@@ -1,0 +1,32 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" 
+          xmlns="sap.m" 
+          xmlns:l="sap.ui.layout" 
+          xmlns:f="sap.ui.layout.form" 
+          xmlns:core="sap.ui.core" 
+          xmlns:html="http://www.w3.org/1999/xhtml" 
+          controllerName="ibc.dm.vPlgReceiptSfc.vPlgReceiptSfc.controller.MainView" 
+width="100%" height="100%">
+    <Panel id="podModelPluginPanel" width="100%" height="100%" expandable="false" expanded="true" accessibleRole="Region" backgroundDesign="Transparent">
+        <headerToolbar>
+            <Toolbar height="3rem">
+                <Title text="{i18n>title}"/>
+                <ToolbarSpacer/>
+                <Button id="closeButton" icon="sap-icon://decline" press="onClosePress"/>
+            </Toolbar>
+        </headerToolbar>
+        <content>
+            <VBox justifyContent="Start" alignItems="Start" fitContainer="true" width="100%" height="60%">
+                <HBox justifyContent="Center" alignItems="Center" width="100%">
+                        <Label text="{= ${/isCustomQuan} ? ${i18n>inputQuantityLabelPallet} : ${i18n>inputQuantityLabel} }" labelFor="inputReceiptQuantity" class="sapUiSmallMarginEnd fontText"/>
+                        <Input id="inputReceiptQuantity" value="{/receiptQuan}" liveChange="onReceiptInputLiveChange" class="inputFont" width="18rem"/>
+                        <Label text="{/uom}"  id = "labelUom" class="sapUiSmallMarginBegin fontText"/>
+                </HBox>
+                <HBox justifyContent="Center" alignItems="Center" width="100%">
+                    <Button text="{i18n>buttonReceiptLabel}"  class="bigButton"
+                            press="onButtonReceipt"
+                            id="buttonReceipt" width="14rem" />
+                </HBox>
+            </VBox>
+        </content>
+    </Panel>
+</mvc:View>

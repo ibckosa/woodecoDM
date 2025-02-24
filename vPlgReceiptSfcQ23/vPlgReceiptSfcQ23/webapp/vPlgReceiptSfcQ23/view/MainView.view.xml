@@ -1,0 +1,52 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form" xmlns:core="sap.ui.core" xmlns:html="http://www.w3.org/1999/xhtml" controllerName="ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView" width="100%" height="100%">
+		
+    <Panel 
+        id="panelPlugin"  
+        width="100%"
+        height="100%"
+        expandable="false"
+        expanded="false"
+        accessibleRole="Region"
+        backgroundDesign="Transparent"
+        class="sapUiNoContentPadding">  
+
+        <VBox alignItems="Center" justifyContent="Center" class="sapUiLargeMarginBegin sapUiLargeMarginEnd">
+        <Table items="{ path: '/items' }"
+                inset="false"
+                fixedLayout="true"
+                class="sapUiLargeMarginBottom">
+            <columns>
+                <Column width="4rem">
+                    <Text id="CheckColumn"  />
+                </Column>
+                <Column width="50rem">
+                    <Text id="CodeDescriptionColumn"/>
+                </Column>
+                <Column width="10rem">
+                    <Text id="QuantityColumn"  visible = "true"/>
+                </Column>
+
+            </columns>
+            <items>
+                <ColumnListItem vAlign="Middle" >
+                    <cells>
+                        <CheckBox selected="{lineChecked}" class="bigCheckbox"/>
+                        <Text text="{codeDescription}" width="50rem" class="fontText"/>
+                        <Input value="{quantity}" editable="true" width="10rem" class="inputFont"/>
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+
+        <HBox justifyContent="Center">
+            <Button text="Opakowanie" id="packagingButton" press="onPackagingButton" class="bigButton sapUiSmallMarginEnd" width="15rem"/>
+            <Button text="Zwrot" id="returnButton" press="onReturnButton" class="bigButton"  width="15rem"/>
+            <Button text="Odpad" id="wasteButton" press="onWasteButton" class="bigButton sapUiSmallMarginBegin"  width="15rem"/>
+        </HBox>
+
+
+        </VBox>
+	</Panel>		
+        
+  
+</mvc:View>

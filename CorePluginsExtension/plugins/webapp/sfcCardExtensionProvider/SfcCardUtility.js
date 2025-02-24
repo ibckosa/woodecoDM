@@ -1,0 +1,233 @@
+sap.ui.define([
+    "sap/ui/base/Object",
+    "sap/m/Button",
+    "sap/m/Label",
+    "sap/m/MessageToast",
+    "sap/ui/layout/VerticalLayout",
+    "sap/m/MessageBox",
+    "sap/m/ProgressIndicator"
+], function (BaseObject, Button, Label, MessageToast, VerticalLayout, MessageBox, ProgressIndicator) {
+    "use strict";
+    return BaseObject.extend("ibc.dm.plugins.sfcCardExtensionProvider.SfcCardUtility", {
+        constructor: function () {
+        },
+
+        setPluginEventExtension: function(oExtension){
+            this.oPluginEventExtension = oExtension;
+        },
+
+        getPluginEventExtension: function(){
+            return this.oPluginEventExtension;
+        },
+
+        getCoreExtension: function(){
+            return this.oPluginEventExtension.getCoreExtension();
+        },
+
+        getController: function(){
+            return this.getPluginEventExtension().getController();
+        },
+
+        getConfigurationValue: function(sProperty){
+            let oController = this.getController();
+            if (!oController) {
+                return null;
+            }
+            return oController.getConfigurationValue(sProperty);
+        },
+
+        setLocalI18nModel: function(){
+
+            // Create a resource bundle for language specific texts
+            var oResourceModel = new sap.ui.model.resource.ResourceModel({
+                bundleName : "ibc.dm.plugins.sfcCardExtensionProvider.i18n.i18n"
+            });
+
+            // Assign the model object to the SAPUI5 core using the name "i18n"
+
+            this.getController().getPodController().getView().setModel(oResourceModel,"i18n_local");
+
+        },
+        getMethodsOf: function(obj){
+            var methods = {}
+            Object.getOwnPropertyNames( Object.getPrototypeOf(obj) ).forEach(methodName => {
+              methods[methodName] = obj[methodName]
+            })
+            return methods
+        },
+
+        loadHeaderInformation: function(bShowHelp, bShowSupplier){
+            this.setLocalI18nModel();
+
+            let oInformationContainer = this.getCoreExtension().getPluginInformationContainer();
+            let oToolbarContainer = this.getCoreExtension().getPluginToolbar();
+            
+            // Multiple SFC Card's can be defined, but only one extension, so
+            // this will make sure new controls are created and added to the current displayed
+            // SFC Card plugin
+            if (!this.oChildControls) {
+                this.oChildControls = {};
+            }
+            if (bShowHelp) {
+                let oActionButton = null;
+                if (oToolbarContainer && this.oChildControls[oToolbarContainer.getId()]) {
+                    oActionButton = this.oChildControls[oToolbarContainer.getId()];
+                }
+                if (oToolbarContainer && !oActionButton) {
+                    this.addActionButton(oToolbarContainer);
+                }
+            }
+            if (bShowSupplier) {
+                let oInformationControl = null;
+                if (oInformationContainer && this.oChildControls[oInformationContainer.getId()]) {
+                    oInformationControl = this.oChildControls[oInformationContainer.getId()];
+                }
+                if (oInformationContainer && !oInformationControl) {
+                    this.addInformationControls(oInformationContainer);
+                }
+            }
+        },
+
+        addActionButton: function(oToolbar) {
+            let that = this;
+            let oActionButton = new Button({
+                type: "Emphasized",
+                text: "Help",
+                press: [that.onHelpPress, that]
+            });
+
+
+
+            var oToolbarMethods = this.getMethodsOf(oToolbar);
+            var oExtenisonMethods = this.getMethodsOf(this.getCoreExtension());
+
+
+            var oProgressIndicator = new ProgressIndicator({
+                state : "Success",
+                showValue: true,
+                displayOnly: true,
+                width: "15rem",
+                percentValue: "{customData>/sfcCardCustom/percentProgress}",
+                displayValue: "{customData>/sfcCardCustom/progressIndicatorValue}"
+            });
+
+            debugger;
+
+            if (oToolbar.addAction&&1===2) {
+                oToolbar.addAction(oActionButton);
+            } else if (oToolbar.addContent) {
+                oToolbar.addContent(oProgressIndicator);
+            }
+            this.oChildControls[oToolbar.getId()] = oProgressIndicator;
+        },
+		onHelpPress: function (evt) {
+			MessageToast.show("Custom Help button pressed");
+		},
+
+        addInformationControls: function(oInformationContainer) {
+        //    let oInformationControl = new VerticalLayout();
+        //    oInformationControl.addStyleClass("sapUiNoContentPadding");
+        //    oInformationControl.addStyleClass("sapUiMediumMarginEnd");
+        //    oInformationControl.addStyleClass("sapUiSmallMarginBottom");
+        //    let oLabel = new Label({
+        //        text: "Adam Test",
+        //        tooltip: "Selected Supplier"
+        //    });
+        //    let oLabelData = new Label({
+        //        text: "Adam Test",
+        //        tooltip: "Selected Supplier"
+        //    });
+        //    oInformationControl.addContent(oLabel);
+        //    oInformationControl.addContent(oLabelData);
+        //    oInformationContainer.addItem(oInformationControl);
+        //    this.oChildControls[oInformationContainer.getId()] = oInformationControl;
+            this._addInformationTextField(oInformationContainer, "optimizationNumber");
+            this._addInformationTextField(oInformationContainer, "recipeNumber");
+            this._addInformationTextField(oInformationContainer, "blockNumber");
+            this._addInformationTextField(oInformationContainer, "customerName");
+            this._addInformationTextField(oInformationContainer, "artFam");
+            this._addInformationTextField(oInformationContainer, "thickness");
+            this._addInformationTextField(oInformationContainer, "length");
+            this._addInformationTextField(oInformationContainer, "width");
+            this._addInformationTextField(oInformationContainer, "crossCompany");
+
+            this._addInformationTextField(oInformationContainer, "blatMaterialTop");
+            this._addInformationTextField(oInformationContainer, "blatMaterialDown");
+            this._addInformationTextField(oInformationContainer, "blatThicknessTop");
+            this._addInformationTextField(oInformationContainer, "blatThicknessDown");
+
+            this._addInformationTextField(oInformationContainer, "artfamCom");
+            this._addInformationTextField(oInformationContainer, "artfamEle");
+            this._addInformationTextField(oInformationContainer, "artfamGrp");
+            this._addInformationTextField(oInformationContainer, "artfamRohlpE");
+            this._addInformationTextField(oInformationContainer, "artfamRohlpatte");
+            this._addInformationTextField(oInformationContainer, "ruType");
+
+
+            this._addInformationButton(oInformationContainer, "remarksButton");
+            this._addInformationButton(oInformationContainer, "salesText");
+
+        },
+        _addInformationTextField: function(oInformationContainer, fieldName){
+            let oInformationControl = new VerticalLayout({
+                visible: "{= ${customData>/sfcCardCustom/"+fieldName+"} !== '' && ${customData>/sfcCardCustom/"+fieldName+"} !== undefined}"
+            });
+            oInformationControl.addStyleClass("sapUiNoContentPadding");
+            oInformationControl.addStyleClass("sapUiMediumMarginEnd");
+            oInformationControl.addStyleClass("sapUiSmallMarginBottom");
+
+            try {
+                var oText = this.getController().getPodController().getView().getModel("i18n_local").getResourceBundle().getText(fieldName);
+           
+            } catch (error) {
+                oText = sLabelId;
+            }
+
+           let oLabel = new Label({
+               text: oText,
+           });
+           let oLabelData = new Label({
+               text: "{customData>/sfcCardCustom/"+fieldName+"}"
+           });
+           oInformationControl.addContent(oLabel);
+           oInformationControl.addContent(oLabelData);
+           oInformationContainer.addItem(oInformationControl);
+
+            this.oChildControls[oInformationContainer.getId()] = oInformationControl;
+
+        },
+        _addInformationButton(oInformationContainer, fieldName){
+            let oInformationControl = new VerticalLayout({
+                visible: "{= ${customData>/sfcCardCustom/"+fieldName+"} !== '' && ${customData>/sfcCardCustom/"+fieldName+"} !== undefined}"
+            });
+            oInformationControl.addStyleClass("sapUiNoContentPadding");
+            oInformationControl.addStyleClass("sapUiMediumMarginEnd");
+            oInformationControl.addStyleClass("sapUiSmallMarginBottom");
+
+            try {
+                var oText = this.getController().getPodController().getView().getModel("i18n_local").getResourceBundle().getText(fieldName);
+           
+            } catch (error) {
+                oText = sLabelId;
+            }
+            var that = this;
+            var oButton = new Button({
+                     type: "Emphasized",
+                     id: fieldName,
+                     text: oText,
+                     press: [that.onPopupButton, that]
+                 });
+            oInformationControl.addContent(oButton);
+            oInformationContainer.addItem(oInformationControl);
+            this.oChildControls[oInformationContainer.getId()] = oInformationControl;
+        },
+        onPopupButton: function(oEvent){
+            var oButtonId = oEvent.getSource().getId();
+            var oPodModel = this.getController().getPodSelectionModel();
+            var oModel = this.getController().getView().getModel("customData");
+            var sTextToDisplay = this.getController().getView().getModel("customData").getProperty("/sfcCardCustom/"+oButtonId);
+
+            MessageBox.information(sTextToDisplay);
+        }
+    })
+});

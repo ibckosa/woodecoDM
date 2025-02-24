@@ -1,0 +1,15 @@
+{
+	"components": [
+		{
+			"id": "vPlgReceiptSfcQ23",
+			"type": "VIEW_PLUGIN",
+			"allowMultipleInstances": false,
+			"name": "ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23",
+			"propertyEditor": "ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.builder.PropertyEditor",
+			"i18n": "ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.i18n.i18n",
+            "productionProcessEnabled": true,
+           "productionProcessTitle": "vPlgReceiptSfcQ23",
+			"supportedPodTypes": ["WORK_CENTER","OPERATION","ORDER"]
+		}   
+	]
+}

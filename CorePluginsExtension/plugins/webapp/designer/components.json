@@ -1,0 +1,33 @@
+{
+    "components": [],
+    "extensions": [
+        {
+            "provider": "ibc/dm/plugins/sfcCardExtensionProvider/ExtensionProvider",
+            "controller": "sap.dm.dme.plugins.headerInformationPlugin",
+            "inclusions": [
+                {
+                    "pods": [
+                        "WC_POD_TEST_PLUGIN", "*"
+                    ],
+                    "plants": [
+                        "4200", "4300", "4100"
+                    ]
+                }
+            ]
+        },
+        {
+            "provider": "ibc/dm/plugins/componentListExtensionProvider/ExtensionProvider",
+            "controller": "sap.dm.dme.assyplugins.componentListPlugin",
+            "inclusions": [
+                {
+                    "pods": [
+                        "WC_POD_TEST_PLUGIN", "*"
+                    ],
+                    "plants": [
+                        "4200", "4300", "4100"
+                    ]
+                }
+            ]
+        }
+    ]
+}

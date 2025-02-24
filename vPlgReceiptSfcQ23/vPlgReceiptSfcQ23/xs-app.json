@@ -1,0 +1,14 @@
+{
+  "welcomeFile": "/vPlgReceiptSfcQ23/index.html",
+  "authenticationMethod": "none",
+  "logout": {
+    "logoutEndpoint": "/do/logout"
+  },
+  "routes": [
+    {
+      "source": "^/vPlgReceiptSfcQ23/(.*)$",
+      "target": "$1",
+      "localDir": "webapp"
+    }
+  ]
+}

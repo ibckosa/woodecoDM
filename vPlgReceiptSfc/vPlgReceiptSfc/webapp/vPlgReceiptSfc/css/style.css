@@ -1,0 +1,50 @@
+/* Enter your custom styles here */
+
+  
+.sapMBtn.bigButton .sapMBtnInner {
+    padding-top: 1rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-bottom: 0.5rem;
+    text-align: center;
+    font-size: 2rem;
+    height: 4rem;
+    background-color: #107E3E;
+    color: white;
+    }
+
+    .sapMBtn.smallButton .sapMBtnInner {
+        text-align: center;
+        font-size: 1.3rem;
+        height: 2rem;    
+        }
+    
+    .fontTitle{
+        font-size: 1.3rem;
+    }
+    .fontText{
+        font-size: 2.5rem;
+    }
+
+    .fontText2{
+        font-size: 1.3rem;
+    }
+
+    .fontTextRodo3{
+        font-size: 1rem;
+        font-style: italic;
+
+    }
+
+    .sapMInputBase.inputFont{
+        height: 3rem;
+     }
+    .sapMInputBase.inputFont .sapMInputBaseContentWrapper{
+        height: 3rem;
+     }
+     .sapMInputBase.inputFont .sapMInputBaseContentWrapper .sapMInputBaseInner{
+        font-size: 2.5rem;
+     }
+
+
+	
