@@ -757,7 +757,7 @@ sap.ui.define([
 
         },
         _checkConfirmMm: async function(oReceiptParameters){
-            let oReturn = {approve: false};
+            
             return await new Promise((resolve,reject)=>{
                 this._resolveConfirmMm = resolve;
                 if (!this.oApproveDialog) {
@@ -769,14 +769,15 @@ sap.ui.define([
                             type: mobileLibrary.ButtonType.Emphasized,
                             text: this._getText("answerYes"),
                             press: async function () {
+                                    let oReturn = {approve: true};
                                     this.oApproveDialog.close();
-                                    oReturn.approve = true;
                                     this._resolveConfirmMm(oReturn);
                             }.bind(this)
                         }),
                         endButton: new Button({
                             text: this._getText("answerNo"),
                             press: function () {
+                                let oReturn = {approve: false};
                                 this.oApproveDialog.close();
                                 this._resolveConfirmMm(oReturn);
                             }.bind(this)
