@@ -111,8 +111,6 @@ sap.ui.define([
                 displayValue: "{customData>/sfcCardCustom/progressIndicatorValue}"
             });
 
-            debugger;
-
             if (oToolbar.addAction&&1===2) {
                 oToolbar.addAction(oActionButton);
             } else if (oToolbar.addContent) {
@@ -165,7 +163,7 @@ sap.ui.define([
 
 
             this._addInformationButton(oInformationContainer, "remarksButton");
-            this._addInformationButton(oInformationContainer, "salesText");
+            this._addInformationButton(oInformationContainer, "salesTextPL");
 
         },
         _addInformationTextField: function(oInformationContainer, fieldName){
@@ -223,10 +221,8 @@ sap.ui.define([
         },
         onPopupButton: function(oEvent){
             var oButtonId = oEvent.getSource().getId();
-            var oPodModel = this.getController().getPodSelectionModel();
-            var oModel = this.getController().getView().getModel("customData");
             var sTextToDisplay = this.getController().getView().getModel("customData").getProperty("/sfcCardCustom/"+oButtonId);
-
+            sTextToDisplay = sTextToDisplay.replaceAll("$&","\n");
             MessageBox.information(sTextToDisplay);
         }
     })

@@ -60,9 +60,6 @@ sap.ui.define([
             if (oDataModel) {
                 oData = oDataModel.getData();
             }
-            
-            let oCoreExtension = this.getCoreExtension();
-            debugger;
         },
 
         updateCustomData: function(){
@@ -88,7 +85,9 @@ sap.ui.define([
                                                         blatMaterialDown: "",
                                                         blatThicknessTop: "",
                                                         blatThicknessDown: "",
-                                                        salesText: "",
+                                                        salesTextPL: "",
+                                                        salesTextEN: "",
+                                                        salesTextDE: "",
                                                         artfamCom: "",
                                                         artfamEle: "",
                                                         artfamGrp: "",
@@ -130,7 +129,9 @@ sap.ui.define([
                                         blatMaterialDown: "",
                                         blatThicknessTop: "",
                                         blatThicknessDown: "",
-                                        salesText: "",
+                                        salesTextPL: "",
+                                        salesTextEN: "",
+                                        salesTextDE: "",
                                         artfamCom: "",
                                         artfamEle: "",
                                         artfamGrp: "",
@@ -151,8 +152,7 @@ sap.ui.define([
                 var oMaterialData = await this._getMaterialData(oController, oPlant, oMaterial, oMaterialVersion);
                 var oOrderData = await this._getOrderData(oController,oOrder, oPlant);
                 
-                debugger;
-                if(oOrderData.productionQuantity&&oOrderData.doneQuantityInProductionUom){
+                if(oOrderData.productionQuantity>0){
                     oSfcCardCustom.progressIndicatorValue =  oOrderData.doneQuantityInProductionUom + " z " + oOrderData.productionQuantity;
                     if(oOrderData.productionQuantity>0){
                         oSfcCardCustom.percentProgress = parseInt( oOrderData.doneQuantityInProductionUom / oOrderData.productionQuantity * 100 ).toString();
@@ -213,8 +213,14 @@ sap.ui.define([
                             case "RU_TYPE":
                                 oSfcCardCustom.ruType = oMaterialData[0].customValues[i].value;
                                 break;
-                            case "SALES_TEXT":
-                                oSfcCardCustom.salesText = oMaterialData[0].customValues[i].value;
+                            case "SALES_TEXT_PL":
+                                oSfcCardCustom.salesTextPL = oMaterialData[0].customValues[i].value;
+                                break;
+                            case "SALES_TEXT_EN":
+                                oSfcCardCustom.salesTextEN = oMaterialData[0].customValues[i].value;
+                                break;
+                            case "SALES_TEXT_DE":
+                                oSfcCardCustom.salesTextDE = oMaterialData[0].customValues[i].value;
                                 break;
                             case "BLAT_MATERIAL_TOP":
                                 oSfcCardCustom.blatMaterialTop = oMaterialData[0].customValues[i].value;

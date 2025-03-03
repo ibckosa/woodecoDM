@@ -188,9 +188,14 @@ sap.ui.define([
                 );
             });
 
+        },
+        onPackagingButton: async function(oCode){
+            let oTableItems = this.getView().getModel().getData().items;
+            let iValue = 0;
+            oTableItems.forEach( item => {
+                if(item.lineChecked===true){iValue = iValue + 1;}
+            });
+            debugger;
         }
-
-        
-
 	});
 });

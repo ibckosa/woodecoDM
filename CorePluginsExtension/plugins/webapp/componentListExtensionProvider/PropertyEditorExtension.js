@@ -26,6 +26,15 @@ sap.ui.define([
                     oLabel = aContent[iIndex-1];
                     oLabel.setText("Log to console");
                 }
+
+                let oSwitchCompQuanFromOrder = oPropertyEditor.addSwitch(oPropertyFormContainer, "compQuanFromOrder", oPropertyData);
+                iIndex = oPropertyFormContainer.indexOfContent(oSwitchCompQuanFromOrder);
+                aContent = oPropertyFormContainer.getContent();
+                oLabel = null;
+                if (aContent[iIndex-1].setText) {
+                    oLabel = aContent[iIndex-1];
+                    oLabel.setText("Ilości komponentów ze zlecenia");
+                }
             }
             return;
         },
@@ -56,6 +65,9 @@ sap.ui.define([
             if (typeof oPropertyData.logToConsole === "undefined") {
                 oPropertyData.logToConsole = false;
             }
+            if (typeof oPropertyData.compQuanFromOrder === "undefined") {
+                oPropertyData.compQuanFromOrder = false;
+            }
             return oPropertyData;
         },
 
@@ -80,6 +92,7 @@ sap.ui.define([
          */
         getDefaultPropertyData: function (oPropertyData) {
             oPropertyData.logToConsole = false;
+            oPropertyData.compQuanFromOrder = false;
             return oPropertyData;
         }
     })

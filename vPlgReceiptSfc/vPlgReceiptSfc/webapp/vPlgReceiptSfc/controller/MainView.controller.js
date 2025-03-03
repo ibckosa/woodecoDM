@@ -295,8 +295,14 @@ sap.ui.define([
             }else{
                 this.showSuccessMessage(oReturnReceipt.returnMessage,true, true);
             }
-            this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-            this.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });
+
+            await this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+            if(parseInt(oReceiptParameters.quantity) === parseInt(oReceiptParameters.sfcQuantity)){
+                this.onClosePress();
+                this.navigateToMainPage();
+            }else{    
+                this.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
+            }
         },
         _getCustomQuan: function(oSelection){
             var oCustomquan = { isSetted: false,

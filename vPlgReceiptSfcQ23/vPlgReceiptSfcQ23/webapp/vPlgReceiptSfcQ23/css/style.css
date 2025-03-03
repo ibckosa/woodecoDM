@@ -44,11 +44,8 @@
         font-size: 2.5rem;
      }
 
-     .sapMCbBg {
-        height: 2rem;
-        width: 2rem;
-        top: 0rem;  
-      }
-
-
+     .bigCheckbox {
+       transform: scale(2);
+    }
+   
 	

@@ -32,7 +32,7 @@
                     <cells>
                         <CheckBox selected="{lineChecked}" class="bigCheckbox"/>
                         <Text text="{codeDescription}" width="50rem" class="fontText"/>
-                        <Input value="{quantity}" editable="true" width="10rem" class="inputFont"/>
+                        <Input value="{quantity}" editable="true" width="10rem" class="inputFont" textAlign="Center"/>
                     </cells>
                 </ColumnListItem>
             </items>

@@ -161,6 +161,8 @@ sap.ui.define([
                 }  
         
                 var oMdl = oTable.getModel();
+                var oMdlData = oTable.getModel().getData();
+                debugger;
                 
                 var iItemsLength = oTable.getItems().length;
 
@@ -183,8 +185,9 @@ sap.ui.define([
                 }
 
             try {
+                var oController = this.getParent().getParent().getParent().getParent();
                 oPodContr._bomReader.then(result=>{
-                    fnUpdateTableItems(oTable,result,oPodContr);
+                    fnUpdateTableItems(oTable,result,oPodContr, oController);
                 });
             } catch (error) {
                 
@@ -223,9 +226,16 @@ sap.ui.define([
             // 
             // AKTUALIZACJA MODELU I BINDINGU 
             //             
-            function fnUpdateTableItems(oTable,bomComponents, oPodController){
+            function fnUpdateTableItems(oTable,bomComponents, oPodController, oController){
 
                 var bSort = false;
+                var oCompQuanFromOrder = false;
+
+                var oConfiguration = oController.getConfiguration();
+
+                if(oConfiguration&& typeof oConfiguration.compQuanFromOrder !== "undefined"){
+                    oCompQuanFromOrder = oConfiguration.compQuanFromOrder;
+                }
 
                 var bColumnExists = oTable.getColumns().some(function (oColumn) {
                     return oColumn.getId() === "uomCol";
@@ -239,7 +249,6 @@ sap.ui.define([
 
                         var itemCompSeq = item.getBindingContext().getObject().componentSequence;
                         var oBomComponent = bomComponents.find((line) => line.sequence == itemCompSeq );
-                        debugger;
                         if(oTable.getColumns().length > item.getCells().length&&oBomComponent){
                             //oMdl.setProperty(item.getBindingContextPath()+"/ComponentUom", oBomComponent.componentQuantityCommercialUom);
                             item.insertCell(new Text({ text: oBomComponent.componentQuantityCommercialUom }), item.getCells().length - 1);
@@ -255,6 +264,13 @@ sap.ui.define([
                                 oMdl.setProperty(item.getBindingContextPath()+"/buttonVisible",true);
                             }
                         }
+                        
+                        var oCell = item.getCells();
+                        try{
+                            
+                            debugger;
+                        }catch(oErr){debugger;}
+                        
                         
                         item.getCells().forEach(cell=>{
                             if(cell.getContent){
@@ -275,12 +291,33 @@ sap.ui.define([
                                 } catch (error) {
                                         
                                 }        
+                            }else if(cell.getText){
+                                if(oBomComponent&&oCompQuanFromOrder===true){
+                                    try{
+                                        let oItemValues =  item.getBindingContext().getObject();
+                                        let oPath = cell.getBindingPath("text");
+                                        if(oPath==="requiredQty"){
+                                            cell.setText(oBomComponent.componentQuantity);
+                                        }else if(oPath==="remainingQty"){
+                                            let oRemainingQuantity = oBomComponent.componentQuantity - oItemValues.requiredQuantity + oItemValues.remainingQuantity;
+                                            cell.setText(oRemainingQuantity);
+                                        }
+                                    }catch(oErr){}
+                                }
                             }
                         });
                     } catch (error) {}
                 });
                 if(bSort){ fnSortTable(); }
             };
+
+            function getMethodsOf (obj){
+                var methods = {}
+                Object.getOwnPropertyNames( Object.getPrototypeOf(obj) ).forEach(methodName => {
+                  methods[methodName] = obj[methodName]
+                })
+                return methods
+            };  
 
             function _getText(oTextId, oPodController){             
                 try {
@@ -300,11 +337,11 @@ sap.ui.define([
                         resolve(oShopOrder.bomComponents);
                     }else{
                         oModel.setProperty("/shopOrder",{shopOrder: oParameters.shopOrder, bomComponents: [], itemsLength: iItemsLength });
-
+                        debugger;
                         oPodController.ajaxGetRequest("../sapdmdmepod/dme/demand-ms/shopOrders", oParameters,
                             function (oResponseData) {
                                 var sUrlTemp =  "../sapdmdmepod/dme/demand-ms/shopOrders/" + oResponseData._embedded.shopOrders[0].id + "/bomComponents?pageSize=20&page=";
-                                
+                                debugger;
                                 var oRequest = new Promise((resolve,reject)=>{
                                     var iCurrentPage = 0;
                                     var aBomComponents = [];
