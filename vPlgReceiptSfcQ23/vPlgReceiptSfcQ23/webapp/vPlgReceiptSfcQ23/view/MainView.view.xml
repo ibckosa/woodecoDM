@@ -16,35 +16,26 @@
                 fixedLayout="true"
                 class="sapUiLargeMarginBottom">
             <columns>
-                <Column width="4rem">
-                    <Text id="CheckColumn"  />
-                </Column>
                 <Column width="50rem">
                     <Text id="CodeDescriptionColumn"/>
                 </Column>
                 <Column width="10rem">
                     <Text id="QuantityColumn"  visible = "true"/>
                 </Column>
-
+                <Column width="12rem">
+                    <Text id="ButtonCol"  />
+                </Column>
             </columns>
             <items>
                 <ColumnListItem vAlign="Middle" >
                     <cells>
-                        <CheckBox selected="{lineChecked}" class="bigCheckbox"/>
-                        <Text text="{codeDescription}" width="50rem" class="fontText"/>
+                        <Text text="{codeDescription}" width="50rem" class="fontTextQ23"/>
                         <Input value="{quantity}" editable="true" width="10rem" class="inputFont" textAlign="Center"/>
+                        <Button icon="sap-icon://accept" id="wasteButton" press="onWasteButton" class="bigButtonQ23 bigButtonIcon sapUiSmallMarginEnd" width="6rem"/>
                     </cells>
                 </ColumnListItem>
             </items>
         </Table>
-
-        <HBox justifyContent="Center">
-            <Button text="Opakowanie" id="packagingButton" press="onPackagingButton" class="bigButton sapUiSmallMarginEnd" width="15rem"/>
-            <Button text="Zwrot" id="returnButton" press="onReturnButton" class="bigButton"  width="15rem"/>
-            <Button text="Odpad" id="wasteButton" press="onWasteButton" class="bigButton sapUiSmallMarginBegin"  width="15rem"/>
-        </HBox>
-
-
         </VBox>
 	</Panel>		
         

@@ -28,6 +28,20 @@
                     ]
                 }
             ]
+        },
+        {
+            "provider": "ibc/dm/plugins/wcPodSelectionExtensionProvider/ExtensionProvider",
+            "controller": "sap.dm.dme.plugins.wcPodSelectionPlugin",
+            "inclusions": [
+                {
+                    "pods": [
+                        "WC_POD_TEST_PLUGIN", "*"
+                    ],
+                    "plants": [
+                        "4200", "4300", "4100"
+                    ]
+                }
+            ]
         }
     ]
 }

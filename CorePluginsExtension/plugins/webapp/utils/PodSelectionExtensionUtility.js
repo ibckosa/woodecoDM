@@ -24,13 +24,14 @@ sap.ui.define([
         },
 
         loadOverflowToolbar: function(fnFunction, fnContext){
-            let bShowHelp = this.getCoreExtension().getConfigurationValue("showHelp");
-            if (bShowHelp) {
+            // this.addActionButton(oOverflowToolbar, "Emphasized", "Help", fnFunction, fnContext);
+            // let bShowHelp = this.getCoreExtension().getConfigurationValue("showHelp");
+            // if (bShowHelp) {
                 let oOverflowToolbar = this.getCoreExtension().getOverflowToolbar();
                 oOverflowToolbar.setVisible(true);
                 oOverflowToolbar.addContent(new ToolbarSpacer());
                 this.addActionButton(oOverflowToolbar, "Emphasized", "Help", fnFunction, fnContext);
-            }
+            // }
         },
 
         loadFilterBar: function(fnFunction, fnContext){

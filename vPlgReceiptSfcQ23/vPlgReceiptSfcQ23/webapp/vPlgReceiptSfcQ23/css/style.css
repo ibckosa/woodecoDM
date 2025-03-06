@@ -1,15 +1,29 @@
- 
-.sapMBtn.bigButton .sapMBtnInner {
-    padding-top: 1rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    padding-bottom: 0.5rem;
+.sapMBtn.bigButtonQ23 .sapMBtnInner {
+    font-size: 1.5rem;
+    height: 2.5rem;
+    padding-top: 0.4rem;
     text-align: center;
-    font-size: 2rem;
-    height: 4rem;
     background-color: #107E3E;
     color: white;
-    }
+    /* transform: scale(2); */
+}
+
+.bigButtonQ23 .sapMBtnInner {
+    height: 3rem;
+}
+
+.sapMBtn.bigButtonQ23 {
+    height: 2.5rem;
+    padding: 0rem;
+}
+
+.sapMBtn.bigButtonIcon .sapMBtnIcon {
+    color: white;
+    font-size: 1.5rem;
+    margin-left: 0.1rem;
+    margin-right: 0.4rem;
+}
+
 
     .sapMBtn.smallButton .sapMBtnInner {
         text-align: center;
@@ -20,8 +34,8 @@
     .fontTitle{
         font-size: 1.3rem;
     }
-    .fontText{
-        font-size: 2.5rem;
+    .fontTextQ23{
+        font-size: 2rem;
     }
 
     .fontText2{
@@ -34,18 +48,15 @@
 
     }
 
-    .sapMInputBase.inputFont{
-        height: 3rem;
+    .sapMInputBase.inputFontQ23{
+        height: 2rem;
      }
-    .sapMInputBase.inputFont .sapMInputBaseContentWrapper{
-        height: 3rem;
+    .sapMInputBase.inputFontQ23 .sapMInputBaseContentWrapper{
+        height: 2rem;
      }
-     .sapMInputBase.inputFont .sapMInputBaseContentWrapper .sapMInputBaseInner{
-        font-size: 2.5rem;
+     .sapMInputBase.inputFontQ23 .sapMInputBaseContentWrapper .sapMInputBaseInner{
+        font-size: 1.5rem;
      }
-
-     .bigCheckbox {
-       transform: scale(2);
-    }
    
+ 
 	
