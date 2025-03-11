@@ -96,6 +96,15 @@ sap.ui.define([
             var sPodType = oPodSelectionModel.getPodType();
 
             try{
+                if(oPodSelectionModel.workCenter === undefined || oPodSelectionModel.workCenter === ""){
+                    return;
+                }
+                if(oPodSelectionModel.resource === null ||oPodSelectionModel.resource === undefined || oPodSelectionModel.resource.resource === undefined){
+                    return
+                }
+                this._oWorkCenter = oPodSelectionModel.workCenter;
+                this._oResource = oPodSelectionModel.resource.resource;
+
                 var aSelection = this.getPodSelectionModel().getSelections()[0];
                 var oCodesTab = await this._getCodes(aSelection.getSfcData().getWorkCenter());
                 var oModelData = { items: oCodesTab };
@@ -227,7 +236,16 @@ sap.ui.define([
                 await this._logNonconformance(oScrapQuantity,oSfcDetails, oSelectedItem.code);
                 await this._executeSfcScrap(oScrapQuantity,oSfcDetails, oSelectedItem.resourceReasonCode);
                 this._showMessageSuccess("success.ProccessFinished");
-                this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+                if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
+                    this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+                }else{
+                    this.getPodSelectionModel().oPodSelectionModel.setInputValue("");
+                    this.getPodSelectionModel().oPodSelectionModel.clearSelections();
+    
+                    this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+                    this.onClosePress();
+                    this.navigateToMainPage();
+                }
             }catch(error){ this._oHandleError(error)}
         },
         _getSelectedItems: function(){
@@ -357,6 +375,7 @@ sap.ui.define([
                  ],
                 plant: oSfcDetails.plant,
                 workCenter: oSfcDetails.workCenter,
+                resource: this._oResource,
                 sfcs: [oSfcDetails.sfc],
                 quantity: oScrapQuantity };
 

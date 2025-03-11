@@ -47,6 +47,7 @@ sap.ui.define([
         },
 
         onClearFilterBar: function(oData){
+            debugger;
             this._oExtensionUtilities.logMessage("PluginEventExtension.onClearFilterBar: WC POD Selection extension");
             let oPodSelectionModel = this.getController().getPodSelectionModel();
             if (oPodSelectionModel) {

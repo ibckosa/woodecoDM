@@ -3,7 +3,7 @@ _schema-version: '3.2'
 version: 0.0.1
 
 modules:
- - name: vPlgReceiptSfcQ23Sel
+ - name: ibc-dm-vPlgReceiptSfcQ23Sel
    type: html5
    path: vPlgReceiptSfcQ23Sel
    parameters:
@@ -24,10 +24,10 @@ modules:
    #build-parameters:
       #builder: grunt
    requires:
-    - name: uaa_indicator_suite
+    - name: uaa_vPlgReceiptSfcQ23Sel_suite
 
 resources:
- - name: uaa_indicator_suite
+ - name: uaa_vPlgReceiptSfcQ23Sel_suite
    parameters:
       path: ./xs-security.json
       service-plan: application

@@ -18,6 +18,7 @@ sap.ui.define([
             let oPluginEventExtension = new PluginEventExtension(this.oExtensionUtilities, this.oExtensionUtility);
             this.oExtensionUtility.setPluginEventExtension(oPluginEventExtension);
             let oPropertyEditorExtension = new PropertyEditorExtension(this.oExtensionUtilities);
+
             return [oLifecycleExtension, oPluginEventExtension, oPropertyEditorExtension];
         }
     })
