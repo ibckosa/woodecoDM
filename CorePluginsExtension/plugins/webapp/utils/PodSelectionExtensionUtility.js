@@ -123,18 +123,18 @@ sap.ui.define([
         },
 
         addFilter: function(oFilterBar, oFilterControl, sGroupName, sName, sLabel, sTooltip) {
-            let oFilterGroupItem = new FilterGroupItem({
-                groupName: sGroupName,
-                visibleInFilterBar: true,
-                partOfCurrentVariant: false,
-                mandatory: false,
-                name: sName,
-                label: sLabel,
-                labelTooltip: sTooltip,
-                visible: true
-            });
-            oFilterGroupItem.setControl(oFilterControl);
-            oFilterBar.addFilterGroupItem(oFilterGroupItem);
+            // let oFilterGroupItem = new FilterGroupItem({
+            //     groupName: sGroupName,
+            //     visibleInFilterBar: true,
+            //     partOfCurrentVariant: false,
+            //     mandatory: false,
+            //     name: sName,
+            //     label: sLabel,
+            //     labelTooltip: sTooltip,
+            //     visible: true
+            // });
+            // oFilterGroupItem.setControl(oFilterControl);
+            // oFilterBar.addFilterGroupItem(oFilterGroupItem);
         },
 
         getCustomFilterControls: function() {
@@ -172,19 +172,19 @@ sap.ui.define([
             
                 let podSelectionModel =  oController.getPodSelectionModel()
                 if(podSelectionModel.workCenter === undefined || podSelectionModel.workCenter === ""){
-                    this._showError("q23.error.emptyWorkCenter");
-                    return;
+                    this._throwError("q23.error.emptyWorkCenter");
                 }
                 if(podSelectionModel.resource === null ||podSelectionModel.resource === undefined || podSelectionModel.resource.resource === undefined){
-                    this._showError("q23.error.emptyResource");
-                    return;
+                    this._throwError("q23.error.emptyResource");
                 }
                 this._oWorkCenter = podSelectionModel.workCenter;
                 this._oResource = podSelectionModel.resource.resource;
 
                 await this._displayDialogQ23(oController);
                 debugger;            
-            }catch(oError){debugger;}
+            }catch(oError){
+                this._handleError(oError);
+                debugger;}
         },
         _displayDialogQ23: async function(oController){
             return await new Promise(async (resolve, reject) => {
@@ -319,75 +319,39 @@ sap.ui.define([
         _loadDataQ23: async function(){
 
             let oDialogModel = this._oDialogQ23.getModel();
+            let oQ23Data = {};
 
-
-            let oQ23TableItems = await this._getQ23TableItems();
+            
             if(!oDialogModel){
                 let dateTimeNow = new Date();
-                let oPopUpData = {
+                oQ23Data = {
                     startDate: UI5Date.getInstance(dateTimeNow.getFullYear(), dateTimeNow.getMonth(), dateTimeNow.getDate(), 0, 0, 0),
                     endDate: UI5Date.getInstance(dateTimeNow.getFullYear(), dateTimeNow.getMonth(), dateTimeNow.getDate(), 23, 59, 59),
-                    items: oQ23TableItems
+                    items: []
                 };   
                 oDialogModel = new JSONModel();
-                oDialogModel.setData(oPopUpData);
             }else{
-                let oModelData = oDialogModel.getData();
-                oModelData.items = oQ23TableItems;
-                oDialogModel.setData(oModelData);
-            }
+                oQ23Data= oDialogModel.getData();
+                
+            }            
+            oQ23Data.items = await this._getQ23TableItems(oQ23Data.startDate, oQ23Data.endDate);
+            oDialogModel.setData(oQ23Data);
 
             this._oDialogQ23.setModel(oDialogModel);
-
-            // debugger;
-            // let dateTimeNow = new Date();
-            // let oPopUpData = {
-            //     startDate: UI5Date.getInstance(dateTimeNow.getFullYear(), dateTimeNow.getMonth(), dateTimeNow.getDate(), 0, 0, 0),
-            //     endDate: UI5Date.getInstance(dateTimeNow.getFullYear(), dateTimeNow.getMonth(), dateTimeNow.getDate(), 23, 59, 59),
-            //     items: []
-            // };
-            // let oPopUpModel = new JSONModel();
-            // let oItem = {
-            //     lineChecked: false,
-            //     orderNumber: "OrderNumber1",
-            //     materialId: "Material1",
-            //     materialDesc: "MaterialDesc",
-            //     quantity: 1200,
-            //     uom: "KG",
-            //     createdAt: dateTimeNow.toUTCString()
-            // };
-
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            // oPopUpData.items.push(oItem);
-            
-            // oPopUpModel.setData(oPopUpData);
-            // oDialog.setModel(oPopUpModel);
-
         },
         _getDateTimePickers: function(){
             let oVBoxDtp1 = new VBox({});
             let oVBoxDtp2 = new VBox({});
+            let oVBoxBtn = new VBox({});
+            let oFilterButton = new Button({
+                text: this._geti18nText("q23.label.buttonFilter"),
+                width: "10rem",
+                type: "Emphasized",
+                press: this.onButtonFilter.bind(this)
+            });
             let oLabelDtp1 = new Label({ text: this._geti18nText("q23.label.startDateTime"), design: "Bold" });
             let oLabelDtp2 = new Label({ text: this._geti18nText("q23.label.endDateTime"), design: "Bold" });
+            let oLabelBtn = new Label({ text: "", design: "Bold" });
 
             let DateTimePicker1 = new DateTimePicker({
                 value: {
@@ -414,8 +378,10 @@ sap.ui.define([
             oVBoxDtp1.addItem(DateTimePicker1);
             oVBoxDtp2.addItem(oLabelDtp2);
             oVBoxDtp2.addItem(DateTimePicker2);
+            oVBoxBtn.addItem(oLabelBtn);
+            oVBoxBtn.addItem(oFilterButton);
 
-            let oToolbar = new Toolbar({ width: "100%", height: "auto", design: "Solid", content: [oVBoxDtp1, oVBoxDtp2] });
+            let oToolbar = new Toolbar({ width: "100%", height: "auto", design: "Solid", content: [oVBoxDtp1, oVBoxDtp2, oVBoxBtn] });
 
             return oToolbar;
         },
@@ -430,15 +396,19 @@ sap.ui.define([
             return oReturn;
 
         },
-        _showError: function(oTextId){
-            this._oSelController.showErrorMessage(this._geti18nText(oTextId),true,true);
+        _showError: function(oText){
+            this._oSelController.showErrorMessage(oText);
         },
         _showSuccessMessage: function(oTextId){
             this._oSelController.showSuccessMessage(this._geti18nText(oTextId),true,true);
         },
-        _getQ23TableItems: async function(){
+        _getQ23TableItems: async function(oStartDate, oEndDate){
             let oReturnTab = [];
-            let oNonconformances  = await this._getNonconformances();
+
+            if(oStartDate === null){this._throwError("q23.error.startDate");}
+            if(oEndDate === null){this._throwError("q23.error.endDate");}
+
+            let oNonconformances  = await this._getNonconformances(oStartDate, oEndDate);
 
             let oNonconformancesFiltered = oNonconformances.filter(
                 nonconformance=> {
@@ -452,26 +422,40 @@ sap.ui.define([
 
             for(const nonconformance of oNonconformancesFiltered){
                 let oSfc = await this._getSfcDetails(nonconformance.sfc);
+                let oOrderDetails = await this._getOrderDetails(oSfc.order.order);
+                let oStepId = this._getStepId(oSfc);
                 //let oMaterial = await this._getMaterialDetails();
                 let oItem = {
                     lineChecked: false,
                     orderNumber: oSfc.order.order,
                     materialId: nonconformance.material.material,
+                    materialVersion: nonconformance.material.version,
                     materialDesc: oSfc.material.description,
                     quantity: nonconformance.quantity,
-                    uom: "KG",
+                    uom: oOrderDetails.productionUnitOfMeasure,
                     createdAt: nonconformance.createdDateTime,
-                    nonconformanceId: nonconformance.id
+                    nonconformanceId: nonconformance.id,
+                    sfc: nonconformance.sfc,
+                    stepId: oStepId,
+                    storageLocation: oOrderDetails.putawayStorageLocation,
+                    plant: oOrderDetails.plant,
+                    packagingMaterial: ""
                 };
                 oReturnTab.push(oItem);
             }
 
             return oReturnTab;
         },
-        _getNonconformances: async function(){
+        _getNonconformances: async function(oStartDate, oEndDate){
             let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + "nonconformance/v1/nonconformances";
 
-            let oParameters = { plant: this._oSelController.getPodController().getUserPlant() };
+            let oParameters = { plant: this._oSelController.getPodController().getUserPlant(),
+                                resource: this._oResource,
+                                fromDate: oStartDate.toJSON(),
+                                toDate: oEndDate.toJSON()
+
+
+             };
             return await new Promise((resolve,reject)=>{
                 this._oSelController.ajaxGetRequest(sUrl, oParameters,
                     function (oResponseData) {
@@ -500,7 +484,7 @@ sap.ui.define([
         _getSfcDetailsBuffer:  function(oSfcNumber){
             if(!this._sfcDetails){return;}
 
-            return this._sfcDetails.find( (sfcDetail) => { sfcDetail.sfc === oSfcNumber });
+            return this._sfcDetails.find( (sfcDetail) => sfcDetail.sfc === oSfcNumber );
 
         },
         _getSfcDetailsApi: async function(oSfcNumber){
@@ -539,22 +523,54 @@ sap.ui.define([
         // _getMaterialDetailsApi: async function(){
             
         // },
-        onButtonScrap: async function(oEvent){
+        onButtonScrap: async function(oEvent){ 
             try{
                 let oSelectedLines = this._getSelectedQ23Lines();
                 for(let oLine of oSelectedLines){
-                    await this._closeNonconformance(oLine);
-                    this._showSuccessMessage("")
+                    try{
+                        await this._closeNonconformance(oLine);
+                        this._showSuccessMessage("q23.success.closeNonconformance")
+                    }catch(oError){this._handleError(oError);}
                 }
-            }catch(oError){
-
-            }
+                this._loadDataQ23();
+            }catch(oError){this._handleError(oError);}
         },
         onButtonPackaging: async function(oEvent){
-
+            try{
+                this._oZweiEndpoint = this._getZweiEndpoint();
+                let oSelectedLines = this._getSelectedQ23Lines();
+                for(let oLine of oSelectedLines){
+                    try{
+                        await this._closeNonconformance(oLine);
+                        this._showSuccessMessage("q23.success.closeNonconformance");
+                        oLine.packagingMaterial = await this._getPackagingMaterial(oLine);
+                        await this._callCustomApi("PACKAGE", oLine);
+                        this._showSuccessMessage("q23.success.packageNonconformance");
+                    }catch(oError){ this._handleError(oError); }
+                }
+                this._loadDataQ23();
+                
+            }catch(oError){
+                this._handleError(oError);
+            }
         },
         onButtonReturn: async function(oEvent){
-
+            try{
+                this._oZweiEndpoint = this._getZweiEndpoint();
+                let oSelectedLines = this._getSelectedQ23Lines();
+                for(let oLine of oSelectedLines){
+                    try{
+                        await this._closeNonconformance(oLine);
+                        this._showSuccessMessage("q23.success.closeNonconformance");
+                        await this._callCustomApi("RETURN", oLine);
+                        this._showSuccessMessage("q23.success.returnNonconformance");
+                    }catch(oError){ this._handleError(oError); }
+                }
+                this._loadDataQ23();
+            }catch(oError){
+                this._handleError(oError);
+            }
+            
         }, 
         _getSelectedQ23Lines: function(){
             let oItems = this._oDialogQ23.getModel().getData().items;
@@ -573,7 +589,6 @@ sap.ui.define([
             return await new Promise((resolve,reject)=>{
                 this._oSelController.ajaxPostRequest(sUrl, oParameters,
                     (oResponseData) => {
-                        this._loadDataQ23();
                         resolve();
                     },
                     oError=>{
@@ -582,7 +597,277 @@ sap.ui.define([
                 );
 
             });
-        }
-        
+        },
+        onButtonFilter: function(oEvent){
+            try{
+                this._loadDataQ23();
+            }catch(oError){
+                this._handleError(oError);
+            }
+        },
+        _throwError: function(oErrorTextId){
+            var oText = this._geti18nText(oErrorTextId);
+            throw { errorMessage: oText };
+        },
+        _handleError: function(oError){
+            const sText = this._getTextFromError(oError);
+            this._showError(sText);
+        },
+        _getTextFromError: function(oError){
+            let oReturn = "";
+
+            if(oError===undefined){
+                oReturn = this._geti18nText("errorGeneralMessage");
+            }else if(oError.displayMessage !== undefined){
+                oReturn = oError.displayMessage;
+            }else if(oError.causeMessage !== undefined){
+                oReturn = oError.causeMessage;
+            }else if(oError.message !== undefined){
+                oReturn = oError.message;
+            }else if(oError.errorMessage !== undefined){
+                oReturn = oError.errorMessage;
+            }else{
+                oReturn = oError;
+            }
+
+            if(oReturn===""){
+                oReturn = this._geti18nText("q23.error.generalError");
+            }
+            return oReturn;
+        },
+        _getZweiEndpoint: function(){
+            let oZweiEndpoint = this.getCoreExtension().getConfigurationValue("zweiURL");
+            if(!oZweiEndpoint){
+                this._throwError("q23.error.noZweiEndPoint");
+            }
+
+            return oZweiEndpoint;
+        },
+        _getOrderDetails: async function(oOrder){
+            let oOrderDetails = this._getOrderDetailsBuffer(oOrder);
+
+            if(oOrderDetails===undefined){
+                oOrderDetails = await this._getOrderDetailsApi(oOrder);
+            }
+
+            if(oOrderDetails===undefined){
+                this._throwError();
+            }
+
+            return oOrderDetails;
+        },
+        _bufferOrderDetails: function(oOrderDetails){
+            if(this._orderDetails === undefined){
+                this._orderDetails = [];
+            }
+            this._orderDetails.push(oOrderDetails);    
+        },  
+        _getOrderDetailsBuffer:  function(oOrder){
+            if(!this._orderDetails){return;}
+
+            return this._orderDetails.find( (orderDetail) =>  orderDetail.order === oOrder );
+
+        },
+        _getOrderDetailsApi: async function(oOrder){
+            let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + "order/v1/orders";
+
+            let oParameters = { plant: this._oSelController.getPodController().getUserPlant(),
+                                order: oOrder
+             };
+            return await new Promise((resolve,reject)=>{
+                this._oSelController.ajaxGetRequest(sUrl, oParameters,
+                    (oResponseData) => {
+                        this._bufferOrderDetails(oResponseData);
+                        //this._sfcDetails.push(oResponseData);
+                        resolve(oResponseData);
+                    },
+                    function (oError, sHttpErrorMessage) {
+                        reject(oError);
+                    }   
+                );
+
+            });
+        },
+        _callCustomApi: async function(oProcess, oLine){
+            let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + this._oZweiEndpoint;
+            debugger;
+            let oHuNumber = await this._generateHuNumber(oLine);
+            let oSapDateTime = this._getCurrentSapDateTime();
+            let oParameters = {};
+            if(oProcess==="RETURN"){
+                oParameters = { WERK: oLine.plant,
+                    BEWART: "521",
+                    ZLO: "STOCK",
+                    LGORT: oLine.storageLocation,
+                    HU: oHuNumber,
+                    MATNR: oLine.materialId,
+                    MATTYP: "SCRAP2SAP",
+                    MENGE: oLine.quantity,
+                    MENGE_EINH: oLine.uom,
+                    AUFNR: oLine.orderNumber,
+                    VORNR: oLine.stepId,
+                    END_LIEF: "N",
+                    ARBPL: this._oWorkCenter,
+                    LOSHINWEIS: "2ND_TO_STOCK",
+                    VVDAT: oSapDateTime.sapDate,
+                    VVZEI: oSapDateTime.sapTime,
+                    WDAT: "39991231",
+                    WZEI: "235959",
+                    VFDAT: "39991231",
+                    VFZEI: "235959",
+                    KLASSE: "A",
+                    STATUS: "F",
+                    QSTMANU: "I",
+                    TST: "F" };
+            }else{
+                oParameters = { WERK: oLine.plant,
+                    BEWART: "521",
+                    ZLO: "STOCK",
+                    LGORT: oLine.storageLocation,
+                    HU: oHuNumber,
+                    MATNR: oLine.packagingMaterial,
+                    MATTYP: "SCRAP2SAP",
+                    MENGE: oLine.quantity,
+                    MENGE_EINH: oLine.uom,
+                    AUFNR: oLine.orderNumber,
+                    VORNR: oLine.stepId,
+                    END_LIEF: "N",
+                    ARBPL: this._oWorkCenter,
+                    LOSHINWEIS: "SCRAP_TO_STOCK",
+                    VVDAT: oSapDateTime.sapDate,
+                    VVZEI: oSapDateTime.sapTime,
+                    WDAT: "39991231",
+                    WZEI: "235959",
+                    VFDAT: "39991231",
+                    VFZEI: "235959",
+                    STATUS: "F",
+                    MATST: "U",
+                    QST: "O",
+                    QSTMANU: "I",
+                    TST: "F" };
+            }
+
+            return await new Promise((resolve,reject)=>{
+                this._oSelController.ajaxPostRequest(sUrl, oParameters,
+                    (oResponseData) => {
+                        resolve(oResponseData);
+                    },
+                    oError=>{
+                        reject(oError);
+                    }   
+                );
+
+            });
+        },
+        _getStepId: function(oSfcDetails){
+            let oStepId = "";
+            try{
+                oStepId = oSfcDetails.steps[0].stepId;      
+            }catch(oError){}
+            return oStepId;
+        },
+        _generateHuNumber: async function(oLineDetails){
+            let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + "numbering/v1/identifiers";
+
+            let oNextHuNumberParameters = { plant: oLineDetails.plant,
+                eventName: "PACKING_UNIT_NUMBER",
+                objectsToMatch: {    MATERIAL_NAME: oLineDetails.materialId,
+                                     MATERIAL_VERSION : oLineDetails.materialVersion,
+                                     ORDER_TYPE: "Production" } };
+
+
+            return await new Promise((resolve,reject)=>{
+                this._oSelController.ajaxPostRequest(sUrl, oNextHuNumberParameters,
+                    function (oResponseData) {
+                        resolve(oResponseData.identifiers[0]);
+                    },
+                    function (oError, sHttpErrorMessage) {
+                        reject(oError);
+                    }   
+                );
+
+            });
+        },
+        _getPackagingMaterial: async function(oLineDetails){
+            let oMaterialDetails = await this._getMaterialDetails(oLineDetails.materialId, oLineDetails.materialVersion);
+            try{
+                let oAttributeName = `${oLineDetails.plant}_RETURN_MATERIAL`;
+                let oCustomValue = oMaterialDetails.customValues.find((customValues)=>customValues.attribute === oAttributeName);
+
+                if(!oCustomValue||!oCustomValue.value||oCustomValue.value===""){throw "";}
+
+                return oCustomValue.value;
+            }catch(oError){
+                this._throwError("q23.error.noPackagingMaterial");
+            }
+
+        },
+        _getMaterialDetails: async function(oMaterialNumber, oMaterialVersion){
+            let oMaterialDetails = await this._getMaterialDetailsBuffer(oMaterialNumber, oMaterialVersion);
+            if(!oMaterialDetails){
+                oMaterialDetails = await this._getMaterialDetailsApi(oMaterialNumber, oMaterialVersion);
+            }
+
+            if(!oMaterialDetails){
+                //TODO THROW EXCEPTION
+            }
+
+            return oMaterialDetails;
+
+        },
+        _getMaterialDetailsBuffer: async function(oMaterialNumber, oMaterialVersion){
+            if(!this._materialDetails){return;}
+
+            return this._materialDetails.find( (materialDetail)=> materialDetail.material === oMaterialNumber && materialDetail.version === oMaterialVersion );
+
+        },
+        _getMaterialDetailsApi: async function(oMaterialNumber, oMaterialVersion){
+            let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + "material/v1/materials";
+
+            let oParameters = { plant: this._oSelController.getPodController().getUserPlant(),
+                                material: oMaterialNumber,
+                                version: oMaterialVersion
+             };
+            return await new Promise((resolve,reject)=>{
+                this._oSelController.ajaxGetRequest(sUrl, oParameters,
+                    (oResponseData) => {
+                        this._bufferMaterialDetails(oResponseData);
+                        //this._sfcDetails.push(oResponseData);
+                        if(oResponseData.length>0){resolve(oResponseData[0]);}
+                        //TODO throw exception
+                    },
+                    function (oError, sHttpErrorMessage) {
+                        reject(oError);
+                    }   
+                );
+
+            });
+        },
+        _bufferMaterialDetails: function(oMaterialDetails){
+            if(!this._materialDetails){this._materialDetails = [];}
+
+            this._materialDetails.push(oMaterialDetails);
+        },
+        _getCurrentSapDateTime: function(){
+            let today = new Date();
+            let oYear = today.getFullYear().toString();
+            let oMonth = today.getMonth().toString();
+            let oDay = today.getDate().toString();
+            let oHour = today.getHours().toString();
+            let oMinutes = today.getMinutes().toString();
+            let oSeconds = today.getSeconds().toString();
+
+
+            if (oMonth.length === 1) { oMonth = `0${oMonth}`; }
+            if (oDay.length === 1) { oDay = `0${oDay}`; }
+            if (oHour.length === 1) { oHour = `0${oHour}`; }
+            if (oMinutes.length === 1) { oMinutes = `0${oMinutes}`; }
+            if (oSeconds.length === 1) { oSeconds = `0${oSeconds}`; }
+
+            return {
+                sapDate: `${oYear}${oMonth}${oDay}`,
+                sapTime: `${oHour}${oMinutes}${oSeconds}`
+            };
+        }   
     })
 });

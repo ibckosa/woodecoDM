@@ -2,15 +2,14 @@
 
   
 .sapMBtn.bigButton .sapMBtnInner {
-    padding-top: 1rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    padding-bottom: 0.5rem;
     text-align: center;
     font-size: 2rem;
     height: 4rem;
     background-color: #107E3E;
     color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     }
 
     .sapMBtn.smallButton .sapMBtnInner {

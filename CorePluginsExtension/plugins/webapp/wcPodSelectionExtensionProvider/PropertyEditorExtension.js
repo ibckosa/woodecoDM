@@ -42,6 +42,15 @@ sap.ui.define([
                     oLabel = aContent[iIndex-1];
                     oLabel.setText("Show Filter");
                 }
+
+                let oInput = oPropertyEditor.addInputField(oPropertyFormContainer, "zweiURL", oPropertyData);
+                iIndex = oPropertyFormContainer.indexOfContent(oInput);
+                aContent = oPropertyFormContainer.getContent();
+                if (aContent[iIndex-1].setText) {
+                    oLabel = aContent[iIndex-1];
+                    oLabel.setText("URL endpoit to ZWEI integration");
+                }
+
             }
         },
 
@@ -76,6 +85,10 @@ sap.ui.define([
             if (typeof oPropertyData.showFilter === "undefined") {
                 oPropertyData.showFilter = true;
             }
+            if (typeof oPropertyData.zweiUrl === "undefined") {
+                oPropertyData.zweiUrl = "";
+            }
+
             return oPropertyData;
         },
 
@@ -97,6 +110,9 @@ sap.ui.define([
             if (typeof oPropertyData.showFilter === "undefined") {
                 oPropertyData.showFilter = true;
             }
+            if (typeof oPropertyData.zweiUrl === "undefined") {
+                oPropertyData.zweiUrl = "";
+            }
             return oPropertyData;
         },
 
@@ -111,6 +127,7 @@ sap.ui.define([
             oPropertyData.logToConsole = false;
             oPropertyData.showHelp = true;
             oPropertyData.showFilter = true;
+            oPropertyData.zweiUrl = "";
             return oPropertyData;
         }
     })

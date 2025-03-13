@@ -1,10 +1,12 @@
 .sapMBtn.bigButtonQ23 .sapMBtnInner {
     font-size: 1.5rem;
     height: 2.5rem;
-    padding-top: 0.4rem;
     text-align: center;
     background-color: #107E3E;
     color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     /* transform: scale(2); */
 }
 

@@ -246,7 +246,7 @@ sap.ui.define([
                     this.onClosePress();
                     this.navigateToMainPage();
                 }
-            }catch(error){ this._oHandleError(error)}
+            }catch(error){ this._HandleError(error)}
         },
         _getSelectedItems: function(){
             return this.getView().getModel().getData().items.filter((item)=>parseInt(item.quantity) > 0);
@@ -302,20 +302,38 @@ sap.ui.define([
                       sfcDoneQuantity: 0,
                       sfcLeftQuantity: "" };
         },
-        _oHandleError: function(oError){
-            let oErrorMessage = "";
+
+        _throwError: function(oErrorTextId){
+            var oText = this._geti18nText(oErrorTextId);
+            throw { errorMessage: oText };
+        },
+
+        _getTextFromError: function(oError){
+            let oReturn = "";
+
             if(oError===undefined){
-                return;
+                oReturn = this._geti18nText("errorGeneralMessage");
             }else if(oError.displayMessage !== undefined){
-                oErrorMessage = oError.displayMessage;
+                oReturn = oError.displayMessage;
             }else if(oError.causeMessage !== undefined){
-                oErrorMessage = oError.causeMessage;
+                oReturn = oError.causeMessage;
+            }else if(oError.message !== undefined){
+                oReturn = oError.message;
+            }else if(oError.errorMessage !== undefined){
+                oReturn = oError.errorMessage;
+            }else{
+                oReturn = oError;
             }
 
-            if(oErrorMessage ===""){
-                oErrorMessage = this._get18nText("errorGeneralMessage");
+            if(oReturn===""){
+                oReturn = this._geti18nText("errorGeneralMessage");
             }
-            this.showErrorMessage(oErrorMessage, true, true);
+            return oReturn;
+        },
+
+        _HandleError: function(oError){
+            const sText = this._getTextFromError(oError);
+            this.showErrorMessage(sText, true, true);
         },
         _executeChecksBeforeScrap: function(oScrapQuantity, oSfcDetails){
 
@@ -396,7 +414,7 @@ sap.ui.define([
         },
         _showMessageSuccess: function(oTextId){
 
-            let oText = this._get18nText(oTextId);
+            let oText = this._geti18nText(oTextId);
             this.showSuccessMessage(oText,true, true);
         },
 
@@ -406,11 +424,11 @@ sap.ui.define([
                 if (!this.oApproveDialog) {
                     this.oApproveDialog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
-                        title: this._get18nText("dialogTitleLabel"),
+                        title: this._geti18nText("dialogTitleLabel"),
                         content: new TextArea({ width: "30rem", rows: 12, id: "commentTextArea" }),
                         beginButton: new Button({
                             type: mobileLibrary.ButtonType.Emphasized,
-                            text: this._get18nText("dialogAcceptButtonLabel"),
+                            text: this._geti18nText("dialogAcceptButtonLabel"),
                             press: async function () {
                                 let oReturn = "";
                                 debugger;
@@ -430,7 +448,7 @@ sap.ui.define([
                 this.oApproveDialog.open();
             });
         },
-        _get18nText: function(oTextId){
+        _geti18nText: function(oTextId){
             let oReturn = '';
 
             try{
