@@ -17,7 +17,6 @@ sap.ui.define([
                new PluginEventExtension(this.oExtensionUtilities),
                new PropertyEditorExtension(this.oExtensionUtilities)
            ];
-           //komentarz Adam Testowy
         }
     })
 });
