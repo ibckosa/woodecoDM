@@ -35,6 +35,15 @@ sap.ui.define([
                     oLabel = aContent[iIndex-1];
                     oLabel.setText("Ilości komponentów ze zlecenia");
                 }
+
+                let oInput = oPropertyEditor.addInputField(oPropertyFormContainer, "zweiURL", oPropertyData);
+                iIndex = oPropertyFormContainer.indexOfContent(oInput);
+                aContent = oPropertyFormContainer.getContent();
+                if (aContent[iIndex-1].setText) {
+                    oLabel = aContent[iIndex-1];
+                    oLabel.setText("URL endpoint to ZWEI integration");
+                }
+
             }
             return;
         },
@@ -68,6 +77,10 @@ sap.ui.define([
             if (typeof oPropertyData.compQuanFromOrder === "undefined") {
                 oPropertyData.compQuanFromOrder = false;
             }
+            if (typeof oPropertyData.zweiUrl === "undefined") {
+                oPropertyData.zweiUrl = "";
+            }
+
             return oPropertyData;
         },
 
@@ -80,6 +93,9 @@ sap.ui.define([
          */
         setPropertyData: function (oPropertyData) {
             this._oExtensionUtilities.logMessage("PropertyEditorExtension.setPropertyData: hi");
+            if (typeof oPropertyData.zweiUrl === "undefined") {
+                oPropertyData.zweiUrl = "";
+            }
             return oPropertyData;
         },
 
@@ -93,6 +109,7 @@ sap.ui.define([
         getDefaultPropertyData: function (oPropertyData) {
             oPropertyData.logToConsole = false;
             oPropertyData.compQuanFromOrder = false;
+            oPropertyData.zweiUrl = "";
             return oPropertyData;
         }
     })

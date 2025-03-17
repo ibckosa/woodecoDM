@@ -4,13 +4,15 @@ sap.ui.define([
     "sap/dm/dme/assyplugins/componentListPlugin/controller/extensions/PluginEventExtensionConstants",
     "sap/dm/dme/podfoundation/util/PodUtility",
     "sap/m/Column",
-    "sap/m/Text"
-], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, PodUtility, Column, Text) {
+    "sap/m/Text",
+    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler"
+], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, PodUtility, Column, Text, PalleteQueueHandler) {
     "use strict";
 
     return PluginControllerExtension.extend("ibc.dm.plugins.componentListExtensionProvider.PluginEventExtension", {
         constructor: function (oExtensionUtilities) {
             this._oExtensionUtilities = oExtensionUtilities;
+            this._oPalleteQueueHandler = new PalleteQueueHandler();
         },
 
         getOverrideExecution: function(sOverrideMember) {
@@ -113,7 +115,7 @@ sap.ui.define([
             this._oExtensionUtilities.logMessage("PluginEventExtension.createAndRefreshTable: hi");
             
             try {
-                this.getController().byId("componentList").attachEvent( "updateFinished", this.onUpdateFinished );
+                this.getController().byId("componentList").attachEvent( "updateFinished", this.onUpdateFinished.bind(this) );
                 var oList = this.getController().byId("componentList");
             } catch (error) {
                 
@@ -142,11 +144,11 @@ sap.ui.define([
 
             // Assign the model object to the SAPUI5 core using the name "i18n"
 
-            this.getParent().getParent().getParent().getParent().getPodController().getView().setModel(oResourceModel,"i18n_local");
+            this.getController().getPodController().getView().setModel(oResourceModel,"i18n_local");
                 
             var bError = false;
 
-            var oPodContr = this.getParent().getParent().getParent().getParent().getPodController();
+            var oPodContr = this.getController().getPodController();
 
             try {
                 var oParams = {
@@ -185,9 +187,9 @@ sap.ui.define([
                 }
 
             try {
-                var oController = this.getParent().getParent().getParent().getParent();
+                var oController = this.getController();;
                 oPodContr._bomReader.then(result=>{
-                    fnUpdateTableItems(oTable,result,oPodContr, oController);
+                    fnUpdateTableItems(oTable,result,oPodContr, oController, this);
                 });
             } catch (error) {
                 
@@ -226,7 +228,7 @@ sap.ui.define([
             // 
             // AKTUALIZACJA MODELU I BINDINGU 
             //             
-            function fnUpdateTableItems(oTable,bomComponents, oPodController, oController){
+            function fnUpdateTableItems(oTable,bomComponents, oPodController, oController,that ){
 
                 var bSort = false;
                 var oCompQuanFromOrder = false;
@@ -252,6 +254,9 @@ sap.ui.define([
                         if(oTable.getColumns().length > item.getCells().length&&oBomComponent){
                             //oMdl.setProperty(item.getBindingContextPath()+"/ComponentUom", oBomComponent.componentQuantityCommercialUom);
                             item.insertCell(new Text({ text: oBomComponent.componentQuantityCommercialUom }), item.getCells().length - 1);
+                        }
+                        if(oBomComponent){
+                            oMdl.setProperty(item.getBindingContextPath()+"/zstorageLocation", oBomComponent.storageLocation);
                         }
                         
                         if( typeof item.getBindingContext().getObject().erpBackflushing !== "boolean"  ){
@@ -287,6 +292,7 @@ sap.ui.define([
                                             }
                                         );
                                         cell.getContent()[1].setText(_getText("buttonAssembleLabel",oPodController));
+                                        cell.getContent()[1].attachPress(that._onPaletteQueuePress.bind(that));
                                     }
                                 } catch (error) {
                                         
@@ -395,6 +401,33 @@ sap.ui.define([
 
         } catch (error) {      
         }            
+        },
+        _onPaletteQueuePress: function(oEvent){
+            debugger;
+            let oLine = oEvent.getSource().getBindingContext().getObject();
+            try{
+                let oPodSelectionModel = this.getController().getPodSelectionModel();
+                let oSelection = oPodSelectionModel.getSelections()[0];
+
+
+                let oHandlerData = { plant: this.getController().getPodController().getUserPlant(),
+                                     workCenter: oPodSelectionModel.workCenter,
+                                     resource: oPodSelectionModel.resource.resource,
+                                     storageLocation: oLine.zstorageLocation,
+                                     material: oLine.component.material,
+                                     version: "",
+                                     bomComponentRef: oLine.bomComponentRef,
+                                     sequence: oLine.componentSequence,
+                                     order: oSelection.shopOrder.shopOrder };
+                
+                this._oPalleteQueueHandler.setHandlerData(oHandlerData);
+                this._oPalleteQueueHandler.displayPaletteQueue(this.getController(),"COMPONENT");
+                
+            }catch(oError){
+
+            }
+
+
         }
 
 

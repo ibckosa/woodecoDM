@@ -29,6 +29,7 @@ sap.ui.define([
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
+            debugger;
             this.aCustomFilters = [];
             this._initialized = false;
         },
@@ -89,6 +90,7 @@ sap.ui.define([
         },
 
         addActionButton: function(oToolbar, sType, sText, fnFunction, fnContext) {
+            debugger;
             let oActionButton = new Button({
                 type: sType,
                 text: sText,
@@ -217,23 +219,23 @@ sap.ui.define([
             });
         },
         _setCustomButtonCssStyles: function(){
-            let oHead = document.getElementsByTagName("head")[0];
-            let oStyle = document.createElement("style");
-            oStyle.type = "text/css";
-            oStyle.innerHTML = `
-                .sapMBtn.bigButtonNC .sapMBtnInner {
-                padding-top: 1rem;
-                padding-left: 0.5rem;
-                padding-right: 0.5rem;
-                padding-bottom: 0.5rem;
-                text-align: center;
-                font-size: 2rem;
-                height: 4rem;
-                background-color: #107E3E;
-                color: white;
-                }
-            `;
-            oHead.appendChild(oStyle);
+            // let oHead = document.getElementsByTagName("head")[0];
+            // let oStyle = document.createElement("style");
+            // oStyle.type = "text/css";
+            // oStyle.innerHTML = `
+            //     .sapMBtn.bigButtonNC .sapMBtnInner {
+            //     padding-top: 1rem;
+            //     padding-left: 0.5rem;
+            //     padding-right: 0.5rem;
+            //     padding-bottom: 0.5rem;
+            //     text-align: center;
+            //     font-size: 2rem;
+            //     height: 4rem;
+            //     background-color: #107E3E;
+            //     color: white;
+            //     }
+            // `;
+            // oHead.appendChild(oStyle);
         },
         _getTableQ23: function () {
             let oPanel = new Panel({ height: "45rem", width: "110rem" });

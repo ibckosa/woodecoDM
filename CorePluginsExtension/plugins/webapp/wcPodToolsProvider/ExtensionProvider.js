@@ -18,8 +18,54 @@ sap.ui.define([
             let oLifecycleExtension = new LifecycleExtension();
             let oPluginEventExtension = new PluginEventExtension();
             let oPropertyEditorExtension = new PropertyEditorExtension();
-
+            this._addCustomStyle();
             return [oLifecycleExtension, oPluginEventExtension, oPropertyEditorExtension];
+
+        },
+        _addCustomStyle: function(){
+            try{
+
+            debugger;
+                let oHead = document.getElementsByTagName("head")[0];
+                let oStyle = document.createElement("style");
+                oStyle.type = "text/css";
+                oStyle.innerHTML = `
+                    .sapMBtn.bigButtonNC .sapMBtnInner {
+                    padding-top: 1rem;
+                    padding-left: 0.5rem;
+                    padding-right: 0.5rem;
+                    padding-bottom: 0.5rem;
+                    text-align: center;
+                    font-size: 2rem;
+                    height: 4rem;
+                    background-color: #107E3E;
+                    color: white;
+                    }
+
+                    .sapMBtn.bigButtonLHU .sapMBtnInner {
+                        font-size: 2rem;
+                        height: 4.5rem;
+                        padding-top: 0rem;
+                        text-align: center;
+                        background-color: #107E3E;
+                        color: white;
+                    }
+
+                    .bigButtonLHU .sapMBtnInner {
+                        height: 4rem;
+                    }
+
+                    .sapMBtn.bigButtonLHU {
+                        height: 3rem;
+                        padding: 0rem;
+                    }
+
+
+
+
+                    `;
+                oHead.appendChild(oStyle);
+            }catch(error){}
         }
     })
 });
