@@ -3,11 +3,12 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/LifecycleExtension",
     "ibc/dm/plugins/wcPodToolsProvider/PluginEventExtension",
     "ibc/dm/plugins/wcPodToolsProvider/PropertyEditorExtension",
-    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler"
+    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
     // "ibc/dm/plugins/utils/ExtensionUtilities",
     // "ibc/dm/plugins/utils/PodSelectionExtensionUtility"
 ], function (PluginExtensionProvider, LifecycleExtension, PluginEventExtension, 
-             PropertyEditorExtension, PalleteQueueHandler) {
+             PropertyEditorExtension, PalleteQueueHandler, ErrorHandler) {
     "use strict";
     return PluginExtensionProvider.extend("ibc.dm.plugins.wcPodToolsProvider.ExtensionProvider", {
         constructor: function () {

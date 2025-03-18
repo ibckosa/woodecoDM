@@ -2,6 +2,9 @@ sap.ui.define([
     "sap/ui/base/ManagedObject",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/Pallete",
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueue",
     "sap/ui/model/json/JSONModel",
     "sap/m/Dialog",
     "sap/m/Button",
@@ -20,7 +23,7 @@ sap.ui.define([
     "sap/m/OverflowToolbar",
     "sap/f/DynamicPage",
     "sap/m/Label"
-], function (ManagedObject,TextHandler, Palette, JSONModel, Dialog, Button, Text, mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label){
+], function (ManagedObject,TextHandler, Palette, ResourceRepository, ErrorHandler, PalleteQueue, JSONModel, Dialog, Button, Text, mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label){
     "use strict";
     return ManagedObject.extend("ibc.dm.plugins.wcPodToolsProvider.PalleteQueueHandler", {
         constructor: function(){
@@ -36,6 +39,7 @@ sap.ui.define([
             try {
                 this._oMode = oMode;
                 this._oPluginViewController = oPluginViewController;
+                this._oErrorHandler = new ErrorHandler(this._oPluginViewController);
                 await this._displayDialogLog();
             } catch (oError) {
 
@@ -62,7 +66,7 @@ sap.ui.define([
                         content: [oVBox],
                         buttons: [
                             new Button({
-                                text: this._textHandler.getText("Zamknij"),
+                                text: this._textHandler.getText("labels.loghu.button.close"),
                                 press: function () {
                                     this._oDialogLog.close();
                                     this._resolveLogDialog();
@@ -71,48 +75,71 @@ sap.ui.define([
                         ]
                     });
                 }
-                let oLogModel = await this._getLogModel();
-                this._oDialogLog.setModel(oLogModel);
+                let oLogModel = await this._getDialogData();
                 this._oDialogLog.open();
 
 
             });
         },
+        _getColumns: function(){
+            let oReturn = [];
+            if(this._oMode === "RESOURCE"){
+                oReturn.push(new Column({ header: new Text({ text: "" }) }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.material") }) }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.materialDesc") }) }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.handlingUnit") }) }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.quantity") }) }));
+
+            }else{
+                oReturn.push(new Column({ header: new Text({ text: "" }) }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.handlingUnit") }) }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.quantity") }) }));
+                //oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("Materiał") }) }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.reservation") }) }));
+            }
+            return oReturn;
+        },
+        _getCells: function(){
+            let oReturn = [];
+            if(this._oMode === "RESOURCE"){
+                oReturn.push( new CheckBox({ selected: "{lineSelected}" }) );
+                oReturn.push( new Text({ text: "{materialId}" }) );
+                oReturn.push( new Text({ text: "{materialDesc}" }) )
+                oReturn.push( new Text({ text: "{handlingUnit}" }) )
+                oReturn.push( new Text({ text: "{quantity}" }) )
+            }else{
+                oReturn.push( new CheckBox({ selected: "{lineSelected}" }) );
+                oReturn.push( new Text({ text: "{handlingUnit}" }) );
+                oReturn.push( new Text({ text: "{quantity}" }) )
+                //oReturn.push( new Text({ text: "{materialId}" }) )
+                oReturn.push( new Text({ text: "{reservation}" }) )
+            }
+            return oReturn;
+        },
+
         _getTableLog: function () {
             let oPanel = new Panel({ height: "45rem", width: "112rem" });
+            let oColumns = this._getColumns();
+
+
             let oTable = new Table({
                 growing: false,
                 sticky: ["ColumnHeaders", "HeaderToolbar"],
                 width: "112rem",
                 inset: false,
-                columns: [
-                    new Column({
-                        header: new Text({ text: "" })
-                    }),
-                    new Column({
-                        header: new Text({ text: this._textHandler.getText("Numer palety") })
-                    }),
-                    new Column({
-                        header: new Text({ text: this._textHandler.getText("Ilość") })
-                    }),
-                    new Column({
-                        header: new Text({ text: this._textHandler.getText("Materiał") })
-                    }),
-                    new Column({
-                        header: new Text({ text: this._textHandler.getText("Rezerwacja") })
-                    })
-                ],
+                columns: oColumns,
                 items: {
                     path: "/items",
-                    template: new ColumnListItem({
-                        cells: [
-                            new CheckBox({ selected: "{lineSelected}", class: "bigCheckbox" }),
-                            new Text({ text: "{handlingUnit}", class: "fontText" }),
-                            new Text({ text: "{quantity}", class: "fontText" }),
-                            new Text({ text: "{materialId}", class: "fontText" }),
-                            new Text({ text: "{reservation}", class: "fontText" })
-                        ]
-                    })
+                    factory: (sId, oContext) => {
+
+                        let isRowToHighlight = oContext.getProperty("consumptionStarted");;
+                        return new ColumnListItem({
+                            cells: this._getCells()
+                        }).addStyleClass(isRowToHighlight ? "redBoldedRow" : "");
+                    }
+                    // template: new ColumnListItem({
+                    //     cells: oCells
+                    // })
                 }
             });
 
@@ -126,33 +153,52 @@ sap.ui.define([
         },
         _getActionButtons: function () {
             debugger;
+            let oButtonsVisible = { reservation: true,
+                                    endReservation: true,
+                                    return: true,
+                                    returnNpw: true,
+                                    additionIssue: true  };
+            if(this._oMode === "RESOURCE"){
+                oButtonsVisible.reservation = false;
+                oButtonsVisible.endReservation = false;
+                oButtonsVisible.additionIssue = false;
+            }
+
+
             let oHBoxBtn = new HBox({});
             let oButtonReservation = new Button({
-                text: this._textHandler.getText("REZERWACJA"),
+                text: this._textHandler.getText("labels.loghu.button.reservation"),
                 width: "15rem",
-                press: this.onButtonReservation.bind(this)
+                press: this.onButtonReservation.bind(this),
+                visible: oButtonsVisible.reservation
             });
 
             let oButtonEndReservation = new Button({
-                text: this._textHandler.getText("ZWOLNIENIE REZERWACJI"),
+                text: this._textHandler.getText("labels.loghu.button.endReservation"),
                 width: "15rem",
-                press: this.onButtonEndReservation.bind(this)
+                press: this.onButtonEndReservation.bind(this),
+                visible: oButtonsVisible.endReservation
             });
 
             let oButtonReturn = new Button({
-                text: this._textHandler.getText("ZWROT"),
+                text: this._textHandler.getText("labels.loghu.button.return"),
                 width: "15rem",
-                press: this.onButtonReturn.bind(this)
+                press: this.onButtonReturn.bind(this),
+                visible: oButtonsVisible.return
             });
 
             let oButtonReturnNpw = new Button({
-                text: this._textHandler.getText("ZWROT NPW"),
-                width: "15rem"
+                text: this._textHandler.getText("labels.loghu.button.returnNpw"),
+                width: "15rem",
+                press: this.onButtonReturnNpw.bind(this),
+                visible: oButtonsVisible.returnNpw
             });
 
             let oButtonAdditionIssue = new Button({
-                text: this._textHandler.getText("WYDANIE DODATKOWE"),
-                width: "15rem"
+                text: this._textHandler.getText("labels.loghu.button.additionalIssue"),
+                width: "15rem",
+                press: this.onButtonAdditionIssue.bind(this),
+                visible: oButtonsVisible.additionIssue
             });
             oButtonReservation.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
             oButtonEndReservation.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
@@ -166,69 +212,22 @@ sap.ui.define([
             oHBoxBtn.addItem(oButtonAdditionIssue);
             return oHBoxBtn;
         },
-        _getLogModel: async function () {
+        _getDialogData: async function () {
 
-            let oPallets = await this._getPalletsData();
-            let oLogData = { items: [] };
-
-
-            for(const Pallet of oPallets.content){
-                let oItem = {
-                    lineSelected: false,
-                    handlingUnit: Pallet.handlingUnit,
-                    inventoryId:  Pallet.inventoryId,
-                    plant:  this._oHandlerData.plant,
-                    orderNumber: this._oHandlerData.order,
-                    sequence: this._oHandlerData.sequence,
-                    materialId: Pallet.material,
-                    materialDesc: "MaterialDesc",
-                    quantity: Pallet.quantityOnHand.value,
-                    uom: Pallet.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
-                    sfc: "SFC1",
-                    reservation: "",
-                    storageLocation: this._oHandlerData.storageLocation,
-                    createdDateTime: Pallet.createdDateTime,
-                    modifiedDateTime: Pallet.modifiedDateTime,
-                    palleteDetails: Pallet
-                };
-                oLogData.items.push(oItem);
-    
+            let oPalleteQueue = new PalleteQueue(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
+            if(this._oMode === "COMPONENT"){
+                oPalleteQueue.setReadForOrderPosition(this._oHandlerData.order,this._oHandlerData.sequence,this._oHandlerData.material,this._oHandlerData.storageLocation);
             }
 
-            // oLogData.items.push(oItem);
-            // oLogData.items.push(oItem);
-            // oLogData.items.push(oItem);
-            // oLogData.items.push(oItem);
-            // oLogData.items.push(oItem);
-            // oLogData.items.push(oItem);
-            // oLogData.items.push(oItem);
-            // oLogData.items.push(oItem);
-            // oLogData.items.push(oItem);
-            // oLogData.items.push(oItem);
+            let oLogData = { items: [] };
 
-            let oLegModel = new JSONModel();
-            oLegModel.setData(oLogData);
+            oLogData.items = await oPalleteQueue.readPalletesQueue();
 
-            return oLegModel;
+            let oLogModel = new JSONModel();
+            oLogModel.setData(oLogData);
+            this._oDialogLog.setModel(oLogModel);
         },
-        _getPalletsData: async function(){
-            let sUrl = this._oPluginViewController.getPublicApiRestDataSourceUri() + "inventory/v1/inventories";
 
-            let oParameters = { plant: this._oHandlerData.plant,
-                                productionSupplyArea: this._oHandlerData.resource,
-                                material: this._oHandlerData.material };
-            return await new Promise((resolve,reject)=>{
-                this._oPluginViewController.ajaxGetRequest(sUrl, oParameters,
-                    (oResponseData) => {
-                        resolve(oResponseData);
-                    },
-                    (oError, sHttpErrorMessage) => {
-                        reject(oError);
-                    }   
-                );
-
-            });
-        },
         onButtonReservation: async function(){
             try{
                 let oSelectedItems = this._getSelectedItems();
@@ -236,10 +235,12 @@ sap.ui.define([
                     for(const item of oSelectedItems){
                         let oPallete  = new Palette(this._oPluginViewController);
                         await oPallete.palleteReservation(item.palleteDetails, item.plant, item.orderNumber, item.sequence );
+                        this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.paletteReservation", item.handlingUnit),true,true);
                     }
-                }catch(oError){}
+                }catch(oError){this._oErrorHandler.handleError(oError);}
+                await this._getDialogData();
             }catch(oError){
-
+                this._oErrorHandler.handleError(oError);
             }
 
         },
@@ -250,24 +251,48 @@ sap.ui.define([
                     for(const item of oSelectedItems){
                         let oPallete  = new Palette(this._oPluginViewController);
                         await oPallete.palleteEndReservation(item.palleteDetails, item.plant);
+                        this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.paletteEndReservation", item.handlingUnit),true,true);
                     }
-                }catch(oError){}
+                }catch(oError){this._oErrorHandler.handleError(oError);}
+                await this._getDialogData();
             }catch(oError){
-
+                this._oErrorHandler.handleError(oError);
             }
         },
         onButtonReturn: async function(){
             try{
+                let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
                 let oSelectedItems = this._getSelectedItems();
                 let oZweiEndpoint = this._getZweiEndpoint();
                 try{
                     for(const item of oSelectedItems){
                         let oPallete  = new Palette(this._oPluginViewController);
+                        item.erpResourceId = oResource.getResourceErpId();
                         await oPallete.palleteReturn(item, oZweiEndpoint);
+                        this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     }
-                }catch(oError){}
+                }catch(oError){this._oErrorHandler.handleError(oError);}
+                await this._getDialogData();
             }catch(oError){
+                this._oErrorHandler.handleError(oError);
+            }
+        },
 
+        onButtonReturnNpw: async function(){
+            try{
+                let oItem = this._getSelectedItem();
+                let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
+                ///pobierz dane materiału
+            }catch(oError){
+                this._oErrorHandler.handleError(oError);
+            }
+        },
+
+        onButtonAdditionIssue: async function(){
+            try{
+                ///dodatkowe wydanie
+            }catch(oError){
+                this._oErrorHandler.handleError(oError);
             }
         },
 
@@ -278,6 +303,15 @@ sap.ui.define([
                 return oItem.lineSelected === true;
             });
             return oSelectedItems;
+        },
+
+        _getSelectedItem: function(){
+            let oSelectedItems = this._getSelectedItems();
+            if(oSelectedItems.length === 1){
+                return oSelectedItems[0];
+            }else{
+                this._oErrorHandler.throw("error.logHu.notOneLineSelected");
+            }
         },
 
         _getZweiEndpoint: function(){

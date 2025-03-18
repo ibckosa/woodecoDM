@@ -5,7 +5,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodSelectionExtensionProvider/PropertyEditorExtension",
     "ibc/dm/plugins/utils/ExtensionUtilities",
     "ibc/dm/plugins/utils/PodSelectionExtensionUtility",
-    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler"
+    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
+
 ], function (PluginExtensionProvider, LifecycleExtension, PluginEventExtension, 
              PropertyEditorExtension, ExtensionUtilities, ExtensionUtility, PalleteQueueHandler) {
     "use strict";
@@ -67,6 +69,11 @@ sap.ui.define([
                         display: flex;
                         align-items: center;
                         justify-content: center;
+                    }
+
+                    .redBoldedRow .sapMText {
+                        color: red !important;
+                        font-weight: bold !important;
                     }
                     `;
                 oHead.appendChild(oStyle);

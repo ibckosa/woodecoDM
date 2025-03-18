@@ -23,9 +23,11 @@ sap.ui.define([
     "sap/m/Panel",
     "sap/m/OverflowToolbar",
     "sap/f/DynamicPage",
-    "sap/m/Label"
+    "sap/m/Label",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler"
 ], function (BaseObject, Button, Input, MessageBox, MessageToast, ToolbarSpacer, FilterGroupItem, JSONModel, PodUtility , Dialog, Text
-    , mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label) {
+    , mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
@@ -97,6 +99,13 @@ sap.ui.define([
                 press: this.onLogButtonPress.bind(this)
             });
             oToolbar.addContent(oActionButton);
+
+            let oPalleteQueueButton = new Button({
+                type: sType,
+                text: "Pallete queue",
+                press: this.onPaletteQueuePress.bind(this)
+            });
+            oToolbar.addContent(oPalleteQueueButton);
         },
 
         createInputFilter: function(sId, sType, sBinding, sPlaceHolder, sMaxLength, sWidth, sSuggestionPath, sItemTextBinding, fnFunction, fnContext) {
@@ -161,6 +170,37 @@ sap.ui.define([
             oModel.loadData(sap.ui.require.toUrl(sPath), null, false);
             return oModel.getData();
         },
+        onPaletteQueuePress: function(oEvent){
+            try{
+                let oController = this.oPluginEventExtension.getController();
+                let podSelectionModel =  oController.getPodSelectionModel()
+                if(podSelectionModel.workCenter === undefined || podSelectionModel.workCenter === ""){
+                    this._throwError("q23.error.emptyWorkCenter");
+                }
+                if(podSelectionModel.resource === null ||podSelectionModel.resource === undefined || podSelectionModel.resource.resource === undefined){
+                    this._throwError("q23.error.emptyResource");
+                }
+                this._oWorkCenter = podSelectionModel.workCenter;
+                this._oResource = podSelectionModel.resource.resource;
+
+                let oPalleteQueueHandler = new PalleteQueueHandler();
+
+
+                let oHandlerData = { plant: oController.getPodController().getUserPlant(),
+                                     workCenter: this._oWorkCenter,
+                                     resource: this._oResource,
+                                     storageLocation: "",
+                                     material: "",
+                                     version: "",
+                                     bomComponentRef: "",
+                                     sequence: "",
+                                     order: "" };
+                
+                oPalleteQueueHandler.setHandlerData(oHandlerData);
+                oPalleteQueueHandler.displayPaletteQueue(oController,"RESOURCE");           
+            }catch(oError){}
+        },
+
         onLogButtonPress: async function(oEvent){
             try{
                 let oController = this.oPluginEventExtension.getController();
@@ -557,6 +597,7 @@ sap.ui.define([
             }
         },
         onButtonReturn: async function(oEvent){
+            let oErrorHandler = new ErrorHandler(this._oSelController);
             try{
                 this._oZweiEndpoint = this._getZweiEndpoint();
                 let oSelectedLines = this._getSelectedQ23Lines();
@@ -566,11 +607,11 @@ sap.ui.define([
                         this._showSuccessMessage("q23.success.closeNonconformance");
                         await this._callCustomApi("RETURN", oLine);
                         this._showSuccessMessage("q23.success.returnNonconformance");
-                    }catch(oError){ this._handleError(oError); }
+                    }catch(oError){ oErrorHandler.handleError(oError); }
                 }
                 this._loadDataQ23();
             }catch(oError){
-                this._handleError(oError);
+                oErrorHandler.handleError(oError);
             }
             
         }, 

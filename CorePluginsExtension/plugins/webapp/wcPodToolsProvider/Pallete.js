@@ -1,16 +1,22 @@
 sap.ui.define([
-    "sap/ui/base/ManagedObject"
-], function (ManagedObject) {
+    "sap/ui/base/ManagedObject",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
+], function (ManagedObject, ErrorHandler) {
     "use strict";
     return ManagedObject.extend("ibc.dm.plugins.wcPodToolsProvider.Pallete", {
         constructor: function(oContoller){
             ManagedObject.prototype.constructor.apply(this, arguments);
             this._oController = oContoller;
+            this._oErrorHandler = new ErrorHandler(this._oController);
         },
 
         palleteReservation: async function(oPalleteDetails, oPlant, oOrder, oSequence){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventories/"+`${oPalleteDetails.inventoryId}?plant=${oPlant}`;
+            this._checkBeforeReservation(oPalleteDetails);
+
             let oAssemblyData = oPalleteDetails.assemblyData.filter( assemblyData => { return assemblyData.dataField !== "RES_ITEM" } );
+            
+
             oAssemblyData.push({ dataField: "RES_ITEM",
                                  dataAttribute: `${oOrder}_${oSequence}`  });
 
@@ -35,6 +41,8 @@ sap.ui.define([
         },
         palleteEndReservation: async function(oPalleteDetails, oPlant){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventories/"+`${oPalleteDetails.inventoryId}?plant=${oPlant}`;
+
+            this._checkBeforeEndReservation(oPalleteDetails);
             let oAssemblyData = oPalleteDetails.assemblyData.filter( assemblyData => { return assemblyData.dataField !== "RES_ITEM" } );
             oAssemblyData.push({ dataField: "RES_ITEM",
                                  dataAttribute: null });
@@ -62,6 +70,7 @@ sap.ui.define([
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + oEndPoint;
             let oSapDateTime = this._getCurrentSapDateTime();
             let oParameters = {};
+            this._checkBeforeReturn(oLine.palleteDetails);
 
             oParameters = { WERK: oLine.plant,
                 BEWART: "988",
@@ -84,7 +93,8 @@ sap.ui.define([
                 STATUS: "R",
                 QST: "0",
                 QSTMANU: "I",
-                TST: "F" };
+                TST: "F",
+                ATTR2: oLine.erpResourceId };
 
                 return await new Promise((resolve,reject)=>{
                     this._oController.ajaxPostRequest(sUrl, oParameters,
@@ -120,7 +130,27 @@ sap.ui.define([
                 sapDate: `${oYear}${oMonth}${oDay}`,
                 sapTime: `${oHour}${oMinutes}${oSeconds}`
             };
-        }   
+        },
+        _checkBeforeReservation: function(oPalleteDetails){
+            let oReservation = oPalleteDetails.assemblyData.find( assemblyData => { return assemblyData.dataField === "RES_ITEM" } );
+            if(oReservation&&oReservation.dataAttribute!==null&&oReservation.dataAttribute){
+                this._oErrorHandler.throwError("error.logHu.ReservationPaletteReserved", oPalleteDetails.handlingUnit);
+            }
+        },
+        _checkBeforeEndReservation: function(oPalleteDetails){
+            let oReservation = oPalleteDetails.assemblyData.find( assemblyData => { return assemblyData.dataField === "RES_ITEM" } );
+            let oConsumption = oPalleteDetails.assemblyData.find( assemblyData => { return assemblyData.dataField === "CONS_START" } );
+            if(oReservation&&oReservation.dataAttribute!==null&&oReservation.dataAttribute
+                &&oConsumption&&oConsumption.dataAttribute!==null&&oConsumption.dataAttribute){
+                this._oErrorHandler.throwError("error.logHu.EndReservationConsumptionStarted", oPalleteDetails.handlingUnit);
+            }
+        },
+        _checkBeforeReturn: function(oPalleteDetails){
+            let oReservation = oPalleteDetails.assemblyData.find( assemblyData => { return assemblyData.dataField === "RES_ITEM" } );
+            if(oReservation&&oReservation.dataAttribute!==null&&oReservation.dataAttribute){
+                this._oErrorHandler.throwError("error.logHu.ReturnPaletteReserved", oPalleteDetails.handlingUnit);
+            }
+        }
     })
 
 });

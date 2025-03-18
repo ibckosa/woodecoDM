@@ -11,11 +11,11 @@ sap.ui.define([
             this.setModel(oResourceModel);
         },
 
-        getText: function(oTextId){
+        getText: function(oTextId, ...args){
 
             let oReturn = "";
             try{
-                 oReturn = this.getModel().getResourceBundle().getText(oTextId);
+                 oReturn = this.getModel().getResourceBundle().getText(oTextId, args);
             }catch(oError){
                 oReturn = oTextId;
             }
