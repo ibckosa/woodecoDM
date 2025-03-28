@@ -1,0 +1,92 @@
+sap.ui.define([
+    "sap/ui/base/Object",
+    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueuesManager",
+    "ibc/dm/plugins/wcPodToolsProvider/ComponentIssue",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcComponentsReader",
+    "ibc/dm/plugins/wcPodToolsProvider/BomRepository"
+], function (ObjectUI5, PalleteQueuesManager, ComponentIssue, SfcRepository, SfcComponentsReader, BomRepository) {
+    "use strict";
+    return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.IssuesManager", {
+        constructor: function(oController, oPlant, oWorkCenter, oResource, oOrderNumber, oSfc, oOperationActivity, oQuantity){
+            this._checkConstrutorPamateres(oController, oPlant, oWorkCenter, oResource, oOrderNumber, oSfc, oOperationActivity, oQuantity);
+ 
+            this._componentsIssue = [];
+            this._sfcComponents = [];
+            this._sfcPlannedComponents = [];
+            this._oController = oController;
+            this._oPlant = oPlant;
+            this._oResource = oResource;
+            this._oWorkCenter = oWorkCenter;
+            this._oOrderNumber = oOrderNumber;
+            this._oSfc = oSfc;
+            this._oOperationActivity = oOperationActivity;
+            this._oQuantity = oQuantity;
+            this._oPalleteQueuesManager = new PalleteQueuesManager(this._oController);
+        },
+
+        _checkConstrutorPamateres: function(oController,oWorkCenter, oResource, oOrderNumber, oSfc, oOperationActivity, oQuantity){
+
+        },
+
+        prepareIssues: async function(){
+            await this._readOrder();
+            await this._readSfc();
+            await this._readIssueComponents();
+
+            for(const componentIssue of this._componentsIssue){
+                await componentIssue.prepareIssue();
+            }
+        },
+        executeIssues: async function(){
+            for(const componentIssue of this._componentsIssue){
+                await componentIssue.executeIssue();
+            }
+        },
+        _readOrder: function(){
+
+        },
+        _readSfc: function(){
+
+        },
+        _readIssueComponents: async function(){
+            let oSfcComponents = await SfcComponentsReader.readComponents(this._oController, this._oSfc, this._oOperationActivity );
+            let oSfc = await SfcRepository.getInstance(this._oController, this._oPlant, this._oSfc);
+            let oBom = await BomRepository.getInstance(this._oController, this._oPlant, oSfc.getBom().bom, oSfc.getBom().type);
+            await oSfc.readData();
+            let oBomComponents = oBom.getComponents();
+
+            for(const sfcComponent of oSfcComponents){
+                let oBomComponent = oBomComponents.find(bomComponent => { return bomComponent.sequence === sfcComponent.componentSequence });
+                let oIssueQuan = Math.ceil(sfcComponent.requiredQuantity * ( this._oQuantity / oSfc.getQuantity() ));
+                if(oBomComponent&&oBomComponent.backflushEnabled === false){
+                    let oComponentIssue = new ComponentIssue({  controller: this._oController,
+                                                                sfc: this._oSfc,
+                                                                plant: this._oPlant,
+                                                                orderNumber: this._oOrderNumber,
+                                                                operation: this._oOperationActivity,
+                                                                sequence: oBomComponent.sequence,
+                                                                bomRef: sfcComponent.bomComponentRef                                                                ,
+                                                                quantity: oIssueQuan,
+                                                                material: oBomComponent.material.material,
+                                                                workCenter: this._oWorkCenter,
+                                                                resource: this._oResource,
+                                                                uom: oBomComponent.unitOfMeasure,
+                                                                storageLocation: oBomComponent.storageLocation,
+                                                                palleteQueuesManager: this._oPalleteQueuesManager });
+                    this._componentsIssue.push(oComponentIssue);
+                }
+            }
+
+
+        },
+        changeSfcNumber: function(oSfcNumber){
+            this._oSfc = oSfcNumber;
+            for(const componentIssue of this._componentsIssue){
+                componentIssue.changeSfc(oSfcNumber);
+            }
+        }
+
+
+    });
+});

@@ -5,13 +5,18 @@ sap.ui.define([
     "sap/m/Dialog",
     "sap/m/Button",
     "sap/m/library",
-    "sap/m/TextArea"
-], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea) {
+    "sap/m/TextArea",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository"
+], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView", {
 		onInit: function () {
 			PluginViewController.prototype.onInit.apply(this, arguments);
+            this._oErrorHandler = new ErrorHandler(this);
 		},
 
 
@@ -140,6 +145,7 @@ sap.ui.define([
                     lineChecked: false,
                     group: oWorkCenter,
                     code: oCode.code,
+                    dataType: oCodeDetails.dataType,
                     codeDescription: oCodeDetails.description,
                     quantity: 0,
                     resourceReasonCode: oResourceReasonCode
@@ -169,12 +175,13 @@ sap.ui.define([
         },
         _getCodeDetails: async function(oCode){
             let oReturn = {description: "",
-                           oeeCode: ""
+                           oeeCode: "",
+                           dataType: ""
             };
 
             let sUrl = this.getPublicApiRestDataSourceUri() + "nonconformancecode/v1/nonconformancecodes";
             let oRequestParameters = { plant: oCode.plant,
-                                        code: oCode.code };
+                                        code: oCode.code, };
 
            return await new Promise((resolve,reject)=>{
                 this.ajaxGetRequest(sUrl, oRequestParameters,
@@ -182,6 +189,7 @@ sap.ui.define([
                         if(oResponseData.length>0){
                             try{
                                 oReturn.description = oResponseData[0].description;
+                                oReturn.dataType = oResponseData[0].dataType;
                                 let oCustomField = oResponseData[0].customData.find((customField) => customField.attribute === "REASON_CODE");
                                 oReturn.oeeCode = oCustomField.value;
                             }catch(error){}
@@ -224,29 +232,40 @@ sap.ui.define([
 
         onWasteButton: async function(oEvent){
             try{
+                let aSelection = this.getPodSelectionModel().getSelections()[0];
                 let oSelectedItem = oEvent.getSource().getBindingContext().getObject();
                 let oSfcDetails = await this._getSfcDetails();
+                let oResource = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), this._oResource);
+                oSelectedItem.quantity = parseInt(oSelectedItem.quantity);
                 this._executeChecksBeforeScrap(oSelectedItem, oSfcDetails);
                 let oScrapQuantity = parseInt(oSelectedItem.quantity);
-                    
+                let oComment = await this._getComment(oSelectedItem.dataType);
+                debugger;
+                let oIssuesManager = new IssuesManager(this, this.getPodController().getUserPlant(), this._oWorkCenter, this._oResource, aSelection.getShopOrder().getShopOrder(), aSelection.getSfc().getSfc(), aSelection.getSfcData().getOperation(), oSelectedItem.quantity);
+                await oIssuesManager.prepareIssues();
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
                     let oNewSfc = await this._executeSfcSplit(oScrapQuantity,oSfcDetails);
                     oSfcDetails.sfc = oNewSfc;
+                    oIssuesManager.changeSfcNumber(oNewSfc);
                 }
-                await this._logNonconformance(oScrapQuantity,oSfcDetails, oSelectedItem.code);
+                let oNonconformanceId = await this._logNonconformance(oScrapQuantity,oSfcDetails, oSelectedItem.code, oComment);
+                if(oResource.getNcCodeType() === "Q3"){
+                    await this._closeNonconformance(this.getPodController().getUserPlant() , oNonconformanceId);
+                }
                 await this._executeSfcScrap(oScrapQuantity,oSfcDetails, oSelectedItem.resourceReasonCode);
+                await oIssuesManager.executeIssues();
                 this._showMessageSuccess("success.ProccessFinished");
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
                     this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
                 }else{
-                    this.getPodSelectionModel().oPodSelectionModel.setInputValue("");
-                    this.getPodSelectionModel().oPodSelectionModel.clearSelections();
+                    this.getPodSelectionModel().setInputValue("");
+                    this.getPodSelectionModel().clearSelections();
     
                     this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
                     this.onClosePress();
                     this.navigateToMainPage();
                 }
-            }catch(error){ this._HandleError(error)}
+            }catch(error){ this._oErrorHandler.handleError(error)}
         },
         _getSelectedItems: function(){
             return this.getView().getModel().getData().items.filter((item)=>parseInt(item.quantity) > 0);
@@ -254,7 +273,10 @@ sap.ui.define([
         _getSfcDetails: async function(){
             let aSelection = this.getPodSelectionModel().getSelections()[0];
             let oSfcNumber = aSelection.getSfc().getSfc();
-            let oShopOrder = aSelection.getShopOrder().getShopOrder() 
+            let oShopOrder = aSelection.getShopOrder().getShopOrder();
+            let oSfc = await SfcRepository.getInstance(this, this.getPodController().getUserPlant(), oSfcNumber);
+            await oSfc.readData();
+            let oStep = oSfc.getStepByOperation(aSelection.getSfcData().getOperation());
             let sUrl = this.getPublicApiRestDataSourceUri() + "/inventory/v1/inventory/goodsReceipts/summarize";
             let oRequestParameters = {
                 plant: this.getPodController().getUserPlant(),
@@ -273,6 +295,7 @@ sap.ui.define([
                         oReturn.sfcQuantity = parseInt(aSelection.getSfcData().getQuantity());
                         oReturn.resource =  aSelection.getSfcData().getWorkCenter();
                         oReturn.workCenter =  aSelection.getSfcData().getWorkCenter();
+                        oReturn.sfcQuantityInWork = oStep.quantityInWork;
 
                         let oSfcReceipts = oResponseData.sfcs[0].items;
                         if(oSfcReceipts && oSfcReceipts.length > 0){
@@ -300,7 +323,8 @@ sap.ui.define([
                       resource: "",
                       sfcQuantity: 0,
                       sfcDoneQuantity: 0,
-                      sfcLeftQuantity: "" };
+                      sfcLeftQuantity: 0,
+                      sfcQuantityInWork: 0 };
         },
 
         _throwError: function(oErrorTextId){
@@ -335,7 +359,14 @@ sap.ui.define([
             const sText = this._getTextFromError(oError);
             this.showErrorMessage(sText, true, true);
         },
-        _executeChecksBeforeScrap: function(oScrapQuantity, oSfcDetails){
+        _executeChecksBeforeScrap: function(oSelectedItem, oSfcDetails){
+            if(oSelectedItem.quantity>oSfcDetails.sfcLeftQuantity){
+                this._oErrorHandler.throwError("error.q23.sfcNotEnoughQuantity");
+            }
+
+            if(oSelectedItem.quantity>oSfcDetails.sfcQuantityInWork){
+                this._oErrorHandler.throwError("error.q23.sfcNotInWork");
+            }
 
         },
         _executeSfcScrap: async function(oScrapQuantity, oSfcDetails, oResourceReasonCode){
@@ -378,10 +409,9 @@ sap.ui.define([
                     );
                 });
         },
-        _logNonconformance: async function(oScrapQuantity, oSfcDetails, oCode){
+        _logNonconformance: async function(oScrapQuantity, oSfcDetails, oCode, oComment){
             let sUrl = this.getPublicApiRestDataSourceUri() + "nonconformance/v1/log";
 
-            let oComment = await this._getComment();
             debugger;
             let oRequestParameters = {
                 code: oCode,
@@ -401,7 +431,7 @@ sap.ui.define([
                     this.ajaxPostRequest(sUrl, oRequestParameters,
                         oResponseData => {
                             if(oResponseData.ids !== undefined){
-                                resolve();
+                                resolve(oResponseData.ids[0].ids[0]);
                             }else{
                                 throw "błąd";
                             }
@@ -418,9 +448,10 @@ sap.ui.define([
             this.showSuccessMessage(oText,true, true);
         },
 
-        _getComment: async function () {
+        _getComment: async function (oDataType) {
             return await new Promise((resolve, reject) => {
                 this._resolveComment = resolve;
+                this._oDataType = oDataType;
                 if (!this.oApproveDialog) {
                     this.oApproveDialog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
@@ -435,11 +466,13 @@ sap.ui.define([
                                 try {
                                     let oTextArea = this.oApproveDialog.getContent()[0];
                                     oReturn = oTextArea.getValue();
+                                    if(oReturn.length === 0 && this._oDataType ==="NC_DATA_COMMENT_REQUIERED"){
+                                        this._oErrorHandler.throwError("error.q23.emptyComment");
+                                    }
                                     oTextArea.setValue("");
-                                } catch (error) { }
-
-                                this.oApproveDialog.close();
-                                this._resolveComment(oReturn);
+                                    this.oApproveDialog.close();
+                                    this._resolveComment(oReturn);
+                                } catch (oError) { this._oErrorHandler.handleError(oError) }
                             }.bind(this)
                         })
                     });
@@ -457,6 +490,23 @@ sap.ui.define([
                 oReturn = oTextId;
             }
             return oReturn;
+        },
+        _closeNonconformance: async function( oPlant , oNonconformanceId){
+            let sUrl = this.getPublicApiRestDataSourceUri() + "nonconformance/v1/close";
+
+            let oParameters = { plant: oPlant,
+                                id: oNonconformanceId };
+            return await new Promise((resolve,reject)=>{
+                this.ajaxPostRequest(sUrl, oParameters,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    oError=>{
+                        reject(oError);
+                    }   
+                );
+
+            });
         }
 
 	});

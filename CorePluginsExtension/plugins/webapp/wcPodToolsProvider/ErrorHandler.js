@@ -40,7 +40,7 @@ sap.ui.define([
             return oReturn;
         },
         throwError: function(oTextId, ...args){
-            let oError = {errorMessage: this._textHandler.getText(oTextId, args)};
+            let oError = {errorMessage: this._textHandler.getText(oTextId, ...args)};
             throw oError;
         }
     })

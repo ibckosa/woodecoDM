@@ -5,11 +5,13 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodSelectionExtensionProvider/PropertyEditorExtension",
     "ibc/dm/plugins/utils/ExtensionUtilities",
     "ibc/dm/plugins/utils/PodSelectionExtensionUtility",
+    "ibc/dm/plugins/wcPodToolsProvider/ReturnNpwDialog",
     "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler",
-    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager"
 
 ], function (PluginExtensionProvider, LifecycleExtension, PluginEventExtension, 
-             PropertyEditorExtension, ExtensionUtilities, ExtensionUtility, PalleteQueueHandler) {
+             PropertyEditorExtension, ExtensionUtilities, ExtensionUtility, ReturnNpwDialog, PalleteQueueHandler, ErrorHandler, IssuesManager) {
     "use strict";
     return PluginExtensionProvider.extend("ibc.dm.plugins.wcPodSelectionExtensionProvider.ExtensionProvider", {
         constructor: function () {
@@ -74,6 +76,41 @@ sap.ui.define([
                     .redBoldedRow .sapMText {
                         color: red !important;
                         font-weight: bold !important;
+                    }
+
+                    .fontTextHuDialog {
+                        font-size: 2rem;
+                        font-weight: bold !important;
+                        color: black !important;
+                    }
+
+                    .fontTextQuanDialog {
+                        font-size: 1.7rem;
+                    }
+
+
+                    .sapMBtn.bigButtonDialogHu .sapMBtnInner {
+                        font-size: 2rem;
+                        height: 3.3rem;
+                        text-align: center;
+                        background-color: #107E3E;
+                        color: white;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        /* transform: scale(2); */
+                    }
+
+                    .sapMInputBase.inputFontDialog {
+                        height: 2.5rem;
+                    }
+
+                    .sapMInputBase.inputFontDialog .sapMInputBaseContentWrapper {
+                        height: 2.5rem;
+                    }
+
+                    .sapMInputBase.inputFontDialog .sapMInputBaseContentWrapper .sapMInputBaseInner {
+                        font-size: 2rem;
                     }
                     `;
                 oHead.appendChild(oStyle);

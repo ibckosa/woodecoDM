@@ -34,6 +34,15 @@ sap.ui.define([
                 oReturn = oBinCustomValue.value;
             }catch(oError){}
             return oReturn;
+        },
+        getNcCodeType: function(){
+            let oReturn = "";
+
+            try{
+                let oBinCustomValue = this._oDetails.customValues.find(customValue => { return customValue.attribute === "NC_CODE_TYPE"});
+                oReturn = oBinCustomValue.value;
+            }catch(oError){}
+            return oReturn;
         }
     });
 });

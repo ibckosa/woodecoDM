@@ -25,13 +25,15 @@ sap.ui.define([
     "sap/f/DynamicPage",
     "sap/m/Label",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
-    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler"
+    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
 ], function (BaseObject, Button, Input, MessageBox, MessageToast, ToolbarSpacer, FilterGroupItem, JSONModel, PodUtility , Dialog, Text
-    , mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler) {
+    , mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler, TextHandler) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
             debugger;
+            this._oTextHandler = new TextHandler();
             this.aCustomFilters = [];
             this._initialized = false;
         },
@@ -95,14 +97,14 @@ sap.ui.define([
             debugger;
             let oActionButton = new Button({
                 type: sType,
-                text: sText,
+                text: this._oTextHandler.getText("labels.q23.mainButton"),
                 press: this.onLogButtonPress.bind(this)
             });
             oToolbar.addContent(oActionButton);
 
             let oPalleteQueueButton = new Button({
                 type: sType,
-                text: "Pallete queue",
+                text: this._oTextHandler.getText("labels.loghu.mainButton"),
                 press: this.onPaletteQueuePress.bind(this)
             });
             oToolbar.addContent(oPalleteQueueButton);
@@ -171,6 +173,7 @@ sap.ui.define([
             return oModel.getData();
         },
         onPaletteQueuePress: function(oEvent){
+            this._oErrorHandler = new ErrorHandler(this.oPluginEventExtension.getController());
             try{
                 let oController = this.oPluginEventExtension.getController();
                 let podSelectionModel =  oController.getPodSelectionModel()
@@ -198,10 +201,11 @@ sap.ui.define([
                 
                 oPalleteQueueHandler.setHandlerData(oHandlerData);
                 oPalleteQueueHandler.displayPaletteQueue(oController,"RESOURCE");           
-            }catch(oError){}
+            }catch(oError){ _oErrorHandler.handleError(oError);}
         },
 
         onLogButtonPress: async function(oEvent){
+            this._oErrorHandler = new ErrorHandler(this.oPluginEventExtension.getController());
             try{
                 let oController = this.oPluginEventExtension.getController();
                 if(this._initialized === false){
@@ -225,8 +229,7 @@ sap.ui.define([
                 await this._displayDialogQ23(oController);
                 debugger;            
             }catch(oError){
-                this._handleError(oError);
-                debugger;}
+                this._oErrorHandler.handleError(oError)}
         },
         _displayDialogQ23: async function(oController){
             return await new Promise(async (resolve, reject) => {
@@ -241,11 +244,11 @@ sap.ui.define([
                     this._oDialogQ23 = new Dialog({
                         type: mobileLibrary.DialogType.Message,
                         verticalScrolling: false,
-                        title: this._geti18nText("q23.label.dialogTitle"),
+                        title: this._oTextHandler.getText("q23.label.dialogTitle"),
                         content: [oVBox],
                         buttons: [
                             new Button({
-                                text: this._geti18nText("q23.label.buttonClose"),
+                                text: this._oTextHandler.getText("q23.label.buttonClose"),
                                 press: function () {
                                     this._oDialogQ23.close();
                                     this._resolveDialogQ23();
@@ -294,19 +297,22 @@ sap.ui.define([
                         header: new Text({ text: "" })
                     }),
                     new Column({
-                        header: new Text({ text: this._geti18nText("q23.label.orderNumberColumn") })
+                        header: new Text({ text: this._oTextHandler.getText("q23.label.orderNumberColumn") })
                     }),
                     new Column({
-                        header: new Text({ text: this._geti18nText("q23.label.materialIdColumn") })
+                        header: new Text({ text: this._oTextHandler.getText("q23.label.materialIdColumn") })
                     }),
                     new Column({
-                        header: new Text({ text: this._geti18nText("q23.label.materialDescriptionColumn") })
+                        header: new Text({ text: this._oTextHandler.getText("q23.label.materialDescriptionColumn") })
                     }),
                     new Column({
-                        header: new Text({ text: this._geti18nText("q23.label.quantityColumn") })
+                        header: new Text({ text: this._oTextHandler.getText("q23.label.ncDescription") })
                     }),
                     new Column({
-                        header: new Text({ text: this._geti18nText("q23.label.createdAtColumn") })
+                        header: new Text({ text: this._oTextHandler.getText("q23.label.quantityColumn") })
+                    }),
+                    new Column({
+                        header: new Text({ text: this._oTextHandler.getText("q23.label.createdAtColumn") })
                     })
                 ],
                 items: {
@@ -317,6 +323,7 @@ sap.ui.define([
                             new Text({ text: "{orderNumber}", class: "fontText" }),// order number
                             new Text({ text: "{materialId}", class: "fontText" }),//material ID
                             new Text({ text: "{materialDesc}", class: "fontText" }),//material Description
+                            new Text({ text: "{ncDescription}", class: "fontText" }),//nc Description
                             new Text({ text: "{quantity}", class: "fontText" }),//quantity of nonconformance
                             new Text({ text: "{createdAt}", class: "fontText" })//created at
                         ]
@@ -324,28 +331,28 @@ sap.ui.define([
                 }
             });
             let oDynamicPage = new DynamicPage({ height: "40rem", width:"110rem" , content: [oTable] });
-            
+            oDynamicPage.addStyleClass("sapUiNoContentPadding")
             oPanel.addContent(oDynamicPage);
             return oPanel;
         },
         _getActionButtons: function(){
             let oHBoxBtn = new HBox({});
             let oButtonPackaging = new Button({
-                text: this._geti18nText("q23.label.buttonPackaging"),
+                text: this._oTextHandler.getText("q23.label.buttonPackaging"),
                 width: "15rem",
                 class: "bigButtonNC",
                 press: this.onButtonPackaging.bind(this)
             });
 
             let oButtonReturn = new Button({
-                text: this._geti18nText("q23.label.buttonReturn"),
+                text: this._oTextHandler.getText("q23.label.buttonReturn"),
                 width: "15rem",
                 class: "bigButtonNC",
                 press: this.onButtonReturn.bind(this)
             });
 
             let oButtonScrap = new Button({
-                text: this._geti18nText("q23.label.buttonScrap"),
+                text: this._oTextHandler.getText("q23.label.buttonScrap"),
                 width: "15rem",
                 press: this.onButtonScrap.bind(this)
             });
@@ -386,13 +393,13 @@ sap.ui.define([
             let oVBoxDtp2 = new VBox({});
             let oVBoxBtn = new VBox({});
             let oFilterButton = new Button({
-                text: this._geti18nText("q23.label.buttonFilter"),
+                text: this._oTextHandler.getText("q23.label.buttonFilter"),
                 width: "10rem",
                 type: "Emphasized",
                 press: this.onButtonFilter.bind(this)
             });
-            let oLabelDtp1 = new Label({ text: this._geti18nText("q23.label.startDateTime"), design: "Bold" });
-            let oLabelDtp2 = new Label({ text: this._geti18nText("q23.label.endDateTime"), design: "Bold" });
+            let oLabelDtp1 = new Label({ text: this._oTextHandler.getText("q23.label.startDateTime"), design: "Bold" });
+            let oLabelDtp2 = new Label({ text: this._oTextHandler.getText("q23.label.endDateTime"), design: "Bold" });
             let oLabelBtn = new Label({ text: "", design: "Bold" });
 
             let DateTimePicker1 = new DateTimePicker({
@@ -442,7 +449,7 @@ sap.ui.define([
             this._oSelController.showErrorMessage(oText);
         },
         _showSuccessMessage: function(oTextId){
-            this._oSelController.showSuccessMessage(this._geti18nText(oTextId),true,true);
+            this._oSelController.showSuccessMessage(this._oTextHandler.getText(oTextId),true,true);
         },
         _getQ23TableItems: async function(oStartDate, oEndDate){
             let oReturnTab = [];
@@ -477,6 +484,7 @@ sap.ui.define([
                     uom: oOrderDetails.productionUnitOfMeasure,
                     createdAt: nonconformance.createdDateTime,
                     nonconformanceId: nonconformance.id,
+                    ncDescription: nonconformance.code.description,
                     sfc: nonconformance.sfc,
                     stepId: oStepId,
                     storageLocation: oOrderDetails.putawayStorageLocation,
@@ -572,10 +580,10 @@ sap.ui.define([
                     try{
                         await this._closeNonconformance(oLine);
                         this._showSuccessMessage("q23.success.closeNonconformance")
-                    }catch(oError){this._handleError(oError);}
+                    }catch(oError){this._oErrorHandler.handleError(oError);}
                 }
                 this._loadDataQ23();
-            }catch(oError){this._handleError(oError);}
+            }catch(oError){this._oErrorHandler.handleError(oError);}
         },
         onButtonPackaging: async function(oEvent){
             try{
@@ -584,16 +592,16 @@ sap.ui.define([
                 for(let oLine of oSelectedLines){
                     try{
                         await this._closeNonconformance(oLine);
-                        this._showSuccessMessage("q23.success.closeNonconformance");
+                        //this._showSuccessMessage("q23.success.closeNonconformance");
                         oLine.packagingMaterial = await this._getPackagingMaterial(oLine);
                         await this._callCustomApi("PACKAGE", oLine);
                         this._showSuccessMessage("q23.success.packageNonconformance");
-                    }catch(oError){ this._handleError(oError); }
+                    }catch(oError){ this._oErrorHandler.handleError(oError); }
                 }
                 this._loadDataQ23();
                 
             }catch(oError){
-                this._handleError(oError);
+                this._oErrorHandler.handleError(oError);
             }
         },
         onButtonReturn: async function(oEvent){
@@ -604,14 +612,14 @@ sap.ui.define([
                 for(let oLine of oSelectedLines){
                     try{
                         await this._closeNonconformance(oLine);
-                        this._showSuccessMessage("q23.success.closeNonconformance");
+                        //this._showSuccessMessage("q23.success.closeNonconformance");
                         await this._callCustomApi("RETURN", oLine);
                         this._showSuccessMessage("q23.success.returnNonconformance");
-                    }catch(oError){ oErrorHandler.handleError(oError); }
+                    }catch(oError){ this._oErrorHandler.handleError(oError); }
                 }
                 this._loadDataQ23();
             }catch(oError){
-                oErrorHandler.handleError(oError);
+                this._oErrorHandler.handleError(oError);
             }
             
         }, 
@@ -645,38 +653,12 @@ sap.ui.define([
             try{
                 this._loadDataQ23();
             }catch(oError){
-                this._handleError(oError);
+                this._oErrorHandler.handleError(oError);
             }
         },
         _throwError: function(oErrorTextId){
-            var oText = this._geti18nText(oErrorTextId);
+            var oText = this._oTextHandler.getText(oErrorTextId);
             throw { errorMessage: oText };
-        },
-        _handleError: function(oError){
-            const sText = this._getTextFromError(oError);
-            this._showError(sText);
-        },
-        _getTextFromError: function(oError){
-            let oReturn = "";
-
-            if(oError===undefined){
-                oReturn = this._geti18nText("errorGeneralMessage");
-            }else if(oError.displayMessage !== undefined){
-                oReturn = oError.displayMessage;
-            }else if(oError.causeMessage !== undefined){
-                oReturn = oError.causeMessage;
-            }else if(oError.message !== undefined){
-                oReturn = oError.message;
-            }else if(oError.errorMessage !== undefined){
-                oReturn = oError.errorMessage;
-            }else{
-                oReturn = oError;
-            }
-
-            if(oReturn===""){
-                oReturn = this._geti18nText("q23.error.generalError");
-            }
-            return oReturn;
         },
         _getZweiEndpoint: function(){
             let oZweiEndpoint = this.getCoreExtension().getConfigurationValue("zweiURL");

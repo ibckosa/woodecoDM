@@ -1,0 +1,33 @@
+sap.ui.define([
+    "sap/ui/base/Object"
+], function (ObjectUI5) {
+    "use strict";
+    return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.WorkCenter", {
+        constructor: function(oController, oPlant, oWorkCenter){
+            this._oController = oController;
+            this._oPlant = oPlant;
+            this.oWorkCenter = oWorkCenter;
+        },
+        readData: async function(){
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "workcenter/v2/workcenters";
+
+            let oParameters = { plant: this._oPlant,
+                                workCenter:  this.oWorkCenter};
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxGetRequest(sUrl, oParameters,
+                    (oResponseData) => {
+                        this._oDetails = oResponseData[0];
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        reject(oError);
+                    }   
+                );
+
+            });
+        },
+        getPsa: function(){
+            return this._oDetails.productionSupplyArea;
+        }
+    });
+});

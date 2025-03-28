@@ -1,10 +1,12 @@
 sap.ui.define([
-    "sap/ui/base/ManagedObject",
+    "sap/ui/base/Object",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/Pallete",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/PalleteQueue",
+    "ibc/dm/plugins/wcPodToolsProvider/ReturnNpwDialog",
+    "ibc/dm/plugins/wcPodToolsProvider/AdditionalIssueDialog",
     "sap/ui/model/json/JSONModel",
     "sap/m/Dialog",
     "sap/m/Button",
@@ -23,11 +25,11 @@ sap.ui.define([
     "sap/m/OverflowToolbar",
     "sap/f/DynamicPage",
     "sap/m/Label"
-], function (ManagedObject,TextHandler, Palette, ResourceRepository, ErrorHandler, PalleteQueue, JSONModel, Dialog, Button, Text, mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label){
+], function (ObjectUI5,TextHandler, Palette, ResourceRepository, ErrorHandler, PalleteQueue, ReturnNpwDialog, AdditionalIssueDialog, JSONModel, Dialog, Button, Text, mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label){
     "use strict";
-    return ManagedObject.extend("ibc.dm.plugins.wcPodToolsProvider.PalleteQueueHandler", {
+    return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.PalleteQueueHandler", {
         constructor: function(){
-            ManagedObject.prototype.constructor.apply(this, arguments);
+            //ManagedObject.prototype.constructor.apply(this, arguments);
             this._textHandler = new TextHandler();
         },
 
@@ -62,7 +64,6 @@ sap.ui.define([
                     this._oDialogLog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
                         verticalScrolling: false,
-                        title: this._textHandler.getText("Logowanie palet"),
                         content: [oVBox],
                         buttons: [
                             new Button({
@@ -76,6 +77,8 @@ sap.ui.define([
                     });
                 }
                 let oLogModel = await this._getDialogData();
+                let oTitle = this._getDialogTitle();
+                this._oDialogLog.setTitle(oTitle);
                 this._oDialogLog.open();
 
 
@@ -214,7 +217,7 @@ sap.ui.define([
         },
         _getDialogData: async function () {
 
-            let oPalleteQueue = new PalleteQueue(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
+            let oPalleteQueue = new PalleteQueue(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource, this._oHandlerData.workCenter);
             if(this._oMode === "COMPONENT"){
                 oPalleteQueue.setReadForOrderPosition(this._oHandlerData.order,this._oHandlerData.sequence,this._oHandlerData.material,this._oHandlerData.storageLocation);
             }
@@ -261,6 +264,8 @@ sap.ui.define([
         },
         onButtonReturn: async function(){
             try{
+                this._oDialogLog.setBusy(true);
+                let oDummyOrderSfc = this._getDummyOrderSfc();
                 let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
                 let oSelectedItems = this._getSelectedItems();
                 let oZweiEndpoint = this._getZweiEndpoint();
@@ -269,29 +274,60 @@ sap.ui.define([
                         let oPallete  = new Palette(this._oPluginViewController);
                         item.erpResourceId = oResource.getResourceErpId();
                         await oPallete.palleteReturn(item, oZweiEndpoint);
+                        await oPallete.reducePalleteQuan(item, item.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
                         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     }
                 }catch(oError){this._oErrorHandler.handleError(oError);}
-                await this._getDialogData();
+                setTimeout( async ()=> {    await this._getDialogData();
+                                            this._oDialogLog.setBusy(false);},1500);
             }catch(oError){
+                this._oDialogLog.setBusy(false);
                 this._oErrorHandler.handleError(oError);
             }
         },
 
         onButtonReturnNpw: async function(){
             try{
+                this._oDialogLog.setBusy(true)
+                let oDummyOrderSfc = this._getDummyOrderSfc();
+                let oZweiEndpoint = this._getZweiEndpoint();
                 let oItem = this._getSelectedItem();
                 let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
-                ///pobierz dane materiału
+                let oPallete  = new Palette(this._oPluginViewController);
+                let oDialogReturn = await ReturnNpwDialog.showDialog(oItem, this._oPluginViewController);
+                if(oDialogReturn.quantity>0){ 
+                    oItem.erpResourceId = oResource.getResourceErpId();
+                    await oPallete.palleteReturnNpw(oItem, oZweiEndpoint, oDialogReturn.quantity);
+                    this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturnNpw"),true,true);
+                    await oPallete.reducePalleteQuan(oItem, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc );
+                    // let oNonconformanceId = await this._logNonconformance(oDialogReturn.quantity, oItem, oDialogReturn.code, oDummyOrderSfc.dummySfc);
+                    // await this._closeNonconformance(oItem.plant, oNonconformanceId);
+                    setTimeout( async ()=> {                    await this._getDialogData();
+                        this._oDialogLog.setBusy(false);},1500);
+                }else{
+                    this._oDialogLog.setBusy(false);
+                }
             }catch(oError){
+                this._oDialogLog.setBusy(false);
                 this._oErrorHandler.handleError(oError);
             }
         },
 
         onButtonAdditionIssue: async function(){
             try{
-                ///dodatkowe wydanie
+                let oPallete  = new Palette(this._oPluginViewController);
+                let oItem = this._getSelectedItem();
+                let oQuanAdditional = await AdditionalIssueDialog.showDialog(oItem);
+                if(oQuanAdditional>0){
+                    //await this._additionalIssue();
+                    this._oDialogLog.setBusy(true)
+                    await oPallete.additionalIssue(oItem, oQuanAdditional, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity);
+                    this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteAdditionalIssue"),true,true);
+                    setTimeout( async ()=> {  await this._getDialogData();
+                                            this._oDialogLog.setBusy(false);},1500);
+                }
             }catch(oError){
+                this._oDialogLog.setBusy(false);
                 this._oErrorHandler.handleError(oError);
             }
         },
@@ -310,17 +346,81 @@ sap.ui.define([
             if(oSelectedItems.length === 1){
                 return oSelectedItems[0];
             }else{
-                this._oErrorHandler.throw("error.logHu.notOneLineSelected");
+                this._oErrorHandler.throwError("error.logHu.notOneLineSelected");
             }
         },
 
         _getZweiEndpoint: function(){
             let oZweiEndpoint = this._oPluginViewController.getConfigurationValue("zweiURL");
-            if(!oZweiEndpoint){
-                return "";
+            if(!oZweiEndpoint||oZweiEndpoint===""){
+                this._oErrorHandler.throwError("error.logHu.notConfiguredEndpoint");
             }
 
             return oZweiEndpoint;
+        },
+        _getDialogTitle: function(){
+            let oReturn = "";
+
+            if(this._oMode==="COMPONENT"){
+                oReturn = `${this._oHandlerData.material} ${this._oHandlerData.materialDescription}`;
+            }else{
+                oReturn = this._textHandler.getText("labels.logHu.dialogTitleResource", this._oHandlerData.workCenter, this._oHandlerData.resource);
+            }
+            return oReturn;
+        },
+        _getDummyOrderSfc: function(){
+            let oConfiguration = this._oPluginViewController.getConfiguration();
+            if(!oConfiguration){this._oErrorHandler.throwError("error.readConfiguration")};
+
+            if(!oConfiguration.dummyOrder||oConfiguration.dummyOrder===""){this._oErrorHandler.throwError("error.logHU.noDummyOrder")}
+            if(!oConfiguration.dummySfc||oConfiguration.dummySfc===""){this._oErrorHandler.throwError("error.logHU.noDummySfc")}
+
+            return { dummyOrder: oConfiguration.dummyOrder,
+                     dummySfc:   oConfiguration.dummySfc };
+        },
+        _logNonconformance: async function(oQuantity, oLine, oCode, sfc){
+            let sUrl = this._oPluginViewController.getPublicApiRestDataSourceUri() + "nonconformance/v1/log";
+
+            debugger;
+            let oRequestParameters = {
+                code: oCode,
+                plant: oLine.plant,
+                workCenter: oLine.workCenter,
+                resource: oLine.resource,
+                sfcs: [sfc],
+                quantity: oQuantity };
+
+                return await new Promise((resolve,reject)=>{
+                    this._oPluginViewController.ajaxPostRequest(sUrl, oRequestParameters,
+                        oResponseData => {
+                            if(oResponseData.ids !== undefined){
+                                resolve(oResponseData.ids[0].ids[0]);
+                            }else{
+                                resolve ();
+                            }
+                        },
+                       (oError, sHttpErrorMessage) => {
+                            reject(oError);
+                        }
+                    );
+                });
+        },
+        _closeNonconformance: async function(oPlant , oNonconformanceId){
+            let sUrl = this._oPluginViewController.getPublicApiRestDataSourceUri() + "nonconformance/v1/close";
+            
+            let oParameters = { plant: oPlant,
+                                id: oNonconformanceId };
+            return await new Promise((resolve,reject)=>{
+                this._oPluginViewController.ajaxPostRequest(sUrl, oParameters,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    oError=>{
+                        resolve();
+                    }   
+                );
+
+            });
         }
 
     })

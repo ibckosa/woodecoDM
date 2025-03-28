@@ -408,14 +408,15 @@ sap.ui.define([
             try{
                 let oPodSelectionModel = this.getController().getPodSelectionModel();
                 let oSelection = oPodSelectionModel.getSelections()[0];
-
-
                 let oHandlerData = { plant: this.getController().getPodController().getUserPlant(),
                                      workCenter: oPodSelectionModel.workCenter,
                                      resource: oPodSelectionModel.resource.resource,
                                      storageLocation: oLine.zstorageLocation,
                                      material: oLine.component.material,
+                                     materialDescription: oLine.componentDescription,
                                      version: "",
+                                     sfc: oSelection.getSfc().getSfc(),
+                                     operationActivity: oSelection.getSfcData().getOperation(),
                                      bomComponentRef: oLine.bomComponentRef,
                                      sequence: oLine.componentSequence,
                                      order: oSelection.shopOrder.shopOrder };

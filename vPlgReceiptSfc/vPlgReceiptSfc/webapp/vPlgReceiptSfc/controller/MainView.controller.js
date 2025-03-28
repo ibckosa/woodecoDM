@@ -6,8 +6,11 @@ sap.ui.define([
     "sap/m/Dialog",
     "sap/m/Button",
     "sap/m/Text",
-    "sap/m/library"
-], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary) {
+    "sap/m/library",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager"
+], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary, ErrorHandler, SfcRepository, IssuesManager) {
     "use strict";
 
     var oLogger = Log.getLogger("exampleExecutionPlugin", Log.Level.INFO);
@@ -21,7 +24,8 @@ sap.ui.define([
         onInit: function () {
             if (PluginViewController.prototype.onInit) {
                 PluginViewController.prototype.onInit.apply(this, arguments); 
-            }    
+            } 
+            this._oErrorHandler = new ErrorHandler(this);   
             //this.getView().setBusy(true);
         },
 
@@ -96,7 +100,10 @@ sap.ui.define([
                 var oCustomQuan = this._getCustomQuan( oFirstSelection );
                 await this._setInputQuantity(oFirstSelection,oCustomQuan)
             }
-
+            let oComponents = oPodSelectionModel.getComponents();
+            let oComponent = oPodSelectionModel.getComponent();
+            let oOrder = oPodSelectionModel.getShopOrder();
+            debugger;
 
 
             var oModelData = {
@@ -198,116 +205,119 @@ sap.ui.define([
             }
         },
         onButtonReceipt: async function(oEvent){
-            var oReturnReceipt;
-            var oPodController = this.getPodController();
-            var oPodSelectionModel = this.getPodSelectionModel();
-            var aSelections = oPodSelectionModel.getSelections();     
+            try{
+                var oReturnReceipt;
+                var oPodController = this.getPodController();
+                var oPodSelectionModel = this.getPodSelectionModel();
+                var aSelections = oPodSelectionModel.getSelections();     
 
-            if(aSelections.length < 1){ return; };
-            var oOperation = oPodSelectionModel.getOperation();
-            debugger;
-            
+                if(aSelections.length < 1){ return; };
+                var oOperation = oPodSelectionModel.getOperation();
+                debugger;
+                
 
-            var aSelectionFirstRow = aSelections[0];
-            var oShopOrderNumber = aSelectionFirstRow.getShopOrder().getShopOrder();
-            var isOrderEwm = await this._checkOrderIsEwm(oPodController.getUserPlant(), oShopOrderNumber);
-            if(isOrderEwm.isError === true){
-                this.showErrorMessage(isOrderEwm.oErrorMessage,true, true);
-                return;
-            }
+                var aSelectionFirstRow = aSelections[0];
+                var oShopOrderNumber = aSelectionFirstRow.getShopOrder().getShopOrder();
+                var isOrderEwm = await this._checkOrderIsEwm(oPodController.getUserPlant(), oShopOrderNumber);
+                // if(isOrderEwm.isError === true){
+                //     this.showErrorMessage(isOrderEwm.oErrorMessage,true, true);
+                //     return;
+                // }
 
-            
-            var oReceiptParameters = { plant : oPodController.getUserPlant(),
-                                       order: aSelectionFirstRow.getShopOrder().getShopOrder(),
-                                       material: aSelectionFirstRow.getSfcData().getMaterial() ,
-                                       materialVersion: aSelectionFirstRow.getSfcData().getMaterialVersion(),
-                                       quantity: this.byId("inputReceiptQuantity").getValue(),
-                                       unitOfMeasure: isOrderEwm.unitOfMeasure,		
-                                       sfc: aSelectionFirstRow.getSfc().getSfc(),
-                                       storageLocation: isOrderEwm.storageLocation,
-                                       resource: aSelectionFirstRow.getSfcData().getResource(),
-                                       sfcQuantity: aSelectionFirstRow.getSfcData().getQuantity(),
-                                       operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
-                                       workCenter: aSelectionFirstRow.getSfcData().getWorkCenter() };
+                
+                var oReceiptParameters = { plant : oPodController.getUserPlant(),
+                                        order: aSelectionFirstRow.getShopOrder().getShopOrder(),
+                                        material: aSelectionFirstRow.getSfcData().getMaterial() ,
+                                        materialVersion: aSelectionFirstRow.getSfcData().getMaterialVersion(),
+                                        quantity: parseInt(this.byId("inputReceiptQuantity").getValue()),
+                                        unitOfMeasure: isOrderEwm.unitOfMeasure,		
+                                        sfc: aSelectionFirstRow.getSfc().getSfc(),
+                                        storageLocation: isOrderEwm.storageLocation,
+                                        resource: aSelectionFirstRow.getSfcData().getResource(),
+                                        sfcQuantity: aSelectionFirstRow.getSfcData().getQuantity(),
+                                        operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
+                                        workCenter: aSelectionFirstRow.getSfcData().getWorkCenter() };
 
-            var oSfcReturn = await this._getSfcDetails(oReceiptParameters);
+                var oSfcReturn = await this._getSfcDetails(oReceiptParameters);
 
-            if(oSfcReturn.isError===true){
-                this.showErrorMessage(oSfcReturn.returnMessage,true, true);
-                return;
-            }else{
-                try{
-                    var oFirstSfcStep = oSfcReturn.sfcDetails.steps[0];
-                    if(parseInt(oFirstSfcStep.quantityInWork)<parseInt(oReceiptParameters.quantity)){
-                        this.showErrorMessage(this._getText("errorSfcNotInWork"),false, true);
+                if(oSfcReturn.isError===true){
+                    this.showErrorMessage(oSfcReturn.returnMessage,true, true);
+                    return;
+                }else{
+                        var oFirstSfcStep = oSfcReturn.sfcDetails.steps[0];
+                        if(parseInt(oFirstSfcStep.quantityInWork)<parseInt(oReceiptParameters.quantity)){
+                            this._oErrorHandler.throwError("errorSfcNotInWork");
+                            // this.showErrorMessage(this._getText("errorSfcNotInWork"),false, true);
+                            // return;
+                        }
+                }
+                
+                let oIssuesManager = new IssuesManager(this, oReceiptParameters.plant, oReceiptParameters.workCenter, oReceiptParameters.resource, 
+                    oReceiptParameters.order, oReceiptParameters.sfc, oReceiptParameters.operationActivity, oReceiptParameters.quantity);
+                await oIssuesManager.prepareIssues();
+                if (isOrderEwm.isEwmOrder === true){
+                    if(parseInt(oReceiptParameters.quantity) !== parseInt(oReceiptParameters.sfcQuantity) ){
+                        var oSplitReturn = await this._splitSfc(oReceiptParameters);    
+                        if(oSplitReturn.isError === true){
+                            this.showErrorMessage(oSplitReturn.returnMessage,true, true);
+                            return;
+                        };
+                        oReceiptParameters.sfc = oSplitReturn.newSfc;
+                        oIssuesManager.changeSfcNumber(oReceiptParameters.sfc);
+                    }           
+                }else{
+                    var oReturnCheckRequiredParams = await this._checkRequiredParams(oReceiptParameters);
+                    if(oReturnCheckRequiredParams.isError === true){
+                        this.showErrorMessage(oReturnCheckRequiredParams.returnMessage,false, true);
                         return;
                     }
-                }catch{
-                    this.showErrorMessage(this._getText("errorSfcRead"),true, true)
-                    return;
-                }
-            }
-            
 
-            if (isOrderEwm.isEwmOrder === true){
-                if(parseInt(oReceiptParameters.quantity) !== parseInt(oReceiptParameters.sfcQuantity) ){
-                    var oSplitReturn = await this._splitSfc(oReceiptParameters);    
-                    if(oSplitReturn.isError === true){
-                        this.showErrorMessage(oSplitReturn.returnMessage,true, true);
+                    var oReturnCheckConfirmMm = await this._checkConfirmMm(oReceiptParameters);
+                    if(oReturnCheckConfirmMm.approve === false){
                         return;
                     };
-                    oReceiptParameters.sfc = oSplitReturn.newSfc;
-                }           
-            }else{
-                var oReturnCheckRequiredParams = await this._checkRequiredParams(oReceiptParameters);
-                if(oReturnCheckRequiredParams.isError === true){
-                    this.showErrorMessage(oReturnCheckRequiredParams.returnMessage,false, true);
-                    return;
                 }
 
-                var oReturnCheckConfirmMm = await this._checkConfirmMm(oReceiptParameters);
-                if(oReturnCheckConfirmMm.approve === false){
+
+
+
+                //var oReturnConfirmation = await this._executeConfirmation(oReceiptParameters);
+
+                var oReturnConfirmation = await this._executeYieldConfirmation(oReceiptParameters);
+                if(oReturnConfirmation.isError === true){
+                    this.showErrorMessage(oReturnConfirmation.returnMessage,true, true);
                     return;
-                };
-            }
+                }else{
+                    this.showSuccessMessage(oReturnConfirmation.returnMessage,true, true);
+                }
 
+                if(isOrderEwm.isEwmOrder === true){
+                    oReturnReceipt = await this._executeEwmReceipt(oReceiptParameters);
+                }else{
+                    oReturnReceipt = await this._executeMmReceipt(oReceiptParameters);
+                }
+                
+                if(oReturnReceipt.isError === true){
+                    this.showErrorMessage(oReturnReceipt.returnMessage,true, true);
+                    return;
+                }else{
+                    this.showSuccessMessage(oReturnReceipt.returnMessage,true, true);
+                }
 
+                await oIssuesManager.executeIssues();
+                if(parseInt(oReceiptParameters.quantity) === parseInt(oReceiptParameters.sfcQuantity)){
+                    oPodSelectionModel.setInputValue("");
+                    oPodSelectionModel.clearSelections();
 
+                    this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+                    this.onClosePress();
+                    this.navigateToMainPage();
+                }else{    
+                    this.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
+                    this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+                }
 
-            //var oReturnConfirmation = await this._executeConfirmation(oReceiptParameters);
-            var oReturnConfirmation = await this._executeYieldConfirmation(oReceiptParameters);
-            if(oReturnConfirmation.isError === true){
-                this.showErrorMessage(oReturnConfirmation.returnMessage,true, true);
-                return;
-            }else{
-                this.showSuccessMessage(oReturnConfirmation.returnMessage,true, true);
-            }
-
-            if(isOrderEwm.isEwmOrder === true){
-                oReturnReceipt = await this._executeEwmReceipt(oReceiptParameters);
-            }else{
-                oReturnReceipt = await this._executeMmReceipt(oReceiptParameters);
-            }
-            
-            if(oReturnReceipt.isError === true){
-                this.showErrorMessage(oReturnReceipt.returnMessage,true, true);
-                return;
-            }else{
-                this.showSuccessMessage(oReturnReceipt.returnMessage,true, true);
-            }
-
-            
-            if(parseInt(oReceiptParameters.quantity) === parseInt(oReceiptParameters.sfcQuantity)){
-                oPodSelectionModel.setInputValue("");
-                oPodSelectionModel.clearSelections();
-
-                this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-                this.onClosePress();
-                this.navigateToMainPage();
-            }else{    
-                this.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
-                this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-            }
+            }catch(oError){this._oErrorHandler.handleError(oError);}
             
         },
         _getCustomQuan: function(oSelection){
@@ -405,9 +415,10 @@ sap.ui.define([
                 return oReturn; }
             
             if(oOrderDetails.oResponse.putawayStorageLocation === undefined){
-                oReturn.isError = true;
-                oReturn.oErrorMessage = this._getText("noStorageLocationError");
-                return oReturn; 
+                this._oErrorHandler.throwError("");
+                // oReturn.isError = true;
+                // oReturn.oErrorMessage = this._getText("noStorageLocationError");
+                // return oReturn; 
             }
 
             oReturn.storageLocation = oOrderDetails.oResponse.putawayStorageLocation;
@@ -429,9 +440,7 @@ sap.ui.define([
                         resolve(oReturn);
                     },
                     function (oError, sHttpErrorMessage) {
-                        oReturn.isError = true;
-                        oReturn.oErrorMessage = oError.message;
-                        reject(oReturn);
+                        reject(oError);
                     }   
                 );
 
@@ -457,7 +466,7 @@ sap.ui.define([
                     function (oError, sHttpErrorMessage) {
                         oReturn.isError = true;
                         oReturn.oErrorMessage = oError.message;
-                        reject(oReturn);
+                        reject(oError);
                     }   
                 );
 
@@ -540,9 +549,9 @@ sap.ui.define([
 
                     },
                     (oError, sHttpErrorMessage) => {
-                        oReturn.isError = true;
-                        oReturn.returnMessage = this._getText("messageReceiptError");
-                        resolve(oReturn);
+                        // oReturn.isError = true;
+                        // oReturn.returnMessage = this._getText("messageReceiptError");
+                        reject(oError);
                     }
                 );
 
@@ -583,10 +592,10 @@ sap.ui.define([
                         resolve(oReturn);
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
-                        oReturn.isError = true;
-                        oReturn.returnMessage = oError.message;
-                        reject(oReturn);
-                        this.handleError(oError, sHttpErrorMessage);
+                        // oReturn.isError = true;
+                        // oReturn.returnMessage = oError.message;
+                        reject(oError);
+                        // this.handleError(oError, sHttpErrorMessage);
                     }.bind(this)
                 );
             });
@@ -614,18 +623,18 @@ sap.ui.define([
                         resolve(oReturn);
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
-                        debugger;
-                        oReturn.isError = true;
-                        if(oError.message!==undefined){
-                            oReturn.returnMessage = oError.message;
-                        }else if(oError.error.message!==undefined){
-                            oReturn.returnMessage = oError.error.message;
-                        }                        
-                        else{
-                            oReturn.returnMessage = this._getText("messageConfirmationError");
-                        }
+                        // debugger;
+                        // oReturn.isError = true;
+                        // if(oError.message!==undefined){
+                        //     oReturn.returnMessage = oError.message;
+                        // }else if(oError.error.message!==undefined){
+                        //     oReturn.returnMessage = oError.error.message;
+                        // }                        
+                        // else{
+                        //     oReturn.returnMessage = this._getText("messageConfirmationError");
+                        // }
                         
-                        resolve(oReturn);
+                        reject(oError);
                     }.bind(this)
                 );
             });
@@ -649,18 +658,18 @@ sap.ui.define([
                         resolve(oReturn);
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
-                        debugger;
-                        oReturn.isError = true;
-                        if(oError.message!==undefined){
-                            oReturn.returnMessage = oError.message;
-                        }else if(oError.error.message!==undefined){
-                            oReturn.returnMessage = oError.error.message;
-                        }                        
-                        else{
-                            oReturn.returnMessage = this._getText("messageConfirmationError");
-                        }
+                        // debugger;
+                        // oReturn.isError = true;
+                        // if(oError.message!==undefined){
+                        //     oReturn.returnMessage = oError.message;
+                        // }else if(oError.error.message!==undefined){
+                        //     oReturn.returnMessage = oError.error.message;
+                        // }                        
+                        // else{
+                        //     oReturn.returnMessage = this._getText("messageConfirmationError");
+                        // }
                         
-                        resolve(oReturn);
+                        reject(oError);
                     }.bind(this)
                 );
             });
@@ -689,17 +698,17 @@ sap.ui.define([
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
                         debugger;
-                        oReturn.isError = true;
-                        if(oError.message!==undefined){
-                            oReturn.returnMessage = oError.message;
-                        }else if(oError.error.message!==undefined){
-                            oReturn.returnMessage = oError.error.message;
-                        }                        
-                        else{
-                            oReturn.returnMessage = this._getText("messageConfirmationError");
-                        }
+                        // oReturn.isError = true;
+                        // if(oError.message!==undefined){
+                        //     oReturn.returnMessage = oError.message;
+                        // }else if(oError.error.message!==undefined){
+                        //     oReturn.returnMessage = oError.error.message;
+                        // }                        
+                        // else{
+                        //     oReturn.returnMessage = this._getText("messageConfirmationError");
+                        // }
                         
-                        resolve(oReturn);
+                        reject(oError);
                     }.bind(this)
                 );
             });
@@ -725,14 +734,14 @@ sap.ui.define([
                         resolve(oReturn);
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
-                        debugger;
-                        oReturn.isError = true;
-                        if(oError.message!==undefined){
-                            oReturn.returnMessage = oError.message;
-                        }else if(oError.error.message!==undefined){
-                            oReturn.returnMessage = oError.error.message;
-                        }
-                        resolve(oReturn);
+                        // debugger;
+                        // oReturn.isError = true;
+                        // if(oError.message!==undefined){
+                        //     oReturn.returnMessage = oError.message;
+                        // }else if(oError.error.message!==undefined){
+                        //     oReturn.returnMessage = oError.error.message;
+                        // }
+                        reject(oError);
                     }.bind(this)
                 );
             });
@@ -754,14 +763,14 @@ sap.ui.define([
                         resolve(oReturn);
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
-                        debugger;
-                        oReturn.isError = true;
-                        if(oError.message!==undefined){
-                            oReturn.returnMessage = oError.message;
-                        }else if(oError.error.message!==undefined){
-                            oReturn.returnMessage = oError.error.message;
-                        }
-                        resolve(oReturn);
+                        // debugger;
+                        // oReturn.isError = true;
+                        // if(oError.message!==undefined){
+                        //     oReturn.returnMessage = oError.message;
+                        // }else if(oError.error.message!==undefined){
+                        //     oReturn.returnMessage = oError.error.message;
+                        // }
+                        reject(oError);
                     }.bind(this)
                 );
             });

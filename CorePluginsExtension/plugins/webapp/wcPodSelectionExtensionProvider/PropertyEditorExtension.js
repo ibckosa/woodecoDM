@@ -51,6 +51,22 @@ sap.ui.define([
                     oLabel.setText("URL endpoit to ZWEI integration");
                 }
 
+                oInput = oPropertyEditor.addInputField(oPropertyFormContainer, "dummyOrder", oPropertyData);
+                iIndex = oPropertyFormContainer.indexOfContent(oInput);
+                aContent = oPropertyFormContainer.getContent();
+                if (aContent[iIndex-1].setText) {
+                    oLabel = aContent[iIndex-1];
+                    oLabel.setText("Dummy order number");
+                }
+                oInput = oPropertyEditor.addInputField(oPropertyFormContainer, "dummySfc", oPropertyData);
+                iIndex = oPropertyFormContainer.indexOfContent(oInput);
+                aContent = oPropertyFormContainer.getContent();
+                if (aContent[iIndex-1].setText) {
+                    oLabel = aContent[iIndex-1];
+                    oLabel.setText("Dummy sfc number");
+                }
+
+
             }
         },
 
@@ -88,6 +104,12 @@ sap.ui.define([
             if (typeof oPropertyData.zweiUrl === "undefined") {
                 oPropertyData.zweiUrl = "";
             }
+            if (typeof oPropertyData.dummyOrder === "undefined") {
+                oPropertyData.dummyOrder = "";
+            }
+            if (typeof oPropertyData.dummySfc === "undefined") {
+                oPropertyData.dummySfc = "";
+            }
 
             return oPropertyData;
         },
@@ -113,6 +135,12 @@ sap.ui.define([
             if (typeof oPropertyData.zweiUrl === "undefined") {
                 oPropertyData.zweiUrl = "";
             }
+            if (typeof oPropertyData.dummyOrder === "undefined") {
+                oPropertyData.dummyOrder = "";
+            }
+            if (typeof oPropertyData.dummySfc === "undefined") {
+                oPropertyData.dummySfc = "";
+            }
             return oPropertyData;
         },
 
@@ -128,6 +156,8 @@ sap.ui.define([
             oPropertyData.showHelp = true;
             oPropertyData.showFilter = true;
             oPropertyData.zweiUrl = "";
+            oPropertyData.dummyOrder = "";
+            oPropertyData.dummySfc = "";
             return oPropertyData;
         }
     })
