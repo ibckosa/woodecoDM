@@ -6,9 +6,29 @@ sap.ui.define([
     let oNcCodesReader =  ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.NcCodesReader", {
 
     });
-
+    oNcCodesReader._oCodes = [];
 
     oNcCodesReader.readCodes = async function (oController, oPlant, oWorkCenter, oResource) {
+        let oCodeReturn = [];
+
+        let oCodesFromBuffer = this._oCodes.find(code=>{ return code.plant === oPlant &&
+                                                                code.workCenter === oWorkCenter && 
+                                                                code.resource === oResource;  });
+
+        if(!oCodesFromBuffer){
+            oCodeReturn = this._readCodesApi(oController, oPlant, oWorkCenter, oResource);
+            this._oCodes.push({ plant: oPlant,
+                                workCenter: oWorkCenter,
+                                resource: oResource,
+                                codes: oCodeReturn
+            });
+        }else{
+            oCodeReturn = oCodesFromBuffer.codes;
+        }
+        return oCodeReturn;
+    };
+
+    oNcCodesReader._readCodesApi = async function(oController, oPlant, oWorkCenter, oResource){
         let oReturn = [];
         this._oController = oController;
         this._oPlant = oPlant;
@@ -33,8 +53,8 @@ sap.ui.define([
             });
         }
         return oReturn;
-
     };
+
     oNcCodesReader._getCodesOfGroup = async function () {
         let oReturn = [];
 

@@ -8,28 +8,13 @@ sap.ui.define([
 	return PluginViewController.extend("ibc.dm.plugins.vPlgFileViewer.vPlgFileViewer.controller.MainView", {
 		onInit: function () {
 			PluginViewController.prototype.onInit.apply(this, arguments);
-			
-			           
-            
 		},
 
-
-
-
-        onAfterRendering: function(){
-           
-            this.getView().byId("backButton").setVisible(this.getConfiguration().backButtonVisible);
-            this.getView().byId("closeButton").setVisible(this.getConfiguration().closeButtonVisible);
-            
-            this.getView().byId("headerTitle").setText(this.getConfiguration().title);
-            this.getView().byId("textPlugin").setText(this.getConfiguration().text); 
-
+        onAfterRendering: function(){  
         },
 
 		onBeforeRenderingPlugin: function () {
-
-			
-			
+            this._loadData();			
 		},
 
         isSubscribingToNotifications: function() {
@@ -52,28 +37,10 @@ sap.ui.define([
             //}
             return null;
         },
-
-        _handleNotificationMessage: function(oMsg) {
-           
-            var sMessage = "Message not found in payload 'message' property";
-            if (oMsg && oMsg.parameters && oMsg.parameters.length > 0) {
-                for (var i = 0; i < oMsg.parameters.length; i++) {
-
-                    switch (oMsg.parameters[i].name){
-                        case "template":
-                            
-                            break;
-                        case "template2":
-                            
-                        
-                        }        
-          
-
-                    
-                }
-            }
+        _loadData: function(){
 
         },
+
         
 
 		onExit: function () {

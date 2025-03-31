@@ -5,7 +5,6 @@ sap.ui.define([
     "use strict";
     let oSfcRepository =  ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcRepository", {
         constructor: function(){
-
         }
     });
     oSfcRepository._oSfcs = [];
@@ -34,7 +33,7 @@ sap.ui.define([
         return oSfc;
     };
 
-    oSfcRepository.ReadSfcBypassBuffer() = async function(oController, oPlant, oSfcNumber ){
+    oSfcRepository.ReadSfcBypassBuffer = async function(oController, oPlant, oSfcNumber ){
         return await this.readSfcApi(oController, oPlant, oSfcNumber);
     }
 
