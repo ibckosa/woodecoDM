@@ -33,5 +33,10 @@ sap.ui.define([
         await oSfc.readData();
         return oSfc;
     };
+
+    oSfcRepository.ReadSfcBypassBuffer() = async function(oController, oPlant, oSfcNumber ){
+        return await this.readSfcApi(oController, oPlant, oSfcNumber);
+    }
+
     return oSfcRepository;
 });

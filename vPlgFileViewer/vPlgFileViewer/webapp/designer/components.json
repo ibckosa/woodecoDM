@@ -1,0 +1,15 @@
+{
+	"components": [
+		{
+			"id": "vPlgFileViewer",
+			"type": "VIEW_PLUGIN",
+			"allowMultipleInstances": false,
+			"name": "ibc.dm.plugins.vPlgFileViewer.vPlgFileViewer",
+			"propertyEditor": "ibc.dm.plugins.vPlgFileViewer.vPlgFileViewer.builder.PropertyEditor",
+			"i18n": "ibc.dm.plugins.vPlgFileViewer.vPlgFileViewer.i18n.i18n",
+            "productionProcessEnabled": true,
+           "productionProcessTitle": "vPlgFileViewer",
+			"supportedPodTypes": ["WORK_CENTER","OPERATION","ORDER"]
+		}   
+	]
+}
