@@ -57,6 +57,7 @@ sap.ui.define([
             
             //let oCodes = [];
             this._oComboBox.removeAllItems();
+            this._oComboBox.clearSelection();
             for(const code of oCodes){
                 this._oComboBox.addItem( new sap.ui.core.Item({key: code.code, text: code.codeDescription}) );
             }

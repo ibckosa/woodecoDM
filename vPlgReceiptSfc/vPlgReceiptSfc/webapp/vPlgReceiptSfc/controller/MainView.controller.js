@@ -244,8 +244,8 @@ sap.ui.define([
                     this.showErrorMessage(oSfcReturn.returnMessage,true, true);
                     return;
                 }else{
-                        var oFirstSfcStep = oSfcReturn.sfcDetails.steps[0];
-                        if(parseInt(oFirstSfcStep.quantityInWork)<parseInt(oReceiptParameters.quantity)){
+                        let oSfcStep = oSfcReturn.sfcDetails.steps.find(step=>{ return step.operation.operation === oReceiptParameters.operationActivity; });
+                        if(!oSfcStep||parseInt(oSfcStep.quantityInWork)<parseInt(oReceiptParameters.quantity)){
                             this._oErrorHandler.throwError("errorSfcNotInWork");
                             // this.showErrorMessage(this._getText("errorSfcNotInWork"),false, true);
                             // return;

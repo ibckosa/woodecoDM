@@ -9,8 +9,7 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
-    "ibc/dm/plugins/wcPodToolsProvider/LinkReader",
-
+    "ibc/dm/plugins/wcPodToolsProvider/LinkReader"
 ], function (PluginExtensionProvider, LifecycleExtension, PluginEventExtension, 
              PropertyEditorExtension, ExtensionUtilities, ExtensionUtility, ReturnNpwDialog, PalleteQueueHandler, ErrorHandler, IssuesManager, LinkReader) {
     "use strict";
@@ -119,3 +118,5 @@ sap.ui.define([
         }
     })
 });
+
+
