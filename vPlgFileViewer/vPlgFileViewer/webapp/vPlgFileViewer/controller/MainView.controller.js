@@ -1,8 +1,9 @@
 sap.ui.define([
     'jquery.sap.global',
 	"sap/dm/dme/podfoundation/controller/PluginViewController",
-	"sap/ui/model/json/JSONModel"
-], function (jQuery, PluginViewController, JSONModel) {
+	"sap/ui/model/json/JSONModel",
+    "ibc/dm/plugins/wcPodToolsProvider/LinkReader"
+], function (jQuery, PluginViewController, JSONModel, LinkReader) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgFileViewer.vPlgFileViewer.controller.MainView", {
@@ -38,7 +39,7 @@ sap.ui.define([
             return null;
         },
         _loadData: function(){
-
+            /// odczyt linków z LinkReader metoda readLinks(oController, oSfcNumber, oOrderNumber)
         },
 
         

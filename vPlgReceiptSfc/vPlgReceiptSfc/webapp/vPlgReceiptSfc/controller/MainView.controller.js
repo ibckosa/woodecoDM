@@ -239,7 +239,7 @@ sap.ui.define([
                                         workCenter: aSelectionFirstRow.getSfcData().getWorkCenter() };
 
                 var oSfcReturn = await this._getSfcDetails(oReceiptParameters);
-
+                let oSfcLastStep = oSfcReturn.sfcDetails.steps[oSfcReturn.sfcDetails.steps.length - 1];
                 if(oSfcReturn.isError===true){
                     this.showErrorMessage(oSfcReturn.returnMessage,true, true);
                     return;
@@ -291,17 +291,19 @@ sap.ui.define([
                     this.showSuccessMessage(oReturnConfirmation.returnMessage,true, true);
                 }
 
-                if(isOrderEwm.isEwmOrder === true){
-                    oReturnReceipt = await this._executeEwmReceipt(oReceiptParameters);
-                }else{
-                    oReturnReceipt = await this._executeMmReceipt(oReceiptParameters);
-                }
-                
-                if(oReturnReceipt.isError === true){
-                    this.showErrorMessage(oReturnReceipt.returnMessage,true, true);
-                    return;
-                }else{
-                    this.showSuccessMessage(oReturnReceipt.returnMessage,true, true);
+                if(oSfcLastStep.stepId === oSfcStep.stepId){
+                    if(isOrderEwm.isEwmOrder === true){
+                        oReturnReceipt = await this._executeEwmReceipt(oReceiptParameters);
+                    }else{
+                        oReturnReceipt = await this._executeMmReceipt(oReceiptParameters);
+                    }
+                    
+                    if(oReturnReceipt.isError === true){
+                        this.showErrorMessage(oReturnReceipt.returnMessage,true, true);
+                        return;
+                    }else{
+                        this.showSuccessMessage(oReturnReceipt.returnMessage,true, true);
+                    } 
                 }
 
                 await oIssuesManager.executeIssues();
