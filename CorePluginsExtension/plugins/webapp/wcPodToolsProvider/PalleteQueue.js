@@ -119,8 +119,6 @@ sap.ui.define([
                             erpResourceId: "",
                             generatedHu: "",
                             packingMaterial: oMaterial.getPackagingMaterial()
-                            //ak komentarz
-                            // edycja komenatarza
                         });
                     }else{
                         if(oReservation.dataAttribute === oResevationNumber){
