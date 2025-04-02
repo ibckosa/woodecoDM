@@ -39,24 +39,63 @@ sap.ui.define([
             return null;
         },
         _loadData: async function () {
-            // Wywołanie metody readLinks
-            const data = await oLinkReader.readLinks(oController, oSfcNumber, oOrderNumber);
-            
-            // Ustawienie modelu danych
-            const oModel = new sap.ui.model.json.JSONModel({ files: data });
-            this.getView().setModel(oModel);
-        },
-
-        onOpenLink: function (oEvent) {
-            // Pobierz link z bieżącego elementu
-            const sPath = oEvent.getSource().getBindingContext().getPath();
-            const oItem = this.getView().getModel().getProperty(sPath);
-            
-            // Otwórz link w nowej karcie
-            window.open(oItem.fileLink, "_blank");
+            debugger;
+            var oView = this.getView();
+            var oPodSelectionModel = this.getPodSelectionModel();
+            var aSelections = oPodSelectionModel.getSelections();  
+            const oController = this;
+            var oFirstSelection = aSelections[0]; // pierwszy element tablicy
+            var oSfcNumber = oFirstSelection.getSfc().getSfc();
+            var oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
+        
+            try {
+                const aLinks = await LinkReader.readLinks(oController, oSfcNumber, oOrderNumber);
+                const oModel = new JSONModel({ links: aLinks });
+                this.getView().setModel(oModel, "linkModel");
+            } catch (error) {
+                console.error("Błąd podczas ładowania linków:", error);
+            }
         },
         
-
+        onOpenLink: function (oEvent) {
+            const oItem = oEvent.getSource().getParent().getBindingContext("linkModel").getObject();
+            const sLink = oItem.fileLink;
+        
+            if (sLink) {
+                const oHTML = new sap.ui.core.HTML({
+                    content: `
+                        <div style="width:100%; height:100%;">
+                            <iframe src="${sLink}" style="width:100%; height:100%; border:none;"></iframe>
+                        </div>`
+                });
+        
+                const oDialog = new sap.m.Dialog({
+                    title: oItem.fileName || "Podgląd PDF",
+                    contentWidth: "90%",
+                    contentHeight: "90%",
+                    resizable: true,
+                    draggable: true,
+                    verticalScrolling: false,
+                    horizontalScrolling: false,
+                    content: [oHTML],
+                    beginButton: new sap.m.Button({
+                        text: "Zamknij",
+                        press: function () {
+                            oDialog.close();
+                        }
+                    }),
+                    afterClose: function () {
+                        oDialog.destroy();
+                    }
+                });
+        
+                oDialog.open();
+            }
+        },
+        
+        
+        
+        
         
 
 		onExit: function () {
