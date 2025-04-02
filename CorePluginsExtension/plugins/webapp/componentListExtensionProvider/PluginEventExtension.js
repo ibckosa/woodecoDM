@@ -243,7 +243,7 @@ sap.ui.define([
                     return oColumn.getId() === "uomCol";
                   });
                 if (!bColumnExists){
-                    var oNewColumn = new Column({ header: new Text({ text: _getText("uomColumnLabel",oPodController)}), id: "uomCol" });
+                    var oNewColumn = new Column({ header: new Text({ text: _getText("uomColumnLabel", oPodController)}), id: "uomCol" });
                     oTable.insertColumn(oNewColumn, oTable.getColumns().length - 1 );  }
                 
                 oTable.getItems().forEach(item=>{

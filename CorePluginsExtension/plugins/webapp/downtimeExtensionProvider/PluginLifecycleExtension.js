@@ -47,20 +47,30 @@ sap.ui.define([
         },
 
         onBeforeRenderingPlugin: function(oEvent){
-            let sHeight = "";
-            let oConfiguration = this.getController().getConfiguration();
-            if (oConfiguration && oConfiguration.hasOwnProperty("downtimeListButtonHeight")) {
-                sHeight = oConfiguration.downtimeListButtonHeight;
-            }
+            // let oTable = this.getController().getDowntimeTable();
+            // this._oExtensionUtilities.extendDowntimesTable(oTable, this.getController());
+            // this._oExtensionUtilities.logMessage("LifecycleExtension.onAfterRendering: Downtime extension");
+            // let sHeight = "";
+            // let oConfiguration = this.getController().getConfiguration();
+            // if (oConfiguration && oConfiguration.hasOwnProperty("downtimeListButtonHeight")) {
+            //     sHeight = oConfiguration.downtimeListButtonHeight;
+            // }
 
-            let oTable = this.getController().getDowntimeTable();
-            this._oExtensionUtilities.replaceDowntimeListButtons(oTable, sHeight, this.getController());
+            // let oTable = this.getController().getDowntimeTable();
+            //this._oExtensionUtilities.replaceDowntimeListButtons(oTable, sHeight, this.getController());
 
-            this._oExtensionUtilities.logMessage("LifecycleExtension.onBeforeRenderingPlugin: Downtime extension");
+            //this._oExtensionUtilities.logMessage("LifecycleExtension.onBeforeRenderingPlugin: Downtime extension");
+            this._oExtensionUtilities.extendDowntimesTable(oTable, this.getController());
+
         },
 
         onAfterRendering: function(oEvent){
-            this._oExtensionUtilities.logMessage("LifecycleExtension.onAfterRendering: Downtime extension");
+            let oTable = this.getController().getDowntimeTable();
+            oTable.attachEvent( "updateFinished", this.onUpdateFinished.bind(this) );
+        },
+        onUpdateFinished: function(oEvent){
+            let oTable = this.getController().getDowntimeTable();
+            this._oExtensionUtilities.extendDowntimesTable(oTable, this.getController());
         },
 
         onExit: function(oEvent){

@@ -41,6 +41,51 @@ sap.ui.define([
             this.bLogToConsole = false;
         },
 
+        extendDowntimesTable: function(oTable, oController){
+            debugger;
+
+                this._oTableExtended = true;
+                let oColumn = oTable.getColumns();
+                var oNewColumn = new sap.m.Column({ header: new Text({ text: "Komentarz" }), id: "commentTextAreaCol" });
+                
+                let i = 0;
+                for(const column of oColumn){
+                    let oHeader = column.getHeader();
+                    // if(oHeader === null){
+                    //     break;
+                    // }
+                    i = i + 1;
+                    debugger;
+                }
+
+                // if(i!==0){
+                    oTable.removeColumn(15);
+                    oTable.insertColumn(oNewColumn, 15 );
+                    
+                // }
+                
+                for(const item of oTable.getItems()){
+                    let oCells = item.getCells();
+                    if(i!==0){
+                        item.removeCell(15);
+                        item.insertCell(new sap.m.TextArea({ value: "{comments}" }), 15);
+                    }
+                }
+
+            // let oBinding2 = oController.dateModelForDowntime;
+            // let oTable2 = oController.getView().byId("downtimeTable");
+            // let oBindingInfo = oTable.getBindingInfo("items");
+            // let oRowTemplate = oBindingInfo.template;
+            // let oCells = oRowTemplate.getCells();
+            // let oCellsCount = oCells.length;
+            // let oData = oTable.getModel().getData();
+            // let oItems = oTable.getItems();
+            // let oBinding = oTable.getBinding();
+            // for(const item of oItems){
+            //     let oItemData = item.getBindingContext().getObject();
+            // }
+
+        },
         /**
          * Replace any sap.m.Button cells with our custom DowntimeListButton
          * while keeping the same properties, bindings, and event listeners
