@@ -42,6 +42,34 @@
                     ]
                 }
             ]
+        },
+        {
+            "provider": "ibc/dm/plugins/changeEquipmentStatusExtensionProvider/ExtensionProvider",
+            "controller": "sap.dm.dme.plugins.changeEquipmentStatus",
+            "inclusions": [
+                {
+                    "pods": [
+                        "WC_POD_TEST_PLUGIN", "*"
+                    ],
+                    "plants": [
+                        "4200", "4300", "4100", "*"
+                    ]
+                }
+            ]
+        },
+        {
+            "provider": "ibc/dm/plugins/downtimeExtensionProvider/ExtensionProvider",
+            "controller": "sap.dm.dme.oeetransactionplugins.downtimePlugin",
+            "inclusions": [
+                {
+                    "pods": [
+                        "WC_POD_TEST_PLUGIN"
+                    ],
+                    "plants": [
+                        "4200", "4300", "4100", "*"
+                    ]
+                }
+            ]
         }
     ]
 }

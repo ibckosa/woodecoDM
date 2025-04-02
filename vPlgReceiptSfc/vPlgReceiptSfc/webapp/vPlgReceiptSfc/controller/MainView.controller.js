@@ -240,11 +240,11 @@ sap.ui.define([
 
                 var oSfcReturn = await this._getSfcDetails(oReceiptParameters);
                 let oSfcLastStep = oSfcReturn.sfcDetails.steps[oSfcReturn.sfcDetails.steps.length - 1];
+                let oSfcStep = oSfcReturn.sfcDetails.steps.find(step=>{ return step.operation.operation === oReceiptParameters.operationActivity; });
                 if(oSfcReturn.isError===true){
                     this.showErrorMessage(oSfcReturn.returnMessage,true, true);
                     return;
                 }else{
-                        let oSfcStep = oSfcReturn.sfcDetails.steps.find(step=>{ return step.operation.operation === oReceiptParameters.operationActivity; });
                         if(!oSfcStep||parseInt(oSfcStep.quantityInWork)<parseInt(oReceiptParameters.quantity)){
                             this._oErrorHandler.throwError("errorSfcNotInWork");
                             // this.showErrorMessage(this._getText("errorSfcNotInWork"),false, true);
