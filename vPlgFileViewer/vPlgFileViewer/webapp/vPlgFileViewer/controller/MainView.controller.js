@@ -38,9 +38,24 @@ sap.ui.define([
             //}
             return null;
         },
-        _loadData: function(){
-            /// odczyt linków z LinkReader metoda readLinks(oController, oSfcNumber, oOrderNumber)
+        _loadData: async function () {
+            // Wywołanie metody readLinks
+            const data = await oLinkReader.readLinks(oController, oSfcNumber, oOrderNumber);
+            
+            // Ustawienie modelu danych
+            const oModel = new sap.ui.model.json.JSONModel({ files: data });
+            this.getView().setModel(oModel);
         },
+
+        onOpenLink: function (oEvent) {
+            // Pobierz link z bieżącego elementu
+            const sPath = oEvent.getSource().getBindingContext().getPath();
+            const oItem = this.getView().getModel().getProperty(sPath);
+            
+            // Otwórz link w nowej karcie
+            window.open(oItem.fileLink, "_blank");
+        },
+        
 
         
 
