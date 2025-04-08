@@ -2,8 +2,9 @@ sap.ui.define([
     "sap/dm/dme/podfoundation/extension/PluginControllerExtension",
     "sap/ui/core/mvc/OverrideExecution",
     "sap/dm/dme/plugins/headerInformationPlugin/controller/extensions/PluginEventExtensionConstants",
-    "sap/ui/model/json/JSONModel"
-], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "ibc/dm/plugins/wcPodToolsProvider/SmartEditGraphicRepository"
+], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, JSONModel, SmartEditGraphicRepository) {
     "use strict";
 
     return PluginControllerExtension.extend("ibc.dm.plugins.sfcCardExtensionProvider.PluginEventExtension", {
@@ -67,6 +68,7 @@ sap.ui.define([
             if (!oController) {
                 return;
             }
+            let oGraphic = SmartEditGraphicRepository.getGraphic("PD3000");
             let oPodSelectionModel = oController.getPodSelectionModel();
             if (oPodSelectionModel) {
                 if (!oPodSelectionModel.customData) {
@@ -234,10 +236,6 @@ sap.ui.define([
                             case "BLAT_THICKNESS_DOWN":
                                 oSfcCardCustom.blatThicknessDown = oMaterialData[0].customValues[i].value;
                                 break;
-                            // case "PJM":
-                            //     break;
-                            // case "DEFAULT_PACKING_MATERIAL":
-                            //     break;
                         }
                     }
                 }
