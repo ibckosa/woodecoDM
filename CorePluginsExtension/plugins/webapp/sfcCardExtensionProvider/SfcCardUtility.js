@@ -262,6 +262,52 @@ sap.ui.define([
                                   oGraphicToDisplay.push({ graphicName: "Stuktura tył",
                                         graphicType: "structureBack",
                                         graphicUrl: "https://smartedit.clk0j02460-pfleidere1-s1-public.model-t.cc.commerce.ondemand.com/occ/v2/medias/PD3000-D-b-Sonoma.jpg?context=bWFzdGVyfHJvb3R8MTQ5OTM5Mzd8aW1hZ2UvanBlZ3xhREF6TDJoaE1pODVOamcyT1RZek9UUTFOVEF5TDFCRU16QXdNRjlFeElWaVgxTnZibTl0WVM1cWNHY3wxNjYyODVkMDUwMDFlOTc3ZmE0MGEyNDg3ZTU5ZTQwYTBiZDI4MjgzZGFhMTdiODZkYTFjZjYxZjBhYTA5MDYwJiZmYWxzZSYmMmM4ZDg4YmMxYTcxY2E3ODdiNTY2YWVmOTAwMzgwZjE3YzE5MjhmY2I2ZjQ3ZmE1NzJhM2JkMDQzOTMzMDBmZQ" });
+        
+            // Tworzenie obrazów
+    const aImages = oGraphicToDisplay.map(oGraphic => {
+        return new sap.m.VBox({
+            items: [
+                new sap.m.Image({
+                    src: oGraphic.graphicUrl,
+                    width: "400px",
+                    height: "900px",
+                    decorative: false,
+                    alt: oGraphic.graphicName
+                }),
+                new sap.m.Text({
+                    text: oGraphic.graphicName,
+                    textAlign: "Center"
+                })
+            ],
+            alignItems: "Center"
+        });
+    });
+
+    const oFlexBox = new sap.m.FlexBox({
+        items: aImages,
+        direction: "Row",
+        wrap: "Wrap",
+        alignItems: "Start",
+        justifyContent: "Center"
+    });
+
+    const oDialog = new sap.m.Dialog({
+        title: "Podgląd grafik",
+        contentWidth: "80%",
+        contentHeight: "auto",
+        content: [oFlexBox],
+        beginButton: new sap.m.Button({
+            text: "Zamknij",
+            press: function () {
+                oDialog.close();
+            }
+        }),
+        afterClose: function () {
+            oDialog.destroy();
         }
+    });
+
+    oDialog.open();
+                                    }
     })
 });
