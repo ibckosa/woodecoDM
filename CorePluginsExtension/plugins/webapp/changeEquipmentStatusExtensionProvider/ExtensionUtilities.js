@@ -77,11 +77,11 @@ sap.ui.define([
                 if(!this._oChecbkox && !this._oTextArea){
                     //let oView = this._oPluginEventExt.getController().getView();
                     let oContentForm = this._oPluginEventExt.getController().getView().getContent()[0].getContent()[0];
-                    let oText = new sap.m.Text({ text: this._oTextArea.getText("labels.notifications.sendToErp")});
+                    let oText = new sap.m.Text({ text: this._oTextHandler.getText("labels.notifications.sendToErp")});
                     this._oChecbkox = new CheckBox();
                     this._oTextArea = new TextArea({ rows: 7});
                     let oLabel = new Label({ text: "Komentarz"});
-                    let oLabelEmpty = new Label({ text: this._oTextArea.getText("labels.notifications.comment")});
+                    let oLabelEmpty = new Label({ text: this._oTextHandler.getText("labels.notifications.comment")});
                     oContentForm.addContent(oLabel);
                     oContentForm.addContent(this._oTextArea);
                     oContentForm.addContent(oLabelEmpty);
@@ -140,6 +140,10 @@ sap.ui.define([
 
             if(this._oTextArea){
                 let oComment = this._oTextArea.getValue();
+                if(this._oChecbkox.getSelected())
+                {
+                    oComment = "Wysłane do DUR\n" + oComment;
+                }
                 oRequest.comments = oComment;
             }
             debugger;

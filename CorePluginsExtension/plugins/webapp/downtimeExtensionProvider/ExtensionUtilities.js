@@ -1,7 +1,8 @@
 sap.ui.define([
     "sap/ui/base/Object",
-    "ibc/dm/plugins/downtimeExtensionProvider/control/DowntimeListButton"
-], function (BaseObject, DowntimeListButton) {
+    "ibc/dm/plugins/downtimeExtensionProvider/control/DowntimeListButton",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+], function (BaseObject, DowntimeListButton, TextHandler) {
     "use strict";
 
     /**
@@ -39,37 +40,42 @@ sap.ui.define([
     return BaseObject.extend("ibc.dm.plugins.downtimeExtensionProvider.ExtensionUtilities", {
         constructor: function () {
             this.bLogToConsole = false;
+            this._oTextHandler = new TextHandler();
         },
 
         extendDowntimesTable: function(oTable, oController){
             debugger;
-
-                this._oTableExtended = true;
-                let oColumn = oTable.getColumns();
-                var oNewColumn = new sap.m.Column({ header: new Text({ text: "Komentarz" }), id: "commentTextAreaCol" });
-                
-                let i = 0;
-                for(const column of oColumn){
-                    let oHeader = column.getHeader();
-                    // if(oHeader === null){
-                    //     break;
-                    // }
-                    i = i + 1;
-                    debugger;
+                let oButton = oController.getView().byId("editDT");
+                let oButtonParent = oController.getView().byId("editDT").getParent();
+                let oButtonParentId = oController.getView().byId("editDT").getParent().getId();
+                let oButtonParentName = oButtonParent.getMetadata().getElementName()
+                if(!this._initialized){
+                    this._initialized = true;
+                    oButtonParent.insertContent( new sap.m.Button({ text: "Mój guzik", type: "Emphasized"}), 4);
                 }
-
-                // if(i!==0){
-                    oTable.removeColumn(15);
-                    oTable.insertColumn(oNewColumn, 15 );
-                    
-                // }
+                let oViewContent = oController.getView().getContent();
+                this._oTableExtended = true;
+                let oColumns = oTable.getColumns();
+                let bColumnExists = oColumns.some(function (oColumn) { return oColumn.getId() === "textAreaCol";  });
+                
+                oColumns[15].setVisible(false);
+                if(bColumnExists===false){
+                    let oNewColumn = new sap.m.Column({ header: new sap.m.Label({ text: this._oTextHandler.getText("labels.notifications.comment") }), id: "textAreaCol", visible: true });
+                    this._myColIndex = oColumns.length;
+                    oTable.insertColumn(oNewColumn, this._myColIndex)
+                    let omyCol = oTable.getColumns()[oTable.getColumns().length - 1];
+                    let omycolhed = omyCol.getHeader();
+                    debugger;
+                }else if(this._myColIndex){
+                    let omyCol = oTable.getColumns()[this._myColIndex];
+                    let omyColid = omyCol.getId();
+                    omyCol.setHeader(new sap.m.Label({ text: this._oTextHandler.getText("labels.notifications.comment") }));
+                    omyCol.setVisible(true);
+                }
                 
                 for(const item of oTable.getItems()){
-                    let oCells = item.getCells();
-                    if(i!==0){
-                        item.removeCell(15);
-                        item.insertCell(new sap.m.TextArea({ value: "{comments}" }), 15);
-                    }
+                    if(oTable.getColumns().length > item.getCells().length)
+                        item.insertCell(new sap.m.TextArea({ value: "{comments}" }), item.getCells().length);
                 }
 
             // let oBinding2 = oController.dateModelForDowntime;

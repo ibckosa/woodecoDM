@@ -42,6 +42,19 @@ sap.ui.define([
                     oLabel = aContent[iIndex-1];
                     oLabel.setText("Show Supplier");
                 }
+
+
+
+                this.addFieldConfiguration("FRPR", oPropertyFormContainer, oPropertyData);
+                this.addFieldConfiguration("FRSL", oPropertyFormContainer, oPropertyData);
+                this.addFieldConfiguration("FIMP", oPropertyFormContainer, oPropertyData);
+                this.addFieldConfiguration("FDPR", oPropertyFormContainer, oPropertyData);
+                this.addFieldConfiguration("FNUF", oPropertyFormContainer, oPropertyData);
+                this.addFieldConfiguration("FHPR", oPropertyFormContainer, oPropertyData);
+                this.addFieldConfiguration("FXKO", oPropertyFormContainer, oPropertyData);
+                this.addFieldConfiguration("FDSA", oPropertyFormContainer, oPropertyData);            
+
+
             }
             return;
         },
@@ -78,6 +91,40 @@ sap.ui.define([
             if (typeof oPropertyData.showSupplier === "undefined") {
                 oPropertyData.showSupplier = true;
             }
+
+
+            if (typeof oPropertyData.fieldsFRPR === "undefined") {
+                oPropertyData.fieldsFRPR = "";
+            }
+
+            if (typeof oPropertyData.fieldsFRSL === "undefined") {
+                oPropertyData.fieldsFRPR = "";
+            }
+
+            if (typeof oPropertyData.fieldsFIMP === "undefined") {
+                oPropertyData.fieldsFRPR = "";
+            }
+
+            if (typeof oPropertyData.fieldsFDPR === "undefined") {
+                oPropertyData.fieldsFRPR = "";
+            }
+
+            if (typeof oPropertyData.fieldsFNUF === "undefined") {
+                oPropertyData.fieldsFRPR = "";
+            }
+
+            if (typeof oPropertyData.fieldsFHPR === "undefined") {
+                oPropertyData.fieldsFRPR = "";
+            }
+
+            if (typeof oPropertyData.fieldsFXKO === "undefined") {
+                oPropertyData.fieldsFRPR = "";
+            }
+
+            if (typeof oPropertyData.fieldsFDSA === "undefined") {
+                oPropertyData.fieldsFRPR = "";
+            }
+
             return oPropertyData;
         },
 
@@ -99,6 +146,39 @@ sap.ui.define([
             if (typeof oPropertyData.showSupplier === "undefined") {
                 oPropertyData.showSupplier = true;
             }
+
+            if (typeof oPropertyData.fieldsFRPR === "undefined") {
+                oPropertyData.fieldsFRPR = "";
+            }
+
+            if (typeof oPropertyData.fieldsFRSL === "undefined") {
+                oPropertyData.fieldsFRSL = "";
+            }
+
+            if (typeof oPropertyData.fieldsFIMP === "undefined") {
+                oPropertyData.fieldsFIMP = "";
+            }
+
+            if (typeof oPropertyData.fieldsFDPR === "undefined") {
+                oPropertyData.fieldsFDPR = "";
+            }
+
+            if (typeof oPropertyData.fieldsFNUF === "undefined") {
+                oPropertyData.fieldsFNUF = "";
+            }
+
+            if (typeof oPropertyData.fieldsFHPR === "undefined") {
+                oPropertyData.fieldsFHPR = "";
+            }
+
+            if (typeof oPropertyData.fieldsFXKO === "undefined") {
+                oPropertyData.fieldsFXKO = "";
+            }
+
+            if (typeof oPropertyData.fieldsFDSA === "undefined") {
+                oPropertyData.fieldsFDSA = "";
+            }
+
             return oPropertyData;
         },
 
@@ -114,6 +194,17 @@ sap.ui.define([
             oPropertyData.showHelp = true;
             oPropertyData.showSupplier = true;
             return oPropertyData;
+        },
+        addFieldConfiguration(sAuart, oPropertyFormContainer, oPropertyData ){
+            let oPropertyEditor = this.getController();
+            let oInput = oPropertyEditor.addInputField(oPropertyFormContainer, `fields${ sAuart }`, oPropertyData);
+            let iIndex = oPropertyFormContainer.indexOfContent(oInput);
+            let aContent = oPropertyFormContainer.getContent();
+            if (aContent[iIndex-1].setText) {
+                let oLabel = aContent[iIndex-1];
+                oLabel.setText(`fields ${ sAuart }`);
+            }
+
         }
     })
 });

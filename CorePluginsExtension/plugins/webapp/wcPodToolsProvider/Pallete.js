@@ -73,12 +73,19 @@ sap.ui.define([
             let oSapDateTime = this._getCurrentSapDateTime();
             let oParameters = {};
             this._checkBeforeReturn(oLine.palleteDetails);
+            let oBatchNumber = '';
+            if(!oLine.palleteDetails.batchNumber){
+                oBatchNumber = oLine.palleteDetails.handlingUnit;
+            }else{
+                oBatchNumber = oLine.palleteDetails.batchNumber;
+            }
 
             oParameters = { WERK: oLine.plant,
                 BEWART: "988",
                 ZLO: "STOCK",
                 LGORT: oLine.storageLocation,
                 HU: oLine.palleteDetails.handlingUnit,
+                CHARGE: oBatchNumber,
                 MATNR: oLine.palleteDetails.material,
                 MATTYP: "PACKAGES",
                 MENGE: oLine.quantity,
@@ -118,11 +125,13 @@ sap.ui.define([
             this._checkBeforeReturnNpw(oLine ,oEndPoint, oQuantity);
             let oGeneratedHu = await this.generateHuNumber(oLine.palleteDetails.material, oLine.palleteDetails.materialVersion, oLine.plant);
 
+
             oParameters = { WERK: oLine.plant,
                 BEWART: "551",
                 ZLO: "STOCK",
                 LGORT: oLine.storageLocation,
                 HU: oGeneratedHu,
+                CHARGE: oGeneratedHu,
                 MATNR: oLine.palleteDetails.material,
                 MATTYP: "PACKAGES",
                 MENGE: oQuantity,

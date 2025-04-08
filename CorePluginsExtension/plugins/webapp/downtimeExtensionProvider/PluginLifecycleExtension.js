@@ -60,7 +60,7 @@ sap.ui.define([
             //this._oExtensionUtilities.replaceDowntimeListButtons(oTable, sHeight, this.getController());
 
             //this._oExtensionUtilities.logMessage("LifecycleExtension.onBeforeRenderingPlugin: Downtime extension");
-            this._oExtensionUtilities.extendDowntimesTable(oTable, this.getController());
+            //this._oExtensionUtilities.extendDowntimesTable(oTable, this.getController());
 
         },
 

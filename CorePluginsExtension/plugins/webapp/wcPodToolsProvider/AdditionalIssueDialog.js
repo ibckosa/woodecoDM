@@ -48,6 +48,7 @@ sap.ui.define([
             this._oInput.setValue("0");
             this._oLabelHu.setText(`${oLine.handlingUnit}`);
             this._oLabelHuQuan.setText(`${oLine.quantity} ${oLine.uom}`);
+            this._oUom = oLine.uom;
             this._oDialogNpw.open();
         });
     };
@@ -73,17 +74,47 @@ sap.ui.define([
     };
     ReturnNpwDialog.onButtonOk = function (oEvent) {
         this._oDialogNpw.close();
-        this._resolveQuanNpwDialog(parseInt(this._oInput.getValue()));
+        this._resolveQuanNpwDialog(this._oInput.getValue());
     };
     ReturnNpwDialog.onButtonCancel = function (oEvent) {
         this._oDialogNpw.close();
         this._resolveQuanNpwDialog(0);
     };
     ReturnNpwDialog.onInputLiveChange = function (oEvent) {
-        var value = oEvent.getParameter("value");
-        var newValue = value.replace(/[^0-9]/g, '');
-        if (value !== newValue) {
-            oEvent.getSource().setValue(newValue);
+        if(this._oUom==='ST'){
+            let value = oEvent.getParameter("value");
+            let newValue = value.replace(/[^0-9]/g, '');
+            if (value !== newValue) {
+                oEvent.getSource().setValue(newValue);
+            }
+        }else{
+            let oInput = oEvent.getSource();
+            let sValue = oEvent.getParameter("value");
+
+            sValue = sValue.replace(/[^\d.]/g, '');
+            if (sValue.startsWith(".")) {
+                sValue = "0" + sValue;  // ".5" -> "0.5"
+            }
+            let firstDot = sValue.indexOf(".");
+            if (firstDot !== -1) {
+                let secondDot = sValue.indexOf(".", firstDot + 1);
+                if (secondDot !== -1) {
+                    sValue = sValue.substring(0, secondDot) + sValue.substring(secondDot + 1);
+                }
+            }
+            if (firstDot !== -1) {
+                let decimalPart = sValue.slice(firstDot + 1);
+                if (decimalPart.length > 3) {
+                    sValue = sValue.slice(0, firstDot + 1 + 3);  // utnij do 3 cyfr po kropce
+                }
+            }
+            if (sValue === "" || sValue === ".") {
+                sValue = "0";
+            }
+            // Zaktualizuj wartość pola, jeśli została zmieniona
+            if (sValue !== oEvent.getParameter("value")) {
+                oInput.setValue(sValue);
+            }
         }
     }
 

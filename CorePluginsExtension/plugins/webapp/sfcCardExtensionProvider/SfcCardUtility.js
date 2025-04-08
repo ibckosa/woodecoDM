@@ -165,6 +165,8 @@ sap.ui.define([
             this._addInformationButton(oInformationContainer, "remarksButton");
             this._addInformationButton(oInformationContainer, "salesTextPL");
 
+            this._addDekorButton(oInformationContainer);
+
         },
         _addInformationTextField: function(oInformationContainer, fieldName){
             let oInformationControl = new VerticalLayout({
@@ -224,6 +226,42 @@ sap.ui.define([
             var sTextToDisplay = this.getController().getView().getModel("customData").getProperty("/sfcCardCustom/"+oButtonId);
             sTextToDisplay = sTextToDisplay.replaceAll("$&","\n");
             MessageBox.information(sTextToDisplay);
+        },
+        _addDekorButton: function(oInformationContainer){
+            let oInformationControl = new VerticalLayout({
+                //visible: "{= ${customData>/sfcCardCustom/"+fieldName+"} !== '' && ${customData>/sfcCardCustom/"+fieldName+"} !== undefined}"
+            });
+            oInformationControl.addStyleClass("sapUiNoContentPadding");
+            oInformationControl.addStyleClass("sapUiMediumMarginEnd");
+            oInformationControl.addStyleClass("sapUiSmallMarginBottom");
+
+            var oButton = new Button({
+                     type: "Emphasized",
+                     id: "dekorButton",
+                     text: "Dekor",
+                     press: this.onDekorButton.bind(this)
+                 });
+            oInformationControl.addContent(oButton);
+            oInformationContainer.addItem(oInformationControl);
+            this.oChildControls[oInformationContainer.getId()] = oInformationControl;
+        },
+        onDekorButton: function(oEvent){
+            let oGraphicToDisplay = [];
+            oGraphicToDisplay.push({ graphicName: "Dekor przód",
+                                    graphicType: "decorFront",
+                                    graphicUrl: "https://smartedit.clk0j02460-pfleidere1-s1-public.model-t.cc.commerce.ondemand.com/occ/v2/medias/PK9000-Terrazo-Nero-6.jpg?context=bWFzdGVyfHJvb3R8ODU2MzcyfGltYWdlL2pwZWd8YUdRekwyZzRaUzg0T0RFd01UQTNNVGMwT1RReUwxTTJPREF5T1Y5VVpYSnlZWHB2WDA1bGNtOWZOaTVxY0djfDk5NzJhNjQxNDA5YTJiZDI4OTAyN2UyZDZkMDZhNmMwYTdjYTE2NDA0YmI0MWYzMzdlN2I4MzVkNWVlZjEyZDEmJmZhbHNlJiY5Njg1YmYwMTU2MmU4YTA0YzQxODEwY2E1OGIzZmIyNDk4YmIyN2NkNDllMTkwZjIzMTQ3YTUwYzQzMTczZmNl" });
+        
+                                    oGraphicToDisplay.push({ graphicName: "Dekor tył",
+                                        graphicType: "decorBack",
+                                        graphicUrl: "https://smartedit.clk0j02460-pfleidere1-s1-public.model-t.cc.commerce.ondemand.com/occ/v2/medias/PD3000-D-b-Sonoma.jpg?context=bWFzdGVyfHJvb3R8MTQ5OTM5Mzd8aW1hZ2UvanBlZ3xhREF6TDJoaE1pODVOamcyT1RZek9UUTFOVEF5TDFCRU16QXdNRjlFeElWaVgxTnZibTl0WVM1cWNHY3wxNjYyODVkMDUwMDFlOTc3ZmE0MGEyNDg3ZTU5ZTQwYTBiZDI4MjgzZGFhMTdiODZkYTFjZjYxZjBhYTA5MDYwJiZmYWxzZSYmMmM4ZDg4YmMxYTcxY2E3ODdiNTY2YWVmOTAwMzgwZjE3YzE5MjhmY2I2ZjQ3ZmE1NzJhM2JkMDQzOTMzMDBmZQ" });
+     
+                                  oGraphicToDisplay.push({ graphicName: "Stuktura przód",
+                                        graphicType: "structureFront",
+                                        graphicUrl: "https://smartedit.clk0j02460-pfleidere1-s1-public.model-t.cc.commerce.ondemand.com/occ/v2/medias/PD7023-big.jpg?context=bWFzdGVyfHJvb3R8NTc3Njk4NXxpbWFnZS9qcGVnfGFHUm1MMmd4WlM4NE9EQXhNREkxTlRnNU1qYzRMMUl5TnpBeU5GOWlhV2N1YW5Cbnw3YjEzNjBmNGUyY2YxYzk2MmU5MDg5YWFkNjIxM2Y2Nzk5ODViMGM5ODhhNDExYTU0MjcyYjQzYzRlYjE2ZWJkJiZmYWxzZSYmZTZmYTZmODVjZWUxYTRhNDM5ZGM5MjNiNDBiMzNlNjk0MDEwYmZmMjcxZWY1Zjk2MTIyYzVkZGNkM2RmN2U1ZA" });
+
+                                  oGraphicToDisplay.push({ graphicName: "Stuktura tył",
+                                        graphicType: "structureBack",
+                                        graphicUrl: "https://smartedit.clk0j02460-pfleidere1-s1-public.model-t.cc.commerce.ondemand.com/occ/v2/medias/PD3000-D-b-Sonoma.jpg?context=bWFzdGVyfHJvb3R8MTQ5OTM5Mzd8aW1hZ2UvanBlZ3xhREF6TDJoaE1pODVOamcyT1RZek9UUTFOVEF5TDFCRU16QXdNRjlFeElWaVgxTnZibTl0WVM1cWNHY3wxNjYyODVkMDUwMDFlOTc3ZmE0MGEyNDg3ZTU5ZTQwYTBiZDI4MjgzZGFhMTdiODZkYTFjZjYxZjBhYTA5MDYwJiZmYWxzZSYmMmM4ZDg4YmMxYTcxY2E3ODdiNTY2YWVmOTAwMzgwZjE3YzE5MjhmY2I2ZjQ3ZmE1NzJhM2JkMDQzOTMzMDBmZQ" });
         }
     })
 });

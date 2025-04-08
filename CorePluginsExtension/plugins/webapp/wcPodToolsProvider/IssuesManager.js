@@ -58,8 +58,17 @@ sap.ui.define([
 
             for(const sfcComponent of oSfcComponents){
                 let oBomComponent = oBomComponents.find(bomComponent => { return bomComponent.sequence === sfcComponent.componentSequence });
-                let oIssueQuan = Math.ceil(sfcComponent.requiredQuantity * ( this._oQuantity / oSfc.getQuantity() ));
+                
                 if(oBomComponent&&oBomComponent.backflushEnabled === false){
+                    let oIssueQuan;
+                    if(oBomComponent.unitOfMeasure === 'ST'){
+                        oIssueQuan = Math.ceil(sfcComponent.requiredQuantity * ( this._oQuantity / oSfc.getQuantity() ));
+                    }else{
+                        oIssueQuan = sfcComponent.requiredQuantity * ( this._oQuantity / oSfc.getQuantity() );
+                        oIssueQuan = oIssueQuan.toFixed(3);
+                    }
+                   
+
                     let oComponentIssue = new ComponentIssue({  controller: this._oController,
                                                                 sfc: this._oSfc,
                                                                 plant: this._oPlant,
