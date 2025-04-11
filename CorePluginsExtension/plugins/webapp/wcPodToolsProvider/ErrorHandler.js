@@ -12,10 +12,18 @@ sap.ui.define([
 
         handleError: function(oError){
             let oErrorText = this.getTextFromError(oError);
-            this.showError(oErrorText);
+            if(!oError.displayType){
+                this.showError(oErrorText);
+            }else if(oError.displayType === "POPUP"){ 
+                this.showErrorAsPopup(oErrorText);
+            }else{}
+            
         },
         showError: function(oErrorText){
             this._oController.showErrorMessage(oErrorText, true, true);
+        },
+        showErrorAsPopup: function(oErrorText){
+            this._oController.showErrorMessage(oErrorText, false, true);
         },
         getTextFromError: function(oError){
             let oReturn = "";
@@ -41,6 +49,16 @@ sap.ui.define([
         },
         throwError: function(oTextId, ...args){
             let oError = {errorMessage: this._textHandler.getText(oTextId, ...args)};
+            throw oError;
+        },
+        throwErrorPopup: function(oTextId, ...args){
+            let oError = { errorMessage: this._textHandler.getText(oTextId, ...args),
+                           displayType: "POPUP" };
+            throw oError;
+        },
+        throwErrorNoDisplay: function(oTextId, ...args){
+            let oError = { errorMessage: this._textHandler.getText(oTextId, ...args),
+                           displayType: "NO_DISPLAY" };
             throw oError;
         }
     })

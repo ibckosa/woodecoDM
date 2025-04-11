@@ -9,8 +9,9 @@ sap.ui.define([
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager"
-], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary, ErrorHandler, SfcRepository, IssuesManager) {
+    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcReceipt",
+], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary, ErrorHandler, SfcRepository, IssuesManager, SfcReceipt) {
     "use strict";
 
     var oLogger = Log.getLogger("exampleExecutionPlugin", Log.Level.INFO);
@@ -234,13 +235,24 @@ sap.ui.define([
                                         sfc: aSelectionFirstRow.getSfc().getSfc(),
                                         storageLocation: isOrderEwm.storageLocation,
                                         resource: aSelectionFirstRow.getSfcData().getResource(),
-                                        sfcQuantity: aSelectionFirstRow.getSfcData().getQuantity(),
+                                        sfcQuantity: parseInt(aSelectionFirstRow.getSfcData().getQuantity()),
                                         operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
                                         workCenter: aSelectionFirstRow.getSfcData().getWorkCenter() };
 
+
+                
+
                 var oSfcReturn = await this._getSfcDetails(oReceiptParameters);
                 let oSfcLastStep = oSfcReturn.sfcDetails.steps[oSfcReturn.sfcDetails.steps.length - 1];
+                
                 let oSfcStep = oSfcReturn.sfcDetails.steps.find(step=>{ return step.operation.operation === oReceiptParameters.operationActivity; });
+
+                if(oReceiptParameters.workCenter === "P3_BL1"){
+                    let oSfcReceipt = new SfcReceipt(this, oReceiptParameters);
+                    await oSfcReceipt.executeIssue();
+                    return;
+                }
+
                 if(oSfcReturn.isError===true){
                     this.showErrorMessage(oSfcReturn.returnMessage,true, true);
                     return;

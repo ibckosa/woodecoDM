@@ -73,6 +73,11 @@ sap.ui.define([
             }
         },
         _issue: async function(oLine, oQuantity ){
+            if(oLine.uom==='ST'){
+                oQuantity = Math.ceil(oQuantity);
+            }else{
+                oQuantity = Math.round( oQuantity * 1000 ) / 1000;  
+            }
             let oRequestParameters = {
                 "shopOrder": this._oIssueData.orderNumber,///numer zlecenia
                 "batchId": this._oIssueData.sfc, ///SFC

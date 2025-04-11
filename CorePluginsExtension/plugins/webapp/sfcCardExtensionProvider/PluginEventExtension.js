@@ -68,7 +68,7 @@ sap.ui.define([
             if (!oController) {
                 return;
             }
-            let oGraphic = SmartEditGraphicRepository.getGraphic("PD3000");
+            
             let oPodSelectionModel = oController.getPodSelectionModel();
             if (oPodSelectionModel) {
                 if (!oPodSelectionModel.customData) {
@@ -115,6 +115,7 @@ sap.ui.define([
             if(!oFirstSelection){
                 return;
             }
+            let oGraphic = SmartEditGraphicRepository.getGraphic(oController, "PD3000");
 
             try{
                 var oSfcCardCustom =  { optimizationNumber: "",

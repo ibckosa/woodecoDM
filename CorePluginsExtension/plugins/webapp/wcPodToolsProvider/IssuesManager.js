@@ -65,7 +65,7 @@ sap.ui.define([
                         oIssueQuan = Math.ceil(sfcComponent.requiredQuantity * ( this._oQuantity / oSfc.getQuantity() ));
                     }else{
                         oIssueQuan = sfcComponent.requiredQuantity * ( this._oQuantity / oSfc.getQuantity() );
-                        oIssueQuan = oIssueQuan.toFixed(3);
+                        oIssueQuan = Math.round( oIssueQuan * 1000 ) / 1000;
                     }
                    
 

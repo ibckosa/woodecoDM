@@ -19,7 +19,7 @@ sap.ui.define([
              plant: oPlant,
              sfcNumber: oSfcNumber,
              instance: oSfc
-            })
+            });
         }else{
             oSfc = oSfcRepo.instance;
         }
@@ -35,7 +35,27 @@ sap.ui.define([
 
     oSfcRepository.ReadSfcBypassBuffer = async function(oController, oPlant, oSfcNumber ){
         return await this.readSfcApi(oController, oPlant, oSfcNumber);
-    }
+    };
+
+    oSfcRepository.readSfcForOrderApi = async function(oController, oPlant, oOrderNumber, oWorkCenterNumber){
+        let sUrl = this._oController.getPublicApiRestDataSourceUri() + "sfc/v1/worklist/sfcs";
+
+        let oParameters = { plant: oPlant,
+                            order:  oOrderNumber,
+                            workCenter: oWorkCenterNumber,
+                            allSfcSteps: true };
+        return await new Promise((resolve,reject)=>{
+            this._oController.ajaxGetRequest(sUrl, oParameters,
+                (oResponseData) => {
+                    resolve(oResponseData);
+                },
+                (oError, sHttpErrorMessage) => {
+                    reject(oError);
+                }   
+            );
+        });
+    };
+
 
     return oSfcRepository;
 });

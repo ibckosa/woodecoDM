@@ -16,7 +16,7 @@ sap.ui.define([
         if(!oGraphicBuffer){
             oGraphic = new SmartEditGraphic(oController, oGraphicId);
             await oGraphic.readData();
-            this._oGraphic.push({   graphicId: oPlant,
+            this._oGraphic.push({   graphicId: oGraphicId,
                                     instance: oGraphic });
         }else{
             oGraphic = oGraphicBuffer.instance;

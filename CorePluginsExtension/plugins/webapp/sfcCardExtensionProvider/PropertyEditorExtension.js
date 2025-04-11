@@ -53,7 +53,7 @@ sap.ui.define([
                 this.addFieldConfiguration("FHPR", oPropertyFormContainer, oPropertyData);
                 this.addFieldConfiguration("FXKO", oPropertyFormContainer, oPropertyData);
                 this.addFieldConfiguration("FDSA", oPropertyFormContainer, oPropertyData);            
-
+                this.addSmartEditConfiguration(oPropertyFormContainer, oPropertyData);
 
             }
             return;
@@ -125,6 +125,10 @@ sap.ui.define([
                 oPropertyData.fieldsFRPR = "";
             }
 
+            if (typeof oPropertyData.smartEditUrl === "undefined") {
+                oPropertyData.smartEditUrl = "";
+            }
+
             return oPropertyData;
         },
 
@@ -179,6 +183,10 @@ sap.ui.define([
                 oPropertyData.fieldsFDSA = "";
             }
 
+            if (typeof oPropertyData.smartEditUrl === "undefined") {
+                oPropertyData.smartEditUrl = "";
+            }
+
             return oPropertyData;
         },
 
@@ -204,7 +212,16 @@ sap.ui.define([
                 let oLabel = aContent[iIndex-1];
                 oLabel.setText(`fields ${ sAuart }`);
             }
-
+        },
+        addSmartEditConfiguration(oPropertyFormContainer, oPropertyData){
+            let oPropertyEditor = this.getController();
+            let oInput = oPropertyEditor.addInputField(oPropertyFormContainer, 'smartEditUrl', oPropertyData);
+            let iIndex = oPropertyFormContainer.indexOfContent(oInput);
+            let aContent = oPropertyFormContainer.getContent();
+            if (aContent[iIndex-1].setText) {
+                let oLabel = aContent[iIndex-1];
+                oLabel.setText("SmartEdit Url");
+            }
         }
     })
 });
