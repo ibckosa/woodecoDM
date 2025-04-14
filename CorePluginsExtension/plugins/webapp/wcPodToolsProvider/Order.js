@@ -27,7 +27,9 @@ sap.ui.define([
         },
         getPutawayStorageLocation(){
             return this._oDetails.putawayStorageLocation;
+        },
+        getUom: function(){
+            return this._oDetails.baseUnitOfMeasureObject.uom;
         }
-
     });
 });

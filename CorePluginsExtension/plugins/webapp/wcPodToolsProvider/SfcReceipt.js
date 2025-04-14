@@ -7,8 +7,10 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/HuGenerator",
     "sap/dm/dme/model/AjaxUtil",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
-    "ibc/dm/plugins/wcPodToolsProvider/Sfc"
-], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc) {
+    "ibc/dm/plugins/wcPodToolsProvider/Sfc",
+    "sap/m/Dialog",
+    "sap/m/library"
+], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceipt", {
         constructor: function(oController, oReceiptParameters){
@@ -32,43 +34,42 @@ sap.ui.define([
         },
 
         executeIssue: async function(){
+            let oSingleOperationSfc = true;
+            let oLastOperation = false;
+
             this._oSfc = await SfcRepository.readSfcApi(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc);
             this._oOrder = await OrderRepository.readOrder(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.order);
-            let oSingleOperationSfc = false;
-            let oLastOperation = true;
+            this._fillMissingParameters();
+            let oSteps = this._oSfc.getSteps();
+            let oLastStep = this._oSfc.getLastStep();
+            let oCurrentStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
+            
+            if(oSteps.length > 1){
+                oSingleOperationSfc = false;
+            }
+
+            if(oLastStep.operation.operation === oCurrentStep.operation.operation){
+                oLastOperation = true;
+            }
 
             debugger;
-
+            this._generalChecks();
             if(oSingleOperationSfc){
-                await this._issueMultiLastOper();
+                await this._issueSingleOper();
             }else if(oLastOperation){
                 await this._issueMultiLastOper();
             }else{
                 await this._issueMultiNotLastOper();
             }
-
+            this._reloadQ1Plugin = true;
+            this._refreshPod();
 
             
         },
 
         _issueSingleOper: async function(){
-            this._generalSfcChecks();
-        },
-
-        _issueMultiNotLastOper: async function(){
-            this._generalSfcChecks();
-        },
-
-        _issueMultiLastOper: async function(){
-            this._generalSfcChecks();
+            this._checkSfcQuantityInWork();
             let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
-            let oSfcAvailQuan = oSfcStep.quantityInWork + oSfcStep.quantityInQueue;
-            if(oSfcAvailQuan < this._oReceiptParameters.quantity){
-                await this._executeSfcMerge();
-            }else if(oSfcStep.quantityInWork < oSfcStep.quantityInWork){
-                this._oErrorHandler.throwError("errorSfcNotInWork");
-            }
-            
             let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
                                                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
             await oIssuesManager.prepareIssues();
@@ -90,10 +91,66 @@ sap.ui.define([
             }else{
                 await this._executeMmReceipt();
             }
-
             await oIssuesManager.executeIssues();
-            this._refreshPod();
+        },
 
+        _issueMultiNotLastOper: async function(){
+            this._checkSfcQuantityInWork();
+            let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
+            let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
+                                                   this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
+            await oIssuesManager.prepareIssues();
+            let oStorageLocation = await this._getStorageLocation();
+            if(oStorageLocation.isEWMManagedStorageLocation){
+                if(this._oReceiptParameters.quantity < oSfcStep.quantityInWork){
+                    await this._splitSfc(oIssuesManager);
+                }
+            }else{
+                await this._checkRequiredParams();
+                let oReturnCheckConfirmMm = await this._checkConfirmMm();
+                if(oReturnCheckConfirmMm.approve === false){
+                    return;
+                };
+            }
+
+            await this._executeYieldConfirmation();
+            await oIssuesManager.executeIssues();
+        },
+
+        _issueMultiLastOper: async function(){
+            let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
+            let oSfcAvailQuan = oSfcStep.quantityInWork + oSfcStep.quantityInQueue;
+
+            let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
+                                                   this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
+            await oIssuesManager.prepareIssues();
+            
+            if(oSfcAvailQuan < this._oReceiptParameters.quantity){
+                await this._executeSfcMerge();
+            }else if(oSfcStep.quantityInWork < oSfcStep.quantityInWork){
+                this._oErrorHandler.throwError("errorSfcNotInWork");
+            }
+            
+
+            let oStorageLocation = await this._getStorageLocation();
+            if(oStorageLocation.isEWMManagedStorageLocation){
+                if(this._oReceiptParameters.quantity < oSfcStep.quantityInWork){
+                    await this._splitSfc(oIssuesManager);
+                }
+            }else{
+                await this._checkRequiredParams();
+                let oReturnCheckConfirmMm = await this._checkConfirmMm();
+                if(oReturnCheckConfirmMm.approve === false){
+                    return;
+                };
+            }
+            await this._executeYieldConfirmation();
+            if(oStorageLocation.isEWMManagedStorageLocation === true){
+                await this._executeEwmReceipt();
+            }else{
+                await this._executeMmReceipt();
+            }
+            await oIssuesManager.executeIssues();
         },
 
         _getSfcStep: function(){
@@ -103,7 +160,7 @@ sap.ui.define([
             }
             return oSfcStep;
         },
-        _generalSfcChecks: function(){
+        _generalChecks: function(){
             if(this._oSfc.getStatusCode() !== "403"){
                 this._oErrorHandler.throwError("errorSfcNotInWork");
             }
@@ -133,8 +190,8 @@ sap.ui.define([
         },
         _splitSfc: async function(oIssuesManager){
             let oNewSfc = await this._execeuteSplitSfc();
-            this._oReceiptParameters.sfc = oSplitReturn.newSfc;
-            oIssuesManager.changeSfcNumber(oReceiptParameters.sfc);
+            this._oReceiptParameters.sfc = oNewSfc;
+            oIssuesManager.changeSfcNumber(this._oReceiptParameters.sfc);
         },
         _execeuteSplitSfc: async function(){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/split";
@@ -180,11 +237,12 @@ sap.ui.define([
         _checkConfirmMm: async function(){
             return await new Promise((resolve,reject)=>{
                 this._resolveConfirmMm = resolve;
+                this._rejectConfirmMm = reject;
                 if (!this.oApproveDialog) {
                     this.oApproveDialog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
                         title: this._oTextHandler.getText("confirmTitle"),
-                        content: new Text({ text: this._oTextHandler.getText("confirmQuestion") }),
+                        content: new sap.m.Text({ text: this._oTextHandler.getText("confirmQuestion") }),
                         beginButton: new sap.m.Button({
                             type: mobileLibrary.ButtonType.Emphasized,
                             text: this._oTextHandler.getText("answerYes"),
@@ -197,6 +255,8 @@ sap.ui.define([
                             text: this._oTextHandler.getText("answerNo"),
                             press: function () {
                                 this.oApproveDialog.close();
+                                this._rejectConfirmMm({ message: "",
+                                                        displayType: "NO_DISPLAY" })
                                 this._oErrorHandler.throwErrorNoDisplay("");
                             }.bind(this)
                         })
@@ -206,8 +266,39 @@ sap.ui.define([
                this.oApproveDialog.open();
             });
         },
+        _checkMergeNotEnough: async function(oQuan){
+            return await new Promise((resolve,reject)=>{
+                this._resolveConfirmMerge = resolve;
+                this._rejectConfirmMerge = reject;
+                if (!this.oMergeDialog) {
+                    this.oMergeDialog = new Dialog({
+                        type: mobileLibrary.DialogType.Message,
+                        title: this._oTextHandler.getText("label.q1.mergeNotEnoughQuanTitle", oQuan),
+                        content: new sap.m.Text({ text: this._oTextHandler.getText("label.q1.mergeNotEnoughQuan") }),
+                        beginButton: new sap.m.Button({
+                            type: mobileLibrary.ButtonType.Emphasized,
+                            text: this._oTextHandler.getText("answerYes"),
+                            press: async function () {
+                                    this.oMergeDialog.close();
+                                    this._resolveConfirmMerge();
+                            }.bind(this)
+                        }),
+                        endButton: new sap.m.Button({
+                            text: this._oTextHandler.getText("answerNo"),
+                            press: function () {
+                                this.oMergeDialog.close();
+                                this._rejectConfirmMerge({ message: "",
+                                                           displayType: "NO_DISPLAY" })
+                            }.bind(this)
+                        })
+                    });
+                }
+
+               this.oMergeDialog.open();
+            });
+        },
         _executeYieldConfirmation: async function(){
-            let sUrl = this._oController.getSfcExecutionDataSourceUri() + "sfc/complete";
+            let sUrl = this._oController.getSfcExecutionDataSourceUri() + "sfc/complete?async=false";
             let oRequestParameters = {
                 operation: this._oReceiptParameters.operationActivity,
                 quantity: this._oReceiptParameters.quantity,
@@ -307,16 +398,25 @@ sap.ui.define([
             }
 
             if(oSfcRemainingQuan > 0){
-                this._oErrorHandler.throwErrorPopup("error.q1.mergeNotEnoughQuan");
+                let oPossibleQuan = this._oReceiptParameters.quantity - oSfcRemainingQuan;
+                await this._checkMergeNotEnough(oPossibleQuan);
+                this._oReceiptParameters.quantity = oPossibleQuan;
+                //this._oErrorHandler.throwErrorPopup("error.q1.mergeNotEnoughQuan");
             }
 
             if(this._oSfc.getStatusCode() === '403'){
                 oSfcsToOff.push(this._oSfc.getSfcNumber())
             ;}
 
-            await Sfc.signOffSfcs(this._oController, this._oReceiptParameters.plant, oSfcsToOff, this._oReceiptParameters.operationActivity, "P3_BL1");
-            await Sfc.mergeSfcs(this._oController, this._oReceiptParameters.plant, this._oSfc.getSfcNumber(), oSfcsToMerge);
-            await Sfc.startSfcs(this._oController, this._oReceiptParameters.plant, [this._oSfc.getSfcNumber()], this._oReceiptParameters.operationActivity, "P3_BL1" );
+            if(oSfcsToOff.length > 0){
+                await Sfc.signOffSfcs(this._oController, this._oReceiptParameters.plant, oSfcsToOff, this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource);
+            }
+
+            if(oSfcsToMerge.length > 0){
+                await Sfc.mergeSfcs(this._oController, this._oReceiptParameters.plant, this._oSfc.getSfcNumber(), oSfcsToMerge);
+            }   
+
+            await Sfc.startSfcs(this._oController, this._oReceiptParameters.plant, [this._oSfc.getSfcNumber()], this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource );
         },
         _getSfcListForOperation: async function(){
             let sUrl = this._oController.getPublicApiRestDataSourceUri()  + "sfc/v1/worklist/sfcs";
@@ -337,7 +437,20 @@ sap.ui.define([
                 );
 
             });
-        }
+        },
+        _checkSfcQuantityInWork: function(){
+            let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
+
+            if(oSfcStep.quantityInWork < this._oReceiptParameters.quantity){
+                this._oErrorHandler.throwError("errorSfcNotInWork");
+            }
+
+        },
+        _fillMissingParameters: function(){
+            this._oReceiptParameters.storageLocation = this._oOrder.getPutawayStorageLocation();
+            this._oReceiptParameters.unitOfMeasure = this._oOrder.getUom();
+        },
+        
 
     });
 });

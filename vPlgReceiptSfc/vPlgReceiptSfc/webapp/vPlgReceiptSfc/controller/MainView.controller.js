@@ -27,6 +27,8 @@ sap.ui.define([
                 PluginViewController.prototype.onInit.apply(this, arguments); 
             } 
             this._oErrorHandler = new ErrorHandler(this);   
+            this._reloadQ1Plugin = true;
+            this._oCurrentSfc = "";
             //this.getView().setBusy(true);
         },
 
@@ -64,58 +66,38 @@ sap.ui.define([
 
         onPodSelectionChangeEvent: function (sChannelId, sEventId, oData) {
             this.loadModel();
-            return;
         },
 
         onOperationChangeEvent: function (sChannelId, sEventId, oData) {
             this.loadModel();
-            return;
         },
 
         onWorkListSelectEvent: function (sChannelId, sEventId, oData) {
             this.loadModel();
-            return;
         },
 
         loadModel: async function () {
-            var oView = this.getView();
-            var oConfiguration = this.getConfiguration();
-            var bNotificationsEnabled = true;
-            this.getView().setBusyIndicatorDelay(0);
-            this.getView().setBusy(true);
-
-            if (oConfiguration && typeof oConfiguration.notificationsEnabled !== "undefined") {
-                bNotificationsEnabled = oConfiguration.notificationsEnabled;
-            }
-
-            var oPodSelectionModel = this.getPodSelectionModel();
-            if (!oPodSelectionModel) {
-                oView.setModel(new JSONModel());
-                return;
-            }
-            var sPodType = oPodSelectionModel.getPodType();
-            var aSelections = oPodSelectionModel.getSelections();
             
-            if (aSelections && aSelections.length > 0) {
-                var oFirstSelection = aSelections[0];
-                var oCustomQuan = this._getCustomQuan( oFirstSelection );
-                await this._setInputQuantity(oFirstSelection,oCustomQuan)
-            }
-            let oComponents = oPodSelectionModel.getComponents();
-            let oComponent = oPodSelectionModel.getComponent();
-            let oOrder = oPodSelectionModel.getShopOrder();
-            debugger;
+            try{
 
+                var oPodSelectionModel = this.getPodSelectionModel();
+                if (!oPodSelectionModel) { }
+                let aSelections = oPodSelectionModel.getSelections();
+                if(!aSelections || aSelections.length < 1 ){ return; }
+                let oFirstSelection = aSelections[0];
 
-            var oModelData = {
-                podType: sPodType
-            };
-
-            // this.addMaterialCustomFields(oPodController.getUserPlant(), sMaterial);
-            //oLogger.info("oModel: " + JSON.stringify(oModelData));
-            var oModel = new JSONModel(oModelData);
-            this.getView().setBusy(false);
-            //oView.setModel(oModel);
+                if(oFirstSelection.getSfc().getSfc() !== this._oCurrentSfc||this._reloadQ1Plugin || true){
+                    this.getView().setBusyIndicatorDelay(0);
+                    this.getView().setBusy(true);
+                    let oCustomQuan = this._getCustomQuan( oFirstSelection );
+                    await this._setInputQuantity(oFirstSelection,oCustomQuan)
+                    this._oCurrentSfc = oFirstSelection.getSfc().getSfc();
+                    this._reloadQ1Plugin = false;
+                }
+                this.getView().setBusy(false);   
+            }catch(oError){
+                this.getView().setBusy(false);
+                this._oErrorHandler.handleError(oError); }            
         },
 
         /*
@@ -207,131 +189,37 @@ sap.ui.define([
         },
         onButtonReceipt: async function(oEvent){
             try{
-                var oReturnReceipt;
-                var oPodController = this.getPodController();
-                var oPodSelectionModel = this.getPodSelectionModel();
-                var aSelections = oPodSelectionModel.getSelections();     
-
+                let oPodController = this.getPodController();
+                let oPodSelectionModel = this.getPodSelectionModel();
+                let aSelections = oPodSelectionModel.getSelections();  
                 if(aSelections.length < 1){ return; };
-                var oOperation = oPodSelectionModel.getOperation();
-                debugger;
-                
+                this.getView().setBusyIndicatorDelay(0);
+                this.getView().setBusy(true);
+                debugger;   
+                let aSelectionFirstRow = aSelections[0];
+                let oReceiptParameters = { plant : oPodController.getUserPlant(),
+                    order: aSelectionFirstRow.getShopOrder().getShopOrder(),
+                    material: aSelectionFirstRow.getSfcData().getMaterial() ,
+                    materialVersion: aSelectionFirstRow.getSfcData().getMaterialVersion(),
+                    quantity: parseInt(this.byId("inputReceiptQuantity").getValue()),
+                    unitOfMeasure: "",		
+                    sfc: aSelectionFirstRow.getSfc().getSfc(),
+                    storageLocation: "",
+                    resource: oPodSelectionModel.resource.resource,
+                    sfcQuantity: parseInt(aSelectionFirstRow.getSfcData().getQuantity()),
+                    operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
+                    workCenter: oPodSelectionModel.workCenter };
 
-                var aSelectionFirstRow = aSelections[0];
-                var oShopOrderNumber = aSelectionFirstRow.getShopOrder().getShopOrder();
-                var isOrderEwm = await this._checkOrderIsEwm(oPodController.getUserPlant(), oShopOrderNumber);
-                // if(isOrderEwm.isError === true){
-                //     this.showErrorMessage(isOrderEwm.oErrorMessage,true, true);
-                //     return;
-                // }
-
-                
-                var oReceiptParameters = { plant : oPodController.getUserPlant(),
-                                        order: aSelectionFirstRow.getShopOrder().getShopOrder(),
-                                        material: aSelectionFirstRow.getSfcData().getMaterial() ,
-                                        materialVersion: aSelectionFirstRow.getSfcData().getMaterialVersion(),
-                                        quantity: parseInt(this.byId("inputReceiptQuantity").getValue()),
-                                        unitOfMeasure: isOrderEwm.unitOfMeasure,		
-                                        sfc: aSelectionFirstRow.getSfc().getSfc(),
-                                        storageLocation: isOrderEwm.storageLocation,
-                                        resource: aSelectionFirstRow.getSfcData().getResource(),
-                                        sfcQuantity: parseInt(aSelectionFirstRow.getSfcData().getQuantity()),
-                                        operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
-                                        workCenter: aSelectionFirstRow.getSfcData().getWorkCenter() };
-
-
-                
-
-                var oSfcReturn = await this._getSfcDetails(oReceiptParameters);
-                let oSfcLastStep = oSfcReturn.sfcDetails.steps[oSfcReturn.sfcDetails.steps.length - 1];
-                
-                let oSfcStep = oSfcReturn.sfcDetails.steps.find(step=>{ return step.operation.operation === oReceiptParameters.operationActivity; });
-
-                if(oReceiptParameters.workCenter === "P3_BL1"){
+                ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeIssue();
-                    return;
-                }
+                    this._reloadQ1Plugin = true;
+                    this.getView().setBusy(false);
 
-                if(oSfcReturn.isError===true){
-                    this.showErrorMessage(oSfcReturn.returnMessage,true, true);
-                    return;
-                }else{
-                        if(!oSfcStep||parseInt(oSfcStep.quantityInWork)<parseInt(oReceiptParameters.quantity)){
-                            this._oErrorHandler.throwError("errorSfcNotInWork");
-                            // this.showErrorMessage(this._getText("errorSfcNotInWork"),false, true);
-                            // return;
-                        }
-                }
-                
-                let oIssuesManager = new IssuesManager(this, oReceiptParameters.plant, oReceiptParameters.workCenter, oReceiptParameters.resource, 
-                    oReceiptParameters.order, oReceiptParameters.sfc, oReceiptParameters.operationActivity, oReceiptParameters.quantity);
-                await oIssuesManager.prepareIssues();
-                if (isOrderEwm.isEwmOrder === true){
-                    if(parseInt(oReceiptParameters.quantity) !== parseInt(oReceiptParameters.sfcQuantity) ){
-                        var oSplitReturn = await this._splitSfc(oReceiptParameters);    
-                        if(oSplitReturn.isError === true){
-                            this.showErrorMessage(oSplitReturn.returnMessage,true, true);
-                            return;
-                        };
-                        oReceiptParameters.sfc = oSplitReturn.newSfc;
-                        oIssuesManager.changeSfcNumber(oReceiptParameters.sfc);
-                    }           
-                }else{
-                    var oReturnCheckRequiredParams = await this._checkRequiredParams(oReceiptParameters);
-                    if(oReturnCheckRequiredParams.isError === true){
-                        this.showErrorMessage(oReturnCheckRequiredParams.returnMessage,false, true);
-                        return;
-                    }
-
-                    var oReturnCheckConfirmMm = await this._checkConfirmMm(oReceiptParameters);
-                    if(oReturnCheckConfirmMm.approve === false){
-                        return;
-                    };
-                }
-
-
-
-
-                //var oReturnConfirmation = await this._executeConfirmation(oReceiptParameters);
-
-                var oReturnConfirmation = await this._executeYieldConfirmation(oReceiptParameters);
-                if(oReturnConfirmation.isError === true){
-                    this.showErrorMessage(oReturnConfirmation.returnMessage,true, true);
-                    return;
-                }else{
-                    this.showSuccessMessage(oReturnConfirmation.returnMessage,true, true);
-                }
-
-                if(oSfcLastStep.stepId === oSfcStep.stepId){
-                    if(isOrderEwm.isEwmOrder === true){
-                        oReturnReceipt = await this._executeEwmReceipt(oReceiptParameters);
-                    }else{
-                        oReturnReceipt = await this._executeMmReceipt(oReceiptParameters);
-                    }
-                    
-                    if(oReturnReceipt.isError === true){
-                        this.showErrorMessage(oReturnReceipt.returnMessage,true, true);
-                        return;
-                    }else{
-                        this.showSuccessMessage(oReturnReceipt.returnMessage,true, true);
-                    } 
-                }
-
-                await oIssuesManager.executeIssues();
-                if(parseInt(oReceiptParameters.quantity) === parseInt(oReceiptParameters.sfcQuantity)){
-                    oPodSelectionModel.setInputValue("");
-                    oPodSelectionModel.clearSelections();
-
-                    this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-                    this.onClosePress();
-                    this.navigateToMainPage();
-                }else{    
-                    this.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
-                    this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-                }
-
-            }catch(oError){this._oErrorHandler.handleError(oError);}
+            }catch(oError){
+                this.getView().setBusy(false);
+                this._oErrorHandler.handleError(oError);
+            }
             
         },
         _getCustomQuan: function(oSelection){

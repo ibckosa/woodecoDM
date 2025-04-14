@@ -105,7 +105,7 @@ sap.ui.define([
                     return;
                 }
                 if(oPodSelectionModel.resource === null ||oPodSelectionModel.resource === undefined || oPodSelectionModel.resource.resource === undefined){
-                    return
+                    return;
                 }
                 this._oWorkCenter = oPodSelectionModel.workCenter;
                 this._oResource = oPodSelectionModel.resource.resource;

@@ -29,6 +29,12 @@ sap.ui.define([
         getDetails: function(){
             return this._oDetails;
         },
+        getSteps: function(){
+            return this._oDetails.steps;
+        },
+        getLastStep: function(){
+            return this._oDetails.steps[this._oDetails.steps.length - 1];
+        },
         getStepByOperation: function(oOperation){
             return this._oDetails.steps.find(step=>{ return step.operation.operation === oOperation });
         },

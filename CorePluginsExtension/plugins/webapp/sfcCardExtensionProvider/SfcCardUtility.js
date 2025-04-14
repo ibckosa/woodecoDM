@@ -5,7 +5,8 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/ui/layout/VerticalLayout",
     "sap/m/MessageBox",
-    "sap/m/ProgressIndicator"
+    "sap/m/ProgressIndicator",
+    
 ], function (BaseObject, Button, Label, MessageToast, VerticalLayout, MessageBox, ProgressIndicator) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.sfcCardExtensionProvider.SfcCardUtility", {
@@ -247,6 +248,11 @@ sap.ui.define([
         },
         onDekorButton: function(oEvent){
             let oGraphicToDisplay = [];
+            let oDecors = this.getController().getView().getModel("customData").getProperty("/sfcCardCustom/decors");
+            for(const decor of oDecors){
+
+            }
+
             oGraphicToDisplay.push({ graphicName: "Dekor przód",
                                     graphicType: "decorFront",
                                     graphicUrl: "https://smartedit.clk0j02460-pfleidere1-s1-public.model-t.cc.commerce.ondemand.com/occ/v2/medias/PK9000-Terrazo-Nero-6.jpg?context=bWFzdGVyfHJvb3R8ODU2MzcyfGltYWdlL2pwZWd8YUdRekwyZzRaUzg0T0RFd01UQTNNVGMwT1RReUwxTTJPREF5T1Y5VVpYSnlZWHB2WDA1bGNtOWZOaTVxY0djfDk5NzJhNjQxNDA5YTJiZDI4OTAyN2UyZDZkMDZhNmMwYTdjYTE2NDA0YmI0MWYzMzdlN2I4MzVkNWVlZjEyZDEmJmZhbHNlJiY5Njg1YmYwMTU2MmU4YTA0YzQxODEwY2E1OGIzZmIyNDk4YmIyN2NkNDllMTkwZjIzMTQ3YTUwYzQzMTczZmNl" });
