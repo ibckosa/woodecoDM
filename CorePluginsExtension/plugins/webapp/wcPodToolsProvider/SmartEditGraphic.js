@@ -35,7 +35,7 @@ sap.ui.define([
         getGraphicLink: function(){
             let oReturn = "";
             try{
-                let detailsLarge = this._oDetails.decorZoomOutPictureLinks.find(picture => { return picture.linkFormat === "detailsSmall";});
+                let detailsLarge = this._oDetails.decorZoomOutPictureLinks.find(picture => { return picture.linkFormat === "detailsLarge";});
                 oReturn = detailsLarge.linkValue;
             }catch(oError){}
 

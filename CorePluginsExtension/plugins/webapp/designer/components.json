@@ -63,7 +63,7 @@
             "inclusions": [
                 {
                     "pods": [
-                        "WC_POD_TEST_PLUGIN"
+                        "WC_POD_TEST_PLUGIN", "*"
                     ],
                     "plants": [
                         "4200", "4300", "4100", "*"

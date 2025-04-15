@@ -30,6 +30,9 @@ sap.ui.define([
         },
         getUom: function(){
             return this._oDetails.baseUnitOfMeasureObject.uom;
+        },
+        getDetails: function(){
+            return this._oDetails;
         }
     });
 });

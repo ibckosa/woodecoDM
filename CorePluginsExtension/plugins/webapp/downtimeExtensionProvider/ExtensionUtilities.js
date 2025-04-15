@@ -45,15 +45,13 @@ sap.ui.define([
 
         extendDowntimesTable: function(oTable, oController){
             debugger;
-                let oButton = oController.getView().byId("editDT");
+            this._oController = oController;
+            this._oTable = oTable;
                 let oButtonParent = oController.getView().byId("editDT").getParent();
-                let oButtonParentId = oController.getView().byId("editDT").getParent().getId();
-                let oButtonParentName = oButtonParent.getMetadata().getElementName()
                 if(!this._initialized){
                     this._initialized = true;
-                    oButtonParent.insertContent( new sap.m.Button({ text: "Mój guzik", type: "Emphasized"}), 4);
+                    oButtonParent.insertContent( new sap.m.Button({ text: "Mój guzik", type: "Emphasized", press: this._onSendpress.bind(this) }), 4);
                 }
-                let oViewContent = oController.getView().getContent();
                 this._oTableExtended = true;
                 let oColumns = oTable.getColumns();
                 let bColumnExists = oColumns.some(function (oColumn) { return oColumn.getId() === "textAreaCol";  });
@@ -172,6 +170,17 @@ sap.ui.define([
             } else {
                 console.debug(sMessage + vDataOutput);
             }
+        },
+        _onSendpress: function(oEvent){
+            if(this._oController && this._oTable){
+                let oTableModel = this._oTable.getModel();
+                try{
+                    let oData = this._oTable.getModel().getData();
+                    debugger;
+                }catch(oError){}
+                debugger;
+            }
         }
+
     })
 });

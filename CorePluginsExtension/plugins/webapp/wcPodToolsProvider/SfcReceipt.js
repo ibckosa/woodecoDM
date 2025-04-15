@@ -80,10 +80,7 @@ sap.ui.define([
                 }
             }else{
                 await this._checkRequiredParams();
-                let oReturnCheckConfirmMm = await this._checkConfirmMm();
-                if(oReturnCheckConfirmMm.approve === false){
-                    return;
-                };
+                await this._checkConfirmMm();
             }
             await this._executeYieldConfirmation();
             if(oStorageLocation.isEWMManagedStorageLocation === true){
@@ -107,10 +104,7 @@ sap.ui.define([
                 }
             }else{
                 await this._checkRequiredParams();
-                let oReturnCheckConfirmMm = await this._checkConfirmMm();
-                if(oReturnCheckConfirmMm.approve === false){
-                    return;
-                };
+                await this._checkConfirmMm();
             }
 
             await this._executeYieldConfirmation();
@@ -224,7 +218,8 @@ sap.ui.define([
                 this._oController.ajaxGetRequest(sUrl, oRequestParameters,
                     oResponseData => {
                         if(oResponseData.uncollectedParams.length>0){
-                            this._oErrorHandler.throwErrorPopup(this._oTextHandler.getText("errorCheckRequiredParams"));
+                            reject({ message: this._oTextHandler.getText("errorCheckRequiredParams"),
+                                     displayType: "POPUP" });
                         }
                         resolve();
                     },
@@ -302,7 +297,7 @@ sap.ui.define([
             let oRequestParameters = {
                 operation: this._oReceiptParameters.operationActivity,
                 quantity: this._oReceiptParameters.quantity,
-                resource: this._oReceiptParameters.workCenter,
+                resource: this._oReceiptParameters.resource,
                 sfcs: [ this._oReceiptParameters.sfc ]
             };
             return await new Promise((resolve,reject)=>{

@@ -25,7 +25,7 @@ sap.ui.define([
         return oGraphic;
     };
     oSmartEditGraphicRepository._getGraphicBuffer =  function(oGraphicId){
-        return this._oGraphic.find(graphics=>{ return graphics.graphicId === oGraphicId });
+        return this._oGraphic.find( graphics=>{ return graphics.graphicId === oGraphicId });
     };
 
 

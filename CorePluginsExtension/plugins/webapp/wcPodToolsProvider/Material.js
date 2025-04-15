@@ -1,7 +1,8 @@
 sap.ui.define([
     "sap/ui/base/Object",
-    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (Object, TextHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/SmartEditGraphicRepository"
+], function (Object, TextHandler, SmartEditGraphicRepository) {
     "use strict";
     const decorFrontName =  "";
     return Object.extend("ibc.dm.plugins.wcPodToolsProvider.Material", {
@@ -13,7 +14,23 @@ sap.ui.define([
             DECOR_FRONT_TYPE: "decorFront",
             DECOR_BACK_TYPE: "decorBack",
             STRUCTURE_FRONT_TYPE: "structureFront",
-            STRUCTURE_BACK_TYPE: "structureBack"
+            STRUCTURE_BACK_TYPE: "structureBack",
+            CYLINDER_FRONT_1: "CYLINDER_VS_1",
+            CYLINDER_FRONT_1_TYPE: "cylinderFront1",
+            CYLINDER_FRONT_2: "CYLINDER_VS_2",
+            CYLINDER_FRONT_2_TYPE: "cylinderFront2",
+            CYLINDER_FRONT_3: "CYLINDER_VS_3",
+            CYLINDER_FRONT_3_TYPE: "cylinderFront3",
+            CYLINDER_FRONT_4: "CYLINDER_VS_4",
+            CYLINDER_FRONT_4_TYPE: "cylinderFront4",
+            CYLINDER_BACK_1: "CYLINDER_RS_1",
+            CYLINDER_BACK_1_TYPE: "cylinderBack1",
+            CYLINDER_BACK_2: "CYLINDER_RS_2",
+            CYLINDER_BACK_2_TYPE: "cylinderBack2",
+            CYLINDER_BACK_3: "CYLINDER_RS_3",
+            CYLINDER_BACK_3_TYPE: "cylinderBack3",
+            CYLINDER_BACK_4: "CYLINDER_RS_4",
+            CYLINDER_BACK_4_TYPE: "cylinderBack4"
           },
 
         constructor: function(oController, oPlant, oMaterialNumber){
@@ -57,30 +74,30 @@ sap.ui.define([
             }catch(oError){}
             return oReturn;
         },
-        getGraphics: function(){
+        getGraphics: async function(){
             let oReturn = [];
-            let oReturnLine = { graphicName: "",
-                                graphicType: "",
-                                graphicUrl: "" };
+
             let oCustomDataGraphics = this._oDetails.customValues.filter( customValue => { return customValue.attribute === this.CONSTANTS.DECOR_FRONT ||
                                                                                                   customValue.attribute === this.CONSTANTS.DECOR_BACK ||
                                                                                                   customValue.attribute === this.CONSTANTS.STRUCTURE_FRONT ||
-                                                                                                  customValue.attribute === this.CONSTANTS.STRUCTURE_BACK;
-                                                                                                //   customValue.attribute === "CYLINDER_VS_1" ||
-                                                                                                //   customValue.attribute === "CYLINDER_VS_2" ||
-                                                                                                //   customValue.attribute === "CYLINDER_VS_3" ||
-                                                                                                //   customValue.attribute === "CYLINDER_VS_4" ||
-                                                                                                //   customValue.attribute === "CYLINDER_RS_1" ||
-                                                                                                //   customValue.attribute === "CYLINDER_RS_2" ||
-                                                                                                //   customValue.attribute === "CYLINDER_RS_3" ||
-                                                                                                //   customValue.attribute === "CYLINDER_RS_4" 
-                                                                                                
-                                                                                                });
+                                                                                                  customValue.attribute === this.CONSTANTS.STRUCTURE_BACK ||
+                                                                                                  customValue.attribute === this.CONSTANTS.CYLINDER_FRONT_1  ||
+                                                                                                  customValue.attribute === this.CONSTANTS.CYLINDER_FRONT_2 ||
+                                                                                                  customValue.attribute === this.CONSTANTS.CYLINDER_FRONT_3||
+                                                                                                  customValue.attribute === this.CONSTANTS.CYLINDER_FRONT_4 ||
+                                                                                                  customValue.attribute === this.CONSTANTS.CYLINDER_BACK_1||
+                                                                                                  customValue.attribute === this.CONSTANTS.CYLINDER_BACK_1 ||
+                                                                                                  customValue.attribute === this.CONSTANTS.CYLINDER_BACK_1 ||
+                                                                                                  customValue.attribute === this.CONSTANTS.CYLINDER_BACK_1 });
 
 
             for(const customGraphics of oCustomDataGraphics){
-                oReturnLine.graphicUrl = "";
-                switch(customValue.attribute){
+                let oReturnLine = { graphicName: "",
+                    graphicType: "",
+                    graphicUrl: "" };
+                let oSmartEditGraphic = await SmartEditGraphicRepository.getGraphic(this._oController, customGraphics.value);
+                oReturnLine.graphicUrl = oSmartEditGraphic.getGraphicLink();
+                switch(customGraphics.attribute){
                     case this.CONSTANTS.DECOR_FRONT:
                         oReturnLine.graphicName = this._oTextHandler.getText("graphic.label.decorFront");
                         oReturnLine.graphicType = this.CONSTANTS.DECOR_FRONT_TYPE;
@@ -97,9 +114,47 @@ sap.ui.define([
                         oReturnLine.graphicName = this._oTextHandler.getText("graphic.label.structureBack");
                         oReturnLine.graphicType = this.CONSTANTS.STRUCTURE_BACK_TYPE;
                         break;
+                    case this.CONSTANTS.CYLINDER_FRONT_1:
+                        oReturnLine.graphicName = this._oTextHandler.getText("graphic.label.cylinderFront1");
+                        oReturnLine.graphicType = this.CONSTANTS.STRUCTURE_BACK_TYPE;
+                        break;
+                    case this.CONSTANTS.CYLINDER_FRONT_2:
+                        oReturnLine.graphicName = this._oTextHandler.getText("graphic.label.cylinderFront2");
+                        oReturnLine.graphicType = this.CONSTANTS.STRUCTURE_BACK_TYPE;
+                        break;
+                    case this.CONSTANTS.CYLINDER_FRONT_3:
+                        oReturnLine.graphicName = this._oTextHandler.getText("graphic.label.cylinderFront3");
+                        oReturnLine.graphicType = this.CONSTANTS.STRUCTURE_BACK_TYPE;
+                        break;
+                    case this.CONSTANTS.CYLINDER_FRONT_4:
+                        oReturnLine.graphicName = this._oTextHandler.getText("graphic.label.cylinderFront4");
+                        oReturnLine.graphicType = this.CONSTANTS.STRUCTURE_BACK_TYPE;
+                        break;
+                    case this.CONSTANTS.CYLINDER_BACK_1:
+                        oReturnLine.graphicName = this._oTextHandler.getText("graphic.label.cylinderBack1");
+                        oReturnLine.graphicType = this.CONSTANTS.STRUCTURE_BACK_TYPE;
+                        break;
+                    case this.CONSTANTS.CYLINDER_BACK_2:
+                        oReturnLine.graphicName = this._oTextHandler.getText("graphic.label.cylinderBack2");
+                        oReturnLine.graphicType = this.CONSTANTS.STRUCTURE_BACK_TYPE;
+                        break;
+                    case this.CONSTANTS.CYLINDER_BACK_3:
+                        oReturnLine.graphicName = this._oTextHandler.getText("graphic.label.cylinderBack3");
+                        oReturnLine.graphicType = this.CONSTANTS.STRUCTURE_BACK_TYPE;
+                        break;
+                    case this.CONSTANTS.CYLINDER_BACK_4:
+                        oReturnLine.graphicName = this._oTextHandler.getText("graphic.label.cylinderBack4");
+                        oReturnLine.graphicType = this.CONSTANTS.STRUCTURE_BACK_TYPE;
+                        break;
                 } 
-                return oReturn;
+                if(oReturnLine.graphicUrl!==""){
+                    oReturn.push(oReturnLine);
+                }
             }
+            return oReturn;
+        },
+        getDetails: function(){
+            return this._oDetails;
         }
     });
 });
