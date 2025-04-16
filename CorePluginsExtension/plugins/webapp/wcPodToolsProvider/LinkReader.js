@@ -1,6 +1,8 @@
 sap.ui.define([
-    "sap/ui/base/Object"
-], function (ObjectUI5) {
+    "sap/ui/base/Object",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository", 
+    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository"
+], function (ObjectUI5, OrderRepository, SfcRepository) {
     "use strict";
     let oLinkReader =  ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.LinkReader", {
 
@@ -8,6 +10,8 @@ sap.ui.define([
 
 
     oLinkReader.readLinks = async function (oController, oSfcNumber, oOrderNumber) {
+        let oOrder = await OrderRepository.readOrder(oController, oOrderNumber);
+
         return [{ fileName: "testowy_plik",
                   fileDescription: "Plik na potrzeby testów",
                   fileLink: "https://hazidesaratcollege.ac.in/library/uploads/85jkr_harrypotter_1.pdf"
