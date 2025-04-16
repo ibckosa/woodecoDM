@@ -2,16 +2,24 @@ sap.ui.define([
     'jquery.sap.global',
 	"sap/dm/dme/podfoundation/controller/PluginViewController",
 	"sap/ui/model/json/JSONModel",
-    "ibc/dm/plugins/wcPodToolsProvider/LinkReader"
-], function (jQuery, PluginViewController, JSONModel, LinkReader) {
+    "ibc/dm/plugins/wcPodToolsProvider/LinkReader",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+], function (jQuery, PluginViewController, JSONModel, LinkReader, ErrorHandler) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgFileViewer.vPlgFileViewer.controller.MainView", {
 		onInit: function () {
 			PluginViewController.prototype.onInit.apply(this, arguments);
+            this._oErrorHandler = new ErrorHandler(this);
+            this._oTextHandler = new TextHandler();
 		},
 
         onAfterRendering: function(){  
+        },
+
+        onBeforeRendering: function () {
+            this._loadData();
         },
 
 		onBeforeRenderingPlugin: function () {
@@ -53,7 +61,7 @@ sap.ui.define([
                 const oModel = new JSONModel({ links: aLinks });
                 this.getView().setModel(oModel, "linkModel");
             } catch (error) {
-                console.error("Błąd podczas ładowania linków:", error);
+                this._oErrorHandle.handleError(error);
             }
         },
         
@@ -70,7 +78,7 @@ sap.ui.define([
                 });
         
                 const oDialog = new sap.m.Dialog({
-                    title: oItem.fileName || "Podgląd PDF",
+                    title: oItem.fileName || this._oTextHandler.getText("Podgląd PDF"),
                     contentWidth: "90%",
                     contentHeight: "90%",
                     resizable: true,

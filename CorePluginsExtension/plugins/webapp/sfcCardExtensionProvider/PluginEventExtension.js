@@ -208,7 +208,7 @@ sap.ui.define([
                 var oOrder = oFirstSelection.getShopOrder().getShopOrder();
                 var oPlant = oPodController.getUserPlant();
                 var oMaterial = oFirstSelection.getSfcData().getMaterial();
-                let oOrderInstance = await OrderRepository.readOrder(oController, oPlant, oOrder);
+                let oOrderInstance = await OrderRepository.readOrderByPassBuffer(oController, oPlant, oOrder);
                 let oMaterialInstance =  await MaterialRepository.getMaterialInstance(oController, oPlant, oMaterial);
                 var oMaterialData = oMaterialInstance.getDetails();
                 var oOrderData = oOrderInstance.getDetails();

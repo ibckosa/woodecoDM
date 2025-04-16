@@ -268,8 +268,8 @@ sap.ui.define([
                 if (!this.oMergeDialog) {
                     this.oMergeDialog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
-                        title: this._oTextHandler.getText("label.q1.mergeNotEnoughQuanTitle", oQuan),
-                        content: new sap.m.Text({ text: this._oTextHandler.getText("label.q1.mergeNotEnoughQuan") }),
+                        title: this._oTextHandler.getText("label.q1.mergeNotEnoughQuanTitle"),
+                        content: new sap.m.Text({ text: this._oTextHandler.getText("label.q1.mergeNotEnoughQuan", oQuan) }),
                         beginButton: new sap.m.Button({
                             type: mobileLibrary.ButtonType.Emphasized,
                             text: this._oTextHandler.getText("answerYes"),
