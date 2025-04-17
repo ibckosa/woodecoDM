@@ -43,7 +43,7 @@ sap.ui.define([
                 }
             }
             let oHEADER_OPTIMCUT = oOrderDetails.customValues.find( customValue => { return customValue.attribute === "HEADER_OPTIMCUT" } );
-            if(oHEADER_OPTIMCUT){
+            if(oHEADER_OPTIMCUT && oHEADER_OPTIMCUT.value){
                 oReturn.push({
                     fileName: oHEADER_OPTIMCUT.attribute,
                     fileDescription: oHEADER_OPTIMCUT.attribute,
