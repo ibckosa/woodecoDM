@@ -37,7 +37,7 @@ sap.ui.define([
             return oController.getConfigurationValue(sProperty);
         },
 
-        setLocal        Model: function(){
+        setLocalI18nModel: function(){
 
             // Create a resource bundle for language specific texts
             var oResourceModel = new sap.ui.model.resource.ResourceModel({
