@@ -64,7 +64,7 @@ sap.ui.define([
                 this._oErrorHandle.handleError(error);
             }
         },
-        
+/*        
         onOpenLink: function (oEvent) {
             const oItem = oEvent.getSource().getParent().getBindingContext("linkModel").getObject();
             const sLink = oItem.fileLink;
@@ -98,6 +98,15 @@ sap.ui.define([
                 });
         
                 oDialog.open();
+            }
+        },
+        */
+        onOpenLink: function (oEvent) {
+            const oItem = oEvent.getSource().getParent().getBindingContext("linkModel").getObject();
+            const sLink = oItem.fileLink;
+        
+            if (sLink) {
+                window.open(sLink, "_blank");
             }
         },
         
