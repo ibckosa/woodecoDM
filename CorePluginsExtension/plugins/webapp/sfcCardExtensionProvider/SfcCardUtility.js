@@ -37,7 +37,7 @@ sap.ui.define([
             return oController.getConfigurationValue(sProperty);
         },
 
-        setLocalI18nModel: function(){
+        setLocal        Model: function(){
 
             // Create a resource bundle for language specific texts
             var oResourceModel = new sap.ui.model.resource.ResourceModel({
@@ -257,13 +257,13 @@ const aImageBoxes = oGraphicToDisplay.map(oGraphic => {
     let Swidth;
     switch (oGraphicToDisplay.length) {
         case 1:
-            Swidth = "40vw";
+            Swidth = "20vw";
             break;
         case 2:
-            Swidth = "45vw";
+            Swidth = "20vw";
             break;
         case 3:
-            Swidth = "30vw";
+            Swidth = "20vw";
             break;
         case 4:
             Swidth = "20vw";
@@ -312,7 +312,7 @@ const oFlexBox = new sap.m.FlexBox({
 // Dialog (popup)
 const oDialog = new sap.m.Dialog({
     title: "Podgląd grafik",
-    contentWidth: "100%", // Szerokość okna dialogowego
+    contentWidth: "auto", // Szerokość okna dialogowego
     contentHeight: "auto",
     content: [oFlexBox],
     beginButton: new sap.m.Button({

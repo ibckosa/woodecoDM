@@ -48,7 +48,7 @@ sap.ui.define([
         },
         _loadData: async function () {
             debugger;
-            var oView = this.getView();
+            try {
             var oPodSelectionModel = this.getPodSelectionModel();
             var aSelections = oPodSelectionModel.getSelections();  
             const oController = this;
@@ -56,7 +56,7 @@ sap.ui.define([
             var oSfcNumber = oFirstSelection.getSfc().getSfc();
             var oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
         
-            try {
+   
                 const aLinks = await LinkReader.readLinks(oController, oSfcNumber, oOrderNumber);
                 const oModel = new JSONModel({ links: aLinks });
                 this.getView().setModel(oModel, "linkModel");
@@ -78,7 +78,7 @@ sap.ui.define([
                 });
         
                 const oDialog = new sap.m.Dialog({
-                    title: oItem.fileName || this._oTextHandler.getText("Podgląd PDF"),
+                    title: oItem.fileName || this._oTextHandler.getText("ShowPreview"),
                     contentWidth: "90%",
                     contentHeight: "90%",
                     resizable: true,
@@ -87,7 +87,7 @@ sap.ui.define([
                     horizontalScrolling: false,
                     content: [oHTML],
                     beginButton: new sap.m.Button({
-                        text: "Zamknij",
+                        text: this._oTextHandler.getText("Closebutt"),
                         press: function () {
                             oDialog.close();
                         }
