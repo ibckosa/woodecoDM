@@ -5,7 +5,7 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/LinkReader",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (jQuery, PluginViewController, JSONModel, LinkReader, ErrorHandler) {
+], function (jQuery, PluginViewController, JSONModel, LinkReader, ErrorHandler, TextHandler) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgFileViewer.vPlgFileViewer.controller.MainView", {
