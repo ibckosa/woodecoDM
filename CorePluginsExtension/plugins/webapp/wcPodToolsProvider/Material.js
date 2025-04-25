@@ -155,6 +155,9 @@ sap.ui.define([
         },
         getDetails: function(){
             return this._oDetails;
+        },
+        getCustomValues(){
+            return this._oDetails.customValues;
         }
     });
 });

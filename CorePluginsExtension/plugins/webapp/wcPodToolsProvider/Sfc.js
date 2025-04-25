@@ -49,6 +49,9 @@ sap.ui.define([
         },
         getStatusCode(){
             return this._oDetails.status.code;
+        },
+        getSfcNumber(){
+            return this._oDetails.sfc;
         }
     });
 

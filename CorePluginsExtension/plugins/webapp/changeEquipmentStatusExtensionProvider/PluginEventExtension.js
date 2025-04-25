@@ -37,8 +37,8 @@ sap.ui.define([
          */
         handleSaveResourceStatus: function(sUrl, oRequestBody) {
 
-            this._oExtensionUtilities.changeResourceStatus(sUrl, oRequestBody);
-            this.getController().handleSaveResourceStatus(sUrl, oRequestBody);
+            this._oExtensionUtilities.changeResourceStatus(sUrl, oRequestBody, this.getController());
+            
             // this._oExtensionUtilities.logMessage("PluginEventExtension.handleSaveResourceStatus: called");
 
             // let oConfiguration = this.getController().getConfiguration();

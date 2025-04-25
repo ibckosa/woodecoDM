@@ -43,6 +43,15 @@ sap.ui.define([
                 oReturn = oBinCustomValue.value;
             }catch(oError){}
             return oReturn;
+        },
+        getFunctionalLocation(){
+            let oReturn = "";
+
+            try{
+                let oBinCustomValue = this._oDetails.customValues.find(customValue => { return customValue.attribute === "FUNCTIONAL_LOCATION"});
+                oReturn = oBinCustomValue.value;
+            }catch(oError){}
+            return oReturn;
         }
     });
 });

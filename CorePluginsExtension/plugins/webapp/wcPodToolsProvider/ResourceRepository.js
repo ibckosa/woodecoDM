@@ -9,7 +9,7 @@ sap.ui.define([
 
 
     oResourceReposity.getResourceInstance = async function(oController, oPlant, oResourceNumber){
-        let oResource = new Resource(oController,oPlant, oResourceNumber);
+        let oResource = new Resource(oController, oPlant, oResourceNumber);
         await oResource.readResourceData();
         return oResource;
     }

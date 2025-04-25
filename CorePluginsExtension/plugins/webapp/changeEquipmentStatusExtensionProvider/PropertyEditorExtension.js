@@ -38,7 +38,8 @@ sap.ui.define([
                 {
                     control: oPropertyEditor.addSwitch(oPropertyFormContainer, "logToConsole", oPropertyData),
                     label: "Extension debug logging"
-                }
+                },
+
             ];
 
             // set labels for the new controls
@@ -49,6 +50,14 @@ sap.ui.define([
                     let oLabel = aContent[iLabelIndex];
                     oLabel.setText(oControl.label);
                 }
+            }
+
+            let oInput = oPropertyEditor.addInputField(oPropertyFormContainer, "notifEndpoint", oPropertyData);
+            let iIndex = oPropertyFormContainer.indexOfContent(oInput);
+            aContent = oPropertyFormContainer.getContent();
+            if (aContent[iIndex-1].setText) {
+                let oLabel = aContent[iIndex-1];
+                oLabel.setText("Notification endpoint");
             }
         },
 
@@ -96,7 +105,8 @@ sap.ui.define([
             oPropertyData = oPropertyData || {};
             return Object.assign(oPropertyData, {
                 confirmStatusChange: true,
-                logToConsole: true
+                logToConsole: true,
+                notifEndpoint: ""
             });
         }
     })

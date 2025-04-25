@@ -3,8 +3,10 @@ sap.ui.define([
     "sap/m/CheckBox",
     "sap/m/Label",
     "sap/m/TextArea",
-    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (BaseObject, CheckBox, Label, TextArea, TextHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
+    "sap/dm/dme/formatter/StatusFormatter"
+], function (BaseObject, CheckBox, Label, TextArea, TextHandler, ResourceRepository, StatusFormatter) {
     "use strict";
 
     /**
@@ -80,16 +82,29 @@ sap.ui.define([
                     let oText = new sap.m.Text({ text: this._oTextHandler.getText("labels.notifications.sendToErp")});
                     this._oChecbkox = new CheckBox();
                     this._oTextArea = new TextArea({ rows: 7});
-                    let oLabel = new Label({ text: "Komentarz"});
-                    let oLabelEmpty = new Label({ text: this._oTextHandler.getText("labels.notifications.comment")});
+                    let oLabel = new Label({ text: this._oTextHandler.getText("labels.notifications.comment")});
+                    let oLabelEmpty = new Label({ text: ""});
                     oContentForm.addContent(oLabel);
                     oContentForm.addContent(this._oTextArea);
                     oContentForm.addContent(oLabelEmpty);
                     oContentForm.addContent(oText);
                     oContentForm.addContent(this._oChecbkox);
+                    debugger;
+                    let oStatus = this._oPluginEventExt.getController().byId("inputStatus");
+                    let oName = oStatus.getMetadata().getElementName();
+                    let oList = oStatus.getList();
+                    oList.attachEvent("modelContextChange", this._onItemsLoad.bind(this));      
+                    //oList.attachAfterRendering(this._onItemsLoad.bind(this));                    
+                    debugger;
+                    // let oStatusModel = this._oPluginEventExt.getController().byId("inputStatus").getModel();
+                    // let oModel = this._oPluginEventExt.getController().byId("resourceStatusPanel").getModel();
+                    // let oModelData = this._oPluginEventExt.getController().byId("resourceStatusPanel").getModel().getData();
+                    
     
                 }
-            }catch(oError){}
+            }catch(oError){
+                debugger;
+            }
         },
 
         test: function(){
@@ -136,17 +151,155 @@ sap.ui.define([
             debugger;
         },
 
-        changeResourceStatus: function(oUrl, oRequest){
-
-            if(this._oTextArea){
-                let oComment = this._oTextArea.getValue();
-                if(this._oChecbkox.getSelected())
-                {
-                    oComment = "Wysłane do DUR\n" + oComment;
+        changeResourceStatus: async function(oUrl, oRequest, oController){
+            try{
+                if(this._oTextArea){
+                    let oComment = this._oTextArea.getValue();
+                    if(this._oChecbkox.getSelected())
+                    {
+                        await this._createErpNotification(oRequest, oController, oComment)
+                        oComment = "Wysłane do DUR\n" + oComment;
+                    }
+                    oRequest.comments = oComment;
                 }
-                oRequest.comments = oComment;
+                oController.handleSaveResourceStatus(oUrl, oRequest);
             }
+            catch(oError){}
+
+
+            
+        },
+        _createErpNotification: async function(oDurRequest, oController, oComment){
+
             debugger;
+            let oEndPoint = this._getNotifEndpoint(oController);
+            let oPlant = oController.getPodController().getUserPlant();
+            let oPodSelectionModel = oController.getPodSelectionModel();
+            let oDescription = oComment.replaceAll("\n", "|@#|");
+            let oShortText = oController.oSelectedReasonCodeData.description;
+            let oSapDateTime = this._getCurrentSapDateTime();
+            let oResource = await ResourceRepository.getResourceInstance(oController, oPlant, oPodSelectionModel.resource.resource);
+            let oFucntionalLocalization = oResource.getFunctionalLocation();
+            let oParameters = {
+                DESCRIPTION: oDescription,
+                ORDER: oFucntionalLocalization,
+                PLANT: oPlant,
+                SHORTTEXT: oShortText,
+                STARTDATE: oSapDateTime.sapDate,
+                STARTTIME: oSapDateTime.sapTime
+            };
+
+            let sUrl = oController.getPublicApiRestDataSourceUri() + oEndPoint + "&async=false";
+
+            return await new Promise((resolve,reject)=>{
+                oController.ajaxPostRequest(sUrl, oParameters,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        debugger;
+                        reject(oError);
+                    }   
+                );
+
+            });
+            // let oSelectedCode = oController.oSelectedReasonCodeData;
+            // let oResourceStatus = oController.oResourceStatus;
+            // let oResourceStatusPanel = oController.byId("resourceStatusPanel")
+            // debugger;
+        },
+        _onItemsLoad: function(oEvent){
+            try{
+                debugger;
+                let oFilters = []
+                let oList = oEvent.getSource();
+                let oListItems = oList.getItems();
+                // var oBinding = oList.getBinding("items");
+                // // var oFilter = new sap.ui.model.Filter("status", sap.ui.model.FilterOperator.EQ, "4");
+                // oFilters.push(new sap.ui.model.Filter("status", sap.ui.model.FilterOperator.EQ, "4"));
+                // oFilters.push(new sap.ui.model.Filter("status", sap.ui.model.FilterOperator.EQ, "5"));
+                // oFilters.push(new sap.ui.model.Filter("status", sap.ui.model.FilterOperator.EQ, "301"));
+                // oBinding.filter(oFilters);
+                // oBinding.refresh();
+                let oStatusFormatter = StatusFormatter;
+                try{
+                    StatusFormatter.aResourceStatusKeys = [
+                        "ENABLED",
+                        "DISABLED",
+                        "PRODUCTIVE",
+                        "SCHEDULED_DOWN",
+                        "UNSCHEDULED_DOWN",
+                        "UNKNOWN",
+                        "Przezbrojenie"
+                    ];
+                }catch(oError){
+
+                }
+                let oModel = oList.getModel();
+                let oModelData = oModel.getData();
+                oModelData = oModelData.filter(data=>{ return data.status === "4" || data.status === "5" || data.status === "301" });
+                let oStatus4 = { ...oModelData.find( data => { return data.status === "4" } ) };
+                if(oStatus4){
+                    oStatus4.statusDescription = "Przezbrojenie";
+                    oStatus4.status = "99";
+                    oModelData.push(oStatus4);
+                }
+                oModel.setData(oModelData);
+
+
+                this._oPluginEventExt.getController().statusList = this._oPluginEventExt.getController().statusList.filter( status => {return status.status === "4" || status.status === "5" || status.status === "301" } );
+                let oStatusList4 =  { ...this._oPluginEventExt.getController().statusList.find( status => {return status.status === "4" } ) };
+                if(oStatusList4){
+                    oStatusList4.statusDescription = "Przezbrojenie";
+                    oStatusList4.status = "99";
+                    this._oPluginEventExt.getController().statusList.push(oStatusList4);
+                }
+
+                this._oPluginEventExt.getController().oResourceStatus = {
+                    0: "UNKNOWN",
+                    1: "PRODUCTIVE",
+                    301: "ENABLED",
+                    302: "DISABLED",
+                    4: "SCHEDULED_DOWN",
+                    5: "UNSCHEDULED_DOWN",
+                    99: "Przezbrojenie" }
+
+                // oModel.setData(oModelData);
+            }catch(oError){
+                debugger;
+            }
+        },
+        _getCurrentSapDateTime: function(){
+            let today = new Date();
+            let oYear = today.getFullYear().toString();
+            let oMonth = today.getMonth().toString();
+            let oDay = today.getDate().toString();
+            let oHour = today.getHours().toString();
+            let oMinutes = today.getMinutes().toString();
+            let oSeconds = today.getSeconds().toString();
+
+
+            if (oMonth.length === 1) { oMonth = `0${oMonth}`; }
+            if (oDay.length === 1) { oDay = `0${oDay}`; }
+            if (oHour.length === 1) { oHour = `0${oHour}`; }
+            if (oMinutes.length === 1) { oMinutes = `0${oMinutes}`; }
+            if (oSeconds.length === 1) { oSeconds = `0${oSeconds}`; }
+
+            return {
+                sapDate: `${oYear}${oMonth}${oDay}`,
+                sapTime: `${oHour}${oMinutes}${oSeconds}`
+            };
+        },
+        _getNotifEndpoint: function(oController){
+            let oReturn = "";
+            try{
+                let oEndPoint = oController.getConfigurationValue("notifEndpoint");
+                if(oEndPoint){
+                    oReturn = oEndPoint;
+                }
+            }catch(oError){}
+            return oReturn;
         }
+
     })
 });

@@ -21,12 +21,13 @@ sap.ui.define([
 			
 			this.addSwitch(oPropertyFormContainer, "backButtonVisible", oData);
 			this.addSwitch(oPropertyFormContainer, "closeButtonVisible", oData);
+			this.addInputField(oPropertyFormContainer, "printerEndPoint", oData);
             oFormContainer = oPropertyFormContainer;
 		},
 		
 		getDefaultPropertyData: function(){
 			return {
-				
+				"printerEndPoint": "",
 				"backButtonVisible": true,
 				"closeButtonVisible": true
 			};

@@ -50,7 +50,7 @@ sap.ui.define([
                 let oButtonParent = oController.getView().byId("editDT").getParent();
                 if(!this._initialized){
                     this._initialized = true;
-                    oButtonParent.insertContent( new sap.m.Button({ text: "Mój guzik", type: "Emphasized", press: this._onSendpress.bind(this) }), 4);
+                    oButtonParent.insertContent( new sap.m.Button({ text: "Zgłoszenie DUR", type: "Emphasized", press: this._onSendpress.bind(this) }), 4);
                 }
                 this._oTableExtended = true;
                 let oColumns = oTable.getColumns();

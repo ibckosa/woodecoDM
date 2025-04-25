@@ -7,6 +7,8 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/PalleteQueue",
     "ibc/dm/plugins/wcPodToolsProvider/ReturnNpwDialog",
     "ibc/dm/plugins/wcPodToolsProvider/AdditionalIssueDialog",
+    "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
     "sap/ui/model/json/JSONModel",
     "sap/m/Dialog",
     "sap/m/Button",
@@ -25,7 +27,7 @@ sap.ui.define([
     "sap/m/OverflowToolbar",
     "sap/f/DynamicPage",
     "sap/m/Label"
-], function (ObjectUI5,TextHandler, Palette, ResourceRepository, ErrorHandler, PalleteQueue, ReturnNpwDialog, AdditionalIssueDialog, JSONModel, Dialog, Button, Text, mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label){
+], function (ObjectUI5,TextHandler, Palette, ResourceRepository, ErrorHandler, PalleteQueue, ReturnNpwDialog, AdditionalIssueDialog, MaterialRepository, SfcReceiptPrint, JSONModel, Dialog, Button, Text, mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label){
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.PalleteQueueHandler", {
         constructor: function(){
@@ -269,12 +271,14 @@ sap.ui.define([
                 let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
                 let oSelectedItems = this._getSelectedItems();
                 let oZweiEndpoint = this._getZweiEndpoint();
+                let oPrintingEndpoint = this._getPrintingEndpoint();
                 try{
                     for(const item of oSelectedItems){
                         let oPallete  = new Palette(this._oPluginViewController);
                         item.erpResourceId = oResource.getResourceErpId();
                         await oPallete.palleteReturn(item, oZweiEndpoint);
                         await oPallete.reducePalleteQuan(item, item.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
+                        await this._executeLabelPrint(item, oPrintingEndpoint);
                         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     }
                 }catch(oError){this._oErrorHandler.handleError(oError);}
@@ -358,6 +362,14 @@ sap.ui.define([
 
             return oZweiEndpoint;
         },
+        _getPrintingEndpoint: function(){
+            let oPrintingEndpoint = this._oPluginViewController.getConfigurationValue("printerEndPoint");
+            if(!oPrintingEndpoint||oPrintingEndpoint===""){
+                this._oErrorHandler.throwError("error.printing.noEndpoint");
+            }
+
+            return oPrintingEndpoint;
+        },
         _getDialogTitle: function(){
             let oReturn = "";
 
@@ -421,6 +433,28 @@ sap.ui.define([
                 );
 
             });
+        },
+        _executeLabelPrint: async function(oItem, oEndpoint){
+            let oPrintingDetails = {};
+            let oMaterial = await MaterialRepository.getMaterialInstance(this._oPluginViewController, oItem.plant, oItem.materialId);
+            oPrintingDetails.endpoint = oEndpoint;
+            oPrintingDetails.plant  = oItem.plant;
+            oPrintingDetails.order = undefined;
+            oPrintingDetails.workCenter = oItem.workCenter;
+            oPrintingDetails.resource = oItem.resource;
+            oPrintingDetails.sfc = undefined;
+            oPrintingDetails.material = oItem.materialId;
+            oPrintingDetails.HU = oItem.handlingUnit;
+            oPrintingDetails.orderLineCustomValues = [];
+            oPrintingDetails.orderCustomValues = [];
+            oPrintingDetails.materialCustomValues = oMaterial.getCustomValues();
+            oPrintingDetails.quantity = oItem.quantity;
+            oPrintingDetails.printer = 'IBC_BM';
+            oPrintingDetails.operation = "";
+            oPrintingDetails.document = 'WOODECO1';
+            
+            let oSfcReceiptPrint = new SfcReceiptPrint(this._oPluginViewController, oPrintingDetails);
+            await oSfcReceiptPrint.print();
         }
 
     })

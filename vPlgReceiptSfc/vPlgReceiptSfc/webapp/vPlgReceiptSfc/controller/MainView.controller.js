@@ -89,6 +89,7 @@ sap.ui.define([
                 if(oFirstSelection.getSfc().getSfc() !== this._oCurrentSfc||this._reloadQ1Plugin || true){
                     this.getView().setBusyIndicatorDelay(0);
                     this.getView().setBusy(true);
+                    await this._setVisibilityOfPalleteNumber();
                     let oCustomQuan = this._getCustomQuan( oFirstSelection );
                     await this._setInputQuantity(oFirstSelection,oCustomQuan)
                     this._oCurrentSfc = oFirstSelection.getSfc().getSfc();
@@ -208,7 +209,8 @@ sap.ui.define([
                     resource: oPodSelectionModel.resource.resource,
                     sfcQuantity: parseInt(aSelectionFirstRow.getSfcData().getQuantity()),
                     operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
-                    workCenter: oPodSelectionModel.workCenter };
+                    workCenter: oPodSelectionModel.workCenter,
+                    palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()) };
 
                 ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcReceipt(this, oReceiptParameters);
@@ -710,6 +712,9 @@ sap.ui.define([
 
                this.oApproveDialog.open();
             });
+        },
+        _setVisibilityOfPalleteNumber: async function(){
+            this.byId("inputPalleteQuan").setValue("1");
         }
 
     });

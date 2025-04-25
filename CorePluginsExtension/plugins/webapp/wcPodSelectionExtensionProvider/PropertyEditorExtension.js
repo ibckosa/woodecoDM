@@ -65,6 +65,13 @@ sap.ui.define([
                     oLabel = aContent[iIndex-1];
                     oLabel.setText("Dummy sfc number");
                 }
+                oInput = oPropertyEditor.addInputField(oPropertyFormContainer, "printerEndPoint", oPropertyData);
+                iIndex = oPropertyFormContainer.indexOfContent(oInput);
+                aContent = oPropertyFormContainer.getContent();
+                if (aContent[iIndex-1].setText) {
+                    oLabel = aContent[iIndex-1];
+                    oLabel.setText("Endpoint for printing");
+                }
 
 
             }
@@ -110,6 +117,10 @@ sap.ui.define([
             if (typeof oPropertyData.dummySfc === "undefined") {
                 oPropertyData.dummySfc = "";
             }
+            if (typeof oPropertyData.printerEndPoint === "undefined") {
+                oPropertyData.printerEndPoint = "";
+            }
+
 
             return oPropertyData;
         },
@@ -141,6 +152,9 @@ sap.ui.define([
             if (typeof oPropertyData.dummySfc === "undefined") {
                 oPropertyData.dummySfc = "";
             }
+            if (typeof oPropertyData.printerEndPoint === "undefined") {
+                oPropertyData.printerEndPoint = "";
+            }
             return oPropertyData;
         },
 
@@ -158,6 +172,7 @@ sap.ui.define([
             oPropertyData.zweiUrl = "";
             oPropertyData.dummyOrder = "";
             oPropertyData.dummySfc = "";
+            oPropertyData.printerEndPoint = "";
             return oPropertyData;
         }
     })

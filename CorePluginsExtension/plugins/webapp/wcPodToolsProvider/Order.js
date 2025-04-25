@@ -33,6 +33,31 @@ sap.ui.define([
         },
         getDetails: function(){
             return this._oDetails;
+        },
+        getOrderLineCustomValues: function(oLineNumber){
+            let oLineNumberString = `${ oLineNumber }`
+            let oValues = [];
+            if(oLineNumberString.length===1){
+                oLineNumberString = `0${ oLineNumberString }`
+            }
+            try{
+                let oLine = this._oDetails.customValues.find(customValues => {return customValues.attribute === `ITEM_${ oLineNumberString }`; })
+                let oSplittedLine = oLine.value.split("||");
+                oValues = oSplittedLine
+                .filter(item => item.includes(":")) 
+                .map(item => {
+                  const colonIndex = item.indexOf(":");
+                  const field_name = item.substring(0, colonIndex).trim();
+                  const field_value = item.substring(colonIndex + 1).trim();
+                  return { field_name, field_value };
+                });
+            }catch(oError){}
+            
+
+            return oValues;
+        },
+        getHeaderCustomValues: function(){
+            return this._oDetails.customValues.filter(customValue => { return  !customValue.attribute.startsWith("ITEM") });
         }
     });
 });

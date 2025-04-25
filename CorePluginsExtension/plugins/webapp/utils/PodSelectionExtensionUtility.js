@@ -26,9 +26,13 @@ sap.ui.define([
     "sap/m/Label",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler",
-    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository"
 ], function (BaseObject, Button, Input, MessageBox, MessageToast, ToolbarSpacer, FilterGroupItem, JSONModel, PodUtility , Dialog, Text
-    , mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler, TextHandler) {
+    , mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler, TextHandler,
+    MaterialRepository, SfcReceiptPrint, OrderRepository) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
@@ -489,7 +493,8 @@ sap.ui.define([
                     stepId: oStepId,
                     storageLocation: oOrderDetails.putawayStorageLocation,
                     plant: oOrderDetails.plant,
-                    packagingMaterial: ""
+                    packagingMaterial: "",
+                    HU: ""
                 };
                 oReturnTab.push(oItem);
             }
@@ -593,6 +598,7 @@ sap.ui.define([
                     try{
                         await this._closeNonconformance(oLine);
                         //this._showSuccessMessage("q23.success.closeNonconformance");
+                        oLine.HU = await this._generateHuNumber(oLine);
                         oLine.packagingMaterial = await this._getPackagingMaterial(oLine);
                         await this._callCustomApi("PACKAGE", oLine);
                         this._showSuccessMessage("q23.success.packageNonconformance");
@@ -608,12 +614,15 @@ sap.ui.define([
             let oErrorHandler = new ErrorHandler(this._oSelController);
             try{
                 this._oZweiEndpoint = this._getZweiEndpoint();
+                let oPrintingEndpoint = this._getPrintingEndpoint();
                 let oSelectedLines = this._getSelectedQ23Lines();
                 for(let oLine of oSelectedLines){
                     try{
                         await this._closeNonconformance(oLine);
+                        oLine.HU = await this._generateHuNumber(oLine);
                         //this._showSuccessMessage("q23.success.closeNonconformance");
                         await this._callCustomApi("RETURN", oLine);
+                        await this._executeLabelPrint(oLine, oPrintingEndpoint);
                         this._showSuccessMessage("q23.success.returnNonconformance");
                     }catch(oError){ this._oErrorHandler.handleError(oError); }
                 }
@@ -716,7 +725,6 @@ sap.ui.define([
         _callCustomApi: async function(oProcess, oLine){
             let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + this._oZweiEndpoint;
             debugger;
-            let oHuNumber = await this._generateHuNumber(oLine);
             let oSapDateTime = this._getCurrentSapDateTime();
             let oParameters = {};
             if(oProcess==="RETURN"){
@@ -724,8 +732,8 @@ sap.ui.define([
                     BEWART: "521",
                     ZLO: "STOCK",
                     LGORT: oLine.storageLocation,
-                    HU: oHuNumber,
-                    CHARGE: oHuNumber,
+                    HU: oLine.HU,
+                    CHARGE: oLine.HU,
                     MATNR: oLine.materialId,
                     MATTYP: "SCRAP2SAP",
                     MENGE: oLine.quantity,
@@ -750,8 +758,8 @@ sap.ui.define([
                     BEWART: "521",
                     ZLO: "STOCK",
                     LGORT: oLine.storageLocation,
-                    HU: oHuNumber,
-                    CHARGE: oHuNumber,
+                    HU: oLine.HU,
+                    CHARGE: oLine.HU,
                     MATNR: oLine.packagingMaterial,
                     MATTYP: "SCRAP2SAP",
                     MENGE: oLine.quantity,
@@ -895,6 +903,37 @@ sap.ui.define([
                 sapDate: `${oYear}${oMonth}${oDay}`,
                 sapTime: `${oHour}${oMinutes}${oSeconds}`
             };
-        }   
+        },
+        _getPrintingEndpoint: function(){
+            let oPrintingEndpoint = this.getCoreExtension().getConfigurationValue("printerEndPoint");
+            if(!oPrintingEndpoint||oPrintingEndpoint===""){
+                this._oErrorHandler.throwError("error.printing.noEndpoint");
+            }
+
+            return oPrintingEndpoint;
+        },
+        _executeLabelPrint: async function(oItem, oEndpoint){
+            let oPrintingDetails = {};
+            let oMaterial = await MaterialRepository.getMaterialInstance(this._oSelController, oItem.plant, oItem.materialId);
+            let oOrder = await OrderRepository.readOrder(this._oSelController, oItem.plant, oItem.orderNumber);
+            oPrintingDetails.endpoint = oEndpoint;
+            oPrintingDetails.plant  = oItem.plant;
+            oPrintingDetails.order = oItem.orderNumber;
+            oPrintingDetails.workCenter = this._oWorkCenter;
+            oPrintingDetails.resource = this._oResource;
+            oPrintingDetails.sfc = oItem.sfc;
+            oPrintingDetails.material = oItem.materialId;
+            oPrintingDetails.HU = oItem.HU;
+            oPrintingDetails.orderLineCustomValues = [];
+            oPrintingDetails.orderCustomValues = oOrder.getOrderLineCustomValues(1);
+            oPrintingDetails.materialCustomValues = oMaterial.getCustomValues();
+            oPrintingDetails.quantity = oItem.quantity;
+            oPrintingDetails.printer = 'IBC_BM';
+            oPrintingDetails.operation = oItem.stepId;
+            oPrintingDetails.document = 'WOODECO1';
+            
+            let oSfcReceiptPrint = new SfcReceiptPrint(this._oSelController, oPrintingDetails);
+            await oSfcReceiptPrint.print();
+        }
     })
 });
