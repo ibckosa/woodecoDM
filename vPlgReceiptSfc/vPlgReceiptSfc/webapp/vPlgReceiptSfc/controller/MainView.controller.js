@@ -11,7 +11,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceipt",
-], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary, ErrorHandler, SfcRepository, IssuesManager, SfcReceipt) {
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
+        "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary, ErrorHandler, SfcRepository, IssuesManager, SfcReceipt, ResourceRepository, TextHandler) {
     "use strict";
 
     var oLogger = Log.getLogger("exampleExecutionPlugin", Log.Level.INFO);
@@ -29,6 +31,7 @@ sap.ui.define([
             this._oErrorHandler = new ErrorHandler(this);   
             this._reloadQ1Plugin = true;
             this._oCurrentSfc = "";
+            this._oTextHandler = new TextHandler(); 
             //this.getView().setBusy(true);
         },
 
@@ -94,6 +97,7 @@ sap.ui.define([
                     await this._setInputQuantity(oFirstSelection,oCustomQuan)
                     this._oCurrentSfc = oFirstSelection.getSfc().getSfc();
                     this._reloadQ1Plugin = false;
+                    await this._setFieldVisibility();
                 }
                 this.getView().setBusy(false);   
             }catch(oError){
@@ -210,7 +214,8 @@ sap.ui.define([
                     sfcQuantity: parseInt(aSelectionFirstRow.getSfcData().getQuantity()),
                     operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
                     workCenter: oPodSelectionModel.workCenter,
-                    palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()) };
+                    palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
+                    packageNumber: parseInt(this.byId("inputPackageQuan").getValue()) };
 
                 ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcReceipt(this, oReceiptParameters);
@@ -715,10 +720,52 @@ sap.ui.define([
         },
         _setVisibilityOfPalleteNumber: async function(){
             this.byId("inputPalleteQuan").setValue("1");
+        },
+        _setFieldVisibility: async function(){
+            try{
+                let oPodSelectionModel = this.getPodSelectionModel();
+                let oWorkCenter = oPodSelectionModel.workCenter;
+                let oResourceNumber = oPodSelectionModel.resource.resource;
+                debugger;
+                let oResource = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), oResourceNumber);
+                let oFunctionalLocation = oResource.getQ1Scheme();
+
+                if(oFunctionalLocation==="1"){
+                    this.byId("inputPackageQuan").setVisible(false);
+                    this.byId("inputPackageQuanLabel").setVisible(false);
+
+                    this.byId("inputPalleteQuanLabel").setVisible(true);
+                    this.byId("inputPalleteQuan").setVisible(true);
+                    this.byId("inputReceiptQuantityLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityLabelRolls"));
+
+                }else if(oFunctionalLocation==="2"){
+                    this.byId("inputPackageQuan").setVisible(true);
+                    this.byId("inputPackageQuanLabel").setVisible(true);
+
+                    this.byId("inputPalleteQuanLabel").setVisible(true);
+                    this.byId("inputPalleteQuan").setVisible(true);
+                    //wszystko
+                    this.byId("inputReceiptQuantityLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityLabelRolls"));
+                }else{
+                    let oModelData = this.getView().getModel().getData();
+                    this.byId("inputPackageQuan").setVisible(false);
+                    this.byId("inputPackageQuanLabel").setVisible(false);
+
+                    this.byId("inputPalleteQuanLabel").setVisible(false);
+                    this.byId("inputPalleteQuan").setVisible(false);
+
+                    if(oModelData.isCustomQuan){
+                        this.byId("inputReceiptQuantityLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityLabelPallet"));
+                    }else{
+                        this.byId("inputReceiptQuantityLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityLabel"));
+                    }
+                }
+
+            }catch(oError){
+                debugger;
+            }
         }
-
     });
-
     return oPluginViewController;
 });
 

@@ -46,6 +46,14 @@ sap.ui.define([
                 let oLabel = aContent[iIndex-1];
                 oLabel.setText("Enable debug logging");
             }
+
+            oInput = oPropertyEditor.addInputField(oPropertyFormContainer, "notifEndpoint", oPropertyData);
+            iIndex = oPropertyFormContainer.indexOfContent(oInput);
+            aContent = oPropertyFormContainer.getContent();
+            if (aContent[iIndex-1].setText) {
+                let oLabel = aContent[iIndex-1];
+                oLabel.setText("Notification endpoint");
+            }
         },
 
         /*
@@ -61,6 +69,9 @@ sap.ui.define([
             }
             if (typeof oPropertyData.logToConsole === "undefined") {
                 oPropertyData.logToConsole = false;
+            }
+            if (typeof oPropertyData.notifEndpoint === "undefined") {
+                oPropertyData.notifEndpoint = "";
             }
             return oPropertyData;
         },
@@ -87,6 +98,7 @@ sap.ui.define([
         getDefaultPropertyData: function (oPropertyData) {
             oPropertyData.logToConsole = false;
             oPropertyData.downtimeListButtonHeight = "48px";
+            oPropertyData.notifEndpoint = "";
             return oPropertyData;
         }
     })

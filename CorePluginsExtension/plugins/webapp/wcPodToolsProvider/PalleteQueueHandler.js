@@ -299,13 +299,13 @@ sap.ui.define([
                 let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
                 let oPallete  = new Palette(this._oPluginViewController);
                 let oDialogReturn = await ReturnNpwDialog.showDialog(oItem, this._oPluginViewController);
+                let oPrintingEndpoint = this._getPrintingEndpoint();
                 if(oDialogReturn.quantity>0){ 
                     oItem.erpResourceId = oResource.getResourceErpId();
                     await oPallete.palleteReturnNpw(oItem, oZweiEndpoint, oDialogReturn.quantity);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturnNpw"),true,true);
                     await oPallete.reducePalleteQuan(oItem, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc );
-                    // let oNonconformanceId = await this._logNonconformance(oDialogReturn.quantity, oItem, oDialogReturn.code, oDummyOrderSfc.dummySfc);
-                    // await this._closeNonconformance(oItem.plant, oNonconformanceId);
+                    await this._executeLabelPrint(oItem, oPrintingEndpoint);
                     setTimeout( async ()=> {                    await this._getDialogData();
                         this._oDialogLog.setBusy(false);},1500);
                 }else{

@@ -35,16 +35,6 @@ sap.ui.define([
         },
 
         onBeforeRendering: function(oEvent) {
-            let oStatus = this.getController().byId("inputStatus");
-            let oName = oStatus.getMetadata().getElementName();
-            oStatus.onBeforeOpen(this._onItemsLoad.bind(this));
-            oStatus.attachChange(this._onItemsLoad.bind(this));
-            oStatus.onAfterRendering(this._onItemsLoad.bind(this));
-            oStatus.attachEvent( "beforeOpen", this._onItemsLoad.bind(this) );
-            let oList = oStatus.getList();
-            let oItems = oList.getItems();
-            let oListModel = oList.getModel();
-            debugger;
 
             if (!this._bInitialized) {
                 let oConfiguration = this.getController().getConfiguration();
@@ -72,6 +62,13 @@ sap.ui.define([
             this._oExtensionUtilities.logMessage("LifecycleExtension.onExit: ChangeEquipmentStatus extension");
         },
         _onItemsLoad: function(oEvent){
+            try{
+                debugger;
+                let oStatus = oEvent.getSource();
+                let oBinding = oStatus.getBinding();
+            }catch(oError){
+
+            }
             debugger;
         }
     })

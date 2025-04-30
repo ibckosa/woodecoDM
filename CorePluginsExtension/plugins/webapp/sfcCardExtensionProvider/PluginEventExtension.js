@@ -5,8 +5,9 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "ibc/dm/plugins/wcPodToolsProvider/SmartEditGraphicRepository",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository"
-], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, JSONModel, SmartEditGraphicRepository, MaterialRepository, OrderRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository"
+], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, JSONModel, SmartEditGraphicRepository, MaterialRepository, OrderRepository, SfcRepository) {
     "use strict";
 
     return PluginControllerExtension.extend("ibc.dm.plugins.sfcCardExtensionProvider.PluginEventExtension", {
@@ -206,14 +207,16 @@ sap.ui.define([
 
                 var oPodController = oController.getPodController();                   
                 var oOrder = oFirstSelection.getShopOrder().getShopOrder();
+                let oSfcNumber = oFirstSelection.getSfc().getSfc();
                 var oPlant = oPodController.getUserPlant();
                 var oMaterial = oFirstSelection.getSfcData().getMaterial();
                 let oOrderInstance = await OrderRepository.readOrderByPassBuffer(oController, oPlant, oOrder);
                 let oMaterialInstance =  await MaterialRepository.getMaterialInstance(oController, oPlant, oMaterial);
                 var oMaterialData = oMaterialInstance.getDetails();
                 var oOrderData = oOrderInstance.getDetails();
-                let oFieldConfiguration = this._getFieldConfiguration(oController, );
+                //let oFieldConfiguration = this._getFieldConfiguration(oController, );
                 oSfcCardCustom.decors = await oMaterialInstance.getGraphics();
+                let oSfc = SfcRepository.getInstance(oController, oPlant, oMaterial);
                 
                 if(oOrderData.productionQuantity>0){
                     oSfcCardCustom.progressIndicatorValue =  oOrderData.doneQuantityInProductionUom + " z " + oOrderData.productionQuantity;

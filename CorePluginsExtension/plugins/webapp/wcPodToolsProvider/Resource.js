@@ -52,6 +52,15 @@ sap.ui.define([
                 oReturn = oBinCustomValue.value;
             }catch(oError){}
             return oReturn;
+        },
+        getQ1Scheme(){
+            let oReturn = "";
+
+            try{
+                let oBinCustomValue = this._oDetails.customValues.find(customValue => { return customValue.attribute === "Q1_SCHEME"});
+                oReturn = oBinCustomValue.value;
+            }catch(oError){}
+            return oReturn;
         }
     });
 });

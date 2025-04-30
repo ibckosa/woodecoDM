@@ -89,12 +89,18 @@ sap.ui.define([
                     oContentForm.addContent(oLabelEmpty);
                     oContentForm.addContent(oText);
                     oContentForm.addContent(this._oChecbkox);
-                    debugger;
                     let oStatus = this._oPluginEventExt.getController().byId("inputStatus");
-                    let oName = oStatus.getMetadata().getElementName();
                     let oList = oStatus.getList();
+                    oStatus.attachEvent("modelContextChange", this._onItemsLoad.bind(this));      
                     oList.attachEvent("modelContextChange", this._onItemsLoad.bind(this));      
-                    //oList.attachAfterRendering(this._onItemsLoad.bind(this));                    
+                    oList.attachEvent("afterRendering", this._onItemsLoad.bind(this));   
+                    oList.attachEvent("updateFinished", this._onAfterList.bind(this));
+                    oStatus.attachEvent("updateFinished", this._onAfterList.bind(this));
+
+                    oList.attachSelectionChange(this._listSelectionChange.bind(this));
+                    oStatus.onAfterRendering(this._onAfterList.bind(this));       
+                    oList.onAfterRendering(this._onAfterList.bind(this));    
+        
                     debugger;
                     // let oStatusModel = this._oPluginEventExt.getController().byId("inputStatus").getModel();
                     // let oModel = this._oPluginEventExt.getController().byId("resourceStatusPanel").getModel();
@@ -153,6 +159,10 @@ sap.ui.define([
 
         changeResourceStatus: async function(oUrl, oRequest, oController){
             try{
+                if(oRequest.status === "Przezbrojenie"){
+                    oRequest.status = "SCHEDULED_DOWN";
+                    oRequest.reasonCode.timeElement = "CHANGEOVER";
+                }
                 if(this._oTextArea){
                     let oComment = this._oTextArea.getValue();
                     if(this._oChecbkox.getSelected())
@@ -211,9 +221,9 @@ sap.ui.define([
         _onItemsLoad: function(oEvent){
             try{
                 debugger;
-                let oFilters = []
                 let oList = oEvent.getSource();
                 let oListItems = oList.getItems();
+                let oBinding = oList.getBinding();
                 // var oBinding = oList.getBinding("items");
                 // // var oFilter = new sap.ui.model.Filter("status", sap.ui.model.FilterOperator.EQ, "4");
                 // oFilters.push(new sap.ui.model.Filter("status", sap.ui.model.FilterOperator.EQ, "4"));
@@ -299,6 +309,54 @@ sap.ui.define([
                 }
             }catch(oError){}
             return oReturn;
+        },
+        _onAfterList: function(oEvent){
+            debugger;
+            try{
+                
+                let oList = oEvent.getSource();
+                let oBinding = oList.getBinding("items");
+                let oFormatter = oBinding.formatter;
+            }catch(oError){
+                debugger;
+            }
+
+        },
+        _listSelectionChange: function(oEvent){
+            let oController = this._oPluginEventExt.getController();
+            try{
+                let oSelectedKey = oEvent.getParameters().selectedItem.getKey();
+                if(oSelectedKey==="99"){
+                    let oxd = oController.oSelectedReasonCodeData;
+                    oController.oSelectedReasonCodeData = {};
+                    oController.oSelectedReasonCodeData.description = "Changeover - general";
+                    oController.oSelectedReasonCodeData.plant = oController.getPodController().getUserPlant();
+                    oController.oSelectedReasonCodeData.reasonCode1 = "P001";
+                    oController.oSelectedReasonCodeData.fixed=false;
+
+                    oController.oSelectedReasonCodeData.reasonCode2 = null;
+                    oController.oSelectedReasonCodeData.reasonCode3 = null;
+                    oController.oSelectedReasonCodeData.reasonCode4 = null;
+                    oController.oSelectedReasonCodeData.reasonCode5 = null;
+                    oController.oSelectedReasonCodeData.reasonCode6 = null;
+                    oController.oSelectedReasonCodeData.reasonCode7 = null;
+                    oController.oSelectedReasonCodeData.reasonCode8 = null;
+                    oController.oSelectedReasonCodeData.reasonCode9 = null;
+                    oController.oSelectedReasonCodeData.reasonCode10 = null;
+                    oController.oSelectedReasonCodeData.resourceReasonCodeNodeCollection = null;
+                    oController.oSelectedReasonCodeData.status= "ENABLED";
+                    oController.oSelectedReasonCodeData.timeElement = null;
+                    oController.oSelectedReasonCodeData.targetInMinutes = null;
+                    oController.oSelectedReasonCodeData.keyId = "1745825298839000000700256";
+                    oController.byId("inputReasonCode").setValue("Przezbrojenie - ogólne");
+                    oController.byId("save").setEnabled(true);
+                    oController.byId("cancel").setEnabled(true);
+                }
+                
+            }catch(oError){
+
+            }
+            debugger;
         }
 
     })

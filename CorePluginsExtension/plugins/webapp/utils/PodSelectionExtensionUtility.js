@@ -476,7 +476,7 @@ sap.ui.define([
             for(const nonconformance of oNonconformancesFiltered){
                 let oSfc = await this._getSfcDetails(nonconformance.sfc);
                 let oOrderDetails = await this._getOrderDetails(oSfc.order.order);
-                let oStepId = this._getStepId(oSfc);
+                let oStepId = this._getStepId(oSfc, nonconformance.operationActivity.operationActivity);
                 //let oMaterial = await this._getMaterialDetails();
                 let oItem = {
                     lineChecked: false,
@@ -490,7 +490,7 @@ sap.ui.define([
                     nonconformanceId: nonconformance.id,
                     ncDescription: nonconformance.code.description,
                     sfc: nonconformance.sfc,
-                    stepId: oStepId,
+                    stepId: nonconformance.routingStepId,
                     storageLocation: oOrderDetails.putawayStorageLocation,
                     plant: oOrderDetails.plant,
                     packagingMaterial: "",
@@ -601,6 +601,7 @@ sap.ui.define([
                         oLine.HU = await this._generateHuNumber(oLine);
                         oLine.packagingMaterial = await this._getPackagingMaterial(oLine);
                         await this._callCustomApi("PACKAGE", oLine);
+                        await this._executeLabelPrint(oLine, oPrintingEndpoint);
                         this._showSuccessMessage("q23.success.packageNonconformance");
                     }catch(oError){ this._oErrorHandler.handleError(oError); }
                 }
@@ -794,10 +795,11 @@ sap.ui.define([
 
             });
         },
-        _getStepId: function(oSfcDetails){
+        _getStepId: function(oSfcDetails, oOperationNumber){
             let oStepId = "";
             try{
-                oStepId = oSfcDetails.steps[0].stepId;      
+                let oStep = oSfcDetails.steps.find(step=>{return step.operation.operation = oOperationNumber ;}); 
+                oStepId = oStep.stepId;     
             }catch(oError){}
             return oStepId;
         },
@@ -922,7 +924,12 @@ sap.ui.define([
             oPrintingDetails.workCenter = this._oWorkCenter;
             oPrintingDetails.resource = this._oResource;
             oPrintingDetails.sfc = oItem.sfc;
-            oPrintingDetails.material = oItem.materialId;
+            if(oItem.packagingMaterial !== ""){
+                oPrintingDetails.material = oItem.packagingMaterial;
+            }else{
+                oPrintingDetails.material = oItem.materialId;
+            }
+            
             oPrintingDetails.HU = oItem.HU;
             oPrintingDetails.orderLineCustomValues = [];
             oPrintingDetails.orderCustomValues = oOrder.getOrderLineCustomValues(1);

@@ -124,7 +124,7 @@ sap.ui.define([
             let oParameters = {};
             this._checkBeforeReturnNpw(oLine ,oEndPoint, oQuantity);
             let oGeneratedHu = await this.generateHuNumber(oLine.palleteDetails.material, oLine.palleteDetails.materialVersion, oLine.plant);
-
+            oLine.handlingUnit = oGeneratedHu;
 
             oParameters = { WERK: oLine.plant,
                 BEWART: "551",

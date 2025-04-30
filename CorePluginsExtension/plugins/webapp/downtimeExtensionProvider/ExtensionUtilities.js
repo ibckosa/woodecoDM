@@ -1,8 +1,11 @@
 sap.ui.define([
     "sap/ui/base/Object",
     "ibc/dm/plugins/downtimeExtensionProvider/control/DowntimeListButton",
-    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (BaseObject, DowntimeListButton, TextHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+    "sap/dm/dme/model/AjaxUtil",
+], function (BaseObject, DowntimeListButton, TextHandler, ResourceRepository, ErrorHandler, AjaxUtil) {
     "use strict";
 
     /**
@@ -44,7 +47,7 @@ sap.ui.define([
         },
 
         extendDowntimesTable: function(oTable, oController){
-            debugger;
+            this._oErrorHandler = new ErrorHandler(oController);
             this._oController = oController;
             this._oTable = oTable;
                 let oButtonParent = oController.getView().byId("editDT").getParent();
@@ -171,15 +174,104 @@ sap.ui.define([
                 console.debug(sMessage + vDataOutput);
             }
         },
-        _onSendpress: function(oEvent){
+        _onSendpress: async function(oEvent){
             if(this._oController && this._oTable){
-                let oTableModel = this._oTable.getModel();
                 try{
-                    let oData = this._oTable.getModel().getData();
-                    debugger;
-                }catch(oError){}
-                debugger;
+                    let selectedItems = this._oTable.getSelectedItems();
+                    for(const item of selectedItems){
+                        await this._sendToErp(item.getBindingContext().getObject());
+                        await this._editDownTime(item.getBindingContext().getObject());
+                        debugger;                        
+                    }
+                }catch(oError){
+                    this._oErrorHandler.handleError(oError);
+                }
             }
+        },
+        _sendToErp: async function(oItem){
+            debugger;
+            let oEndPoint = this._getNotifEndpoint();
+            let oPlant = this._oController.getPodController().getUserPlant();
+            oItem.comments = `Wysłane do DUR\n${oItem.comments}`;
+            let oDescription = oItem.comments.replaceAll("Wysłane do DUR\n", "");
+            oDescription = oDescription.replaceAll("\n", "|@#|");
+            let oDate = new Date(oItem.actualStart);
+            const year = oDate.getFullYear();
+            const month = String(oDate.getMonth() + 1).padStart(2, '0'); // miesiąc jest od 0, więc dodajemy 1
+            const day = String(oDate.getDate()).padStart(2, '0');
+            const hours = String(oDate.getHours()).padStart(2, '0');
+            const minutes = String(oDate.getMinutes()).padStart(2, '0');
+            const seconds = String(oDate.getSeconds()).padStart(2, '0');
+
+            let oResource = await ResourceRepository.getResourceInstance(this._oController, oPlant, oItem.resource);
+
+            let oParameters = {
+                DESCRIPTION: oDescription,
+                ORDER: oResource.getFunctionalLocation(),
+                PLANT: oPlant,
+                SHORTTEXT: oItem.reasonCodeDescription,
+                STARTDATE: `${year}${month}${day}`,
+                STARTTIME: `${hours}${minutes}${seconds}`
+            };
+
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + oEndPoint + "&async=false";
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPostRequest(sUrl, oParameters,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        debugger;
+                        reject(oError);
+                    }   
+                );
+
+            });
+        },
+        _getNotifEndpoint: function(){
+            let oReturn = "";
+            try{
+                let oEndPoint = this._oController.getConfigurationValue("notifEndpoint");
+                if(oEndPoint){
+                    oReturn = oEndPoint;
+                }
+            }catch(oError){}
+            return oReturn;
+        },
+        _editDownTime: async function(oItem){
+            let oUrl = this._oController.oeeTransactionUrl + "downtimes";
+            let oPlant = this._oController.getPodController().getUserPlant();
+
+            let oParameters = {
+                plant: oPlant,
+                resource: oItem.resource,
+                startDateTime: oItem.actualStart,
+                updateDowntimes: [{
+                    plant: oPlant,
+                    resource: oItem.resource,
+                    startDateTime: oItem.actualStart,
+                    endDateTime: oItem.endDateTime,
+                    markParentDown: oItem.markParentDown,
+                    comments: oItem.comments,
+                    reasonCodeId: oItem.reasonCodeId,
+                    status: oItem.status
+                }]
+            };
+
+            return await new Promise((resolve,reject)=>{
+                AjaxUtil.put(oUrl, oParameters,
+                    (oResponseData) => {
+                        this._oController.publish("DowntimeChangeEvent", this._oController);
+                        this._oController.getDownTimes();
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        reject(oError);
+                    }   
+                );
+
+            });
+
         }
 
     })

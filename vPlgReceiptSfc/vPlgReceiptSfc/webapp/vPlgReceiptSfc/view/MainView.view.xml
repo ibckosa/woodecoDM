@@ -17,11 +17,11 @@ width="100%" height="100%">
         <content>
             <VBox justifyContent="Start" alignItems="Start" fitContainer="true" width="100%" height="60%">
                 <HBox justifyContent="Center" alignItems="Center" width="100%">
-                        <Label text="Ilość kartonów" id="inputPackageQuanLabel" labelFor="inputPackageQuan" class="sapUiSmallMarginEnd fontText"/>
+                        <Label text="{i18n>inputPackageQuan}" id="inputPackageQuanLabel" labelFor="inputPackageQuan" class="sapUiSmallMarginEnd fontText"/>
                         <Input id="inputPackageQuan" value="1" liveChange="onReceiptInputLiveChange" class="inputFont sapUiSmallMarginEnd " width="6rem"/>
                         <Label text="{i18n>inputPalleteQuanLabel}" id="inputPalleteQuanLabel" labelFor="inputPalleteQuan" class="sapUiSmallMarginEnd fontText"/>
                         <Input id="inputPalleteQuan" value="1" liveChange="onReceiptInputLiveChange" class="inputFont sapUiSmallMarginEnd " width="6rem"/>
-                        <Label text="{= ${/isCustomQuan} ? ${i18n>inputQuantityLabelPallet} : ${i18n>inputQuantityLabel} }" labelFor="inputReceiptQuantity" class="sapUiSmallMarginEnd fontText"/>
+                        <Label id="inputReceiptQuantityLabel" text="" labelFor="inputReceiptQuantity" class="sapUiSmallMarginEnd fontText"/>
                         <Input id="inputReceiptQuantity" value="{/receiptQuan}" liveChange="onReceiptInputLiveChange" class="inputFont" width="18rem"/>
                         <Label text="{/uom}"  id = "labelUom" class="sapUiSmallMarginBegin fontText"/>
                 </HBox>
