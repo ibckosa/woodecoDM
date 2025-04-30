@@ -257,16 +257,16 @@ const aImageBoxes = oGraphicToDisplay.map(oGraphic => {
     let Swidth;
     switch (oGraphicToDisplay.length) {
         case 1:
-            Swidth = "20vw";
+            Swidth = "50vw";
             break;
         case 2:
-            Swidth = "20vw";
+            Swidth = "25vw";
             break;
         case 3:
-            Swidth = "20vw";
+            Swidth = "16vw";
             break;
         case 4:
-            Swidth = "20vw";
+            Swidth = "12vw";
             break;
         case 5:
             Swidth = "18vw";
@@ -312,7 +312,7 @@ const oFlexBox = new sap.m.FlexBox({
 // Dialog (popup)
 const oDialog = new sap.m.Dialog({
     title: "Podgląd grafik",
-    contentWidth: "auto", // Szerokość okna dialogowego
+    contentWidth: "50vw", // Szerokość okna dialogowego
     contentHeight: "auto",
     content: [oFlexBox],
     beginButton: new sap.m.Button({
