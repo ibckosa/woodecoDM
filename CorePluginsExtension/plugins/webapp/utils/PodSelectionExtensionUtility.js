@@ -29,10 +29,11 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
-    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository"
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository"
 ], function (BaseObject, Button, Input, MessageBox, MessageToast, ToolbarSpacer, FilterGroupItem, JSONModel, PodUtility , Dialog, Text
     , mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler, TextHandler,
-    MaterialRepository, SfcReceiptPrint, OrderRepository) {
+    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
@@ -594,6 +595,7 @@ sap.ui.define([
             try{
                 this._oZweiEndpoint = this._getZweiEndpoint();
                 let oSelectedLines = this._getSelectedQ23Lines();
+                let oPrinter = await this._getPrinter();
                 for(let oLine of oSelectedLines){
                     try{
                         await this._closeNonconformance(oLine);
@@ -601,7 +603,7 @@ sap.ui.define([
                         oLine.HU = await this._generateHuNumber(oLine);
                         oLine.packagingMaterial = await this._getPackagingMaterial(oLine);
                         await this._callCustomApi("PACKAGE", oLine);
-                        await this._executeLabelPrint(oLine, oPrintingEndpoint);
+                        await this._executeLabelPrint(oLine, oPrintingEndpoint, oPrinter);
                         this._showSuccessMessage("q23.success.packageNonconformance");
                     }catch(oError){ this._oErrorHandler.handleError(oError); }
                 }
@@ -616,6 +618,7 @@ sap.ui.define([
             try{
                 this._oZweiEndpoint = this._getZweiEndpoint();
                 let oPrintingEndpoint = this._getPrintingEndpoint();
+                let oPrinter = await this._getPrinter();
                 let oSelectedLines = this._getSelectedQ23Lines();
                 for(let oLine of oSelectedLines){
                     try{
@@ -623,7 +626,7 @@ sap.ui.define([
                         oLine.HU = await this._generateHuNumber(oLine);
                         //this._showSuccessMessage("q23.success.closeNonconformance");
                         await this._callCustomApi("RETURN", oLine);
-                        await this._executeLabelPrint(oLine, oPrintingEndpoint);
+                        await this._executeLabelPrint(oLine, oPrintingEndpoint, oPrinter);
                         this._showSuccessMessage("q23.success.returnNonconformance");
                     }catch(oError){ this._oErrorHandler.handleError(oError); }
                 }
@@ -914,7 +917,7 @@ sap.ui.define([
 
             return oPrintingEndpoint;
         },
-        _executeLabelPrint: async function(oItem, oEndpoint){
+        _executeLabelPrint: async function(oItem, oEndpoint, oPrinter){
             let oPrintingDetails = {};
             let oMaterial = await MaterialRepository.getMaterialInstance(this._oSelController, oItem.plant, oItem.materialId);
             let oOrder = await OrderRepository.readOrder(this._oSelController, oItem.plant, oItem.orderNumber);
@@ -935,12 +938,24 @@ sap.ui.define([
             oPrintingDetails.orderCustomValues = oOrder.getOrderLineCustomValues(1);
             oPrintingDetails.materialCustomValues = oMaterial.getCustomValues();
             oPrintingDetails.quantity = oItem.quantity;
-            oPrintingDetails.printer = 'IBC_BM';
+            oPrintingDetails.printer = oPrinter;
             oPrintingDetails.operation = oItem.stepId;
             oPrintingDetails.document = 'WOODECO1';
+            oPrintingDetails.printingCopies = 1;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oSelController, oPrintingDetails);
             await oSfcReceiptPrint.print();
+        },
+        _getPrinter: async function(){
+            let oResource = await ResourceRepository.getResourceInstance(this._oSelController, this._oSelController.getPodController().getUserPlant(), this._oResource);
+            let oPrinter = oResource.getPrinterId();
+
+            if(oPrinter==="")
+            {
+                this._oErrorHandler.throwError("error.printing.noPrinter");
+            }
+            return oPrinter;
+
         }
     })
 });

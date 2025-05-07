@@ -1,0 +1,15 @@
+{
+	"components": [
+		{
+			"id": "vPlgMultiOrders",
+			"type": "VIEW_PLUGIN",
+			"allowMultipleInstances": false,
+			"name": "ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders",
+			"propertyEditor": "ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders.builder.PropertyEditor",
+			"i18n": "ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders.i18n.i18n",
+            "productionProcessEnabled": true,
+           "productionProcessTitle": "View plugin - multi orders",
+			"supportedPodTypes": ["WORK_CENTER","OPERATION","ORDER"]
+		}   
+	]
+}

@@ -61,6 +61,15 @@ sap.ui.define([
                 oReturn = oBinCustomValue.value;
             }catch(oError){}
             return oReturn;
+        },
+        getPrinterId(){
+            let oReturn = "";
+
+            try{
+                let oBinCustomValue = this._oDetails.customValues.find(customValue => { return customValue.attribute === "PRINTER_ID"});
+                oReturn = oBinCustomValue.value;
+            }catch(oError){}
+            return oReturn;
         }
     });
 });

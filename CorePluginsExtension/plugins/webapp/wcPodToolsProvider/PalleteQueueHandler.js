@@ -272,13 +272,14 @@ sap.ui.define([
                 let oSelectedItems = this._getSelectedItems();
                 let oZweiEndpoint = this._getZweiEndpoint();
                 let oPrintingEndpoint = this._getPrintingEndpoint();
+                let oPrinter = await this._getPrinter();
                 try{
                     for(const item of oSelectedItems){
                         let oPallete  = new Palette(this._oPluginViewController);
                         item.erpResourceId = oResource.getResourceErpId();
                         await oPallete.palleteReturn(item, oZweiEndpoint);
                         await oPallete.reducePalleteQuan(item, item.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
-                        await this._executeLabelPrint(item, oPrintingEndpoint);
+                        await this._executeLabelPrint(item, oPrintingEndpoint, oPrinter);
                         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     }
                 }catch(oError){this._oErrorHandler.handleError(oError);}
@@ -297,6 +298,7 @@ sap.ui.define([
                 let oZweiEndpoint = this._getZweiEndpoint();
                 let oItem = this._getSelectedItem();
                 let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
+                let oPrinter = await this._getPrinter();
                 let oPallete  = new Palette(this._oPluginViewController);
                 let oDialogReturn = await ReturnNpwDialog.showDialog(oItem, this._oPluginViewController);
                 let oPrintingEndpoint = this._getPrintingEndpoint();
@@ -305,7 +307,7 @@ sap.ui.define([
                     await oPallete.palleteReturnNpw(oItem, oZweiEndpoint, oDialogReturn.quantity);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturnNpw"),true,true);
                     await oPallete.reducePalleteQuan(oItem, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc );
-                    await this._executeLabelPrint(oItem, oPrintingEndpoint);
+                    await this._executeLabelPrint(oItem, oPrintingEndpoint, oPrinter);
                     setTimeout( async ()=> {                    await this._getDialogData();
                         this._oDialogLog.setBusy(false);},1500);
                 }else{
@@ -434,7 +436,7 @@ sap.ui.define([
 
             });
         },
-        _executeLabelPrint: async function(oItem, oEndpoint){
+        _executeLabelPrint: async function(oItem, oEndpoint, oPrinter){
             let oPrintingDetails = {};
             let oMaterial = await MaterialRepository.getMaterialInstance(this._oPluginViewController, oItem.plant, oItem.materialId);
             oPrintingDetails.endpoint = oEndpoint;
@@ -449,12 +451,23 @@ sap.ui.define([
             oPrintingDetails.orderCustomValues = [];
             oPrintingDetails.materialCustomValues = oMaterial.getCustomValues();
             oPrintingDetails.quantity = oItem.quantity;
-            oPrintingDetails.printer = 'IBC_BM';
+            oPrintingDetails.printer = oPrinter;
             oPrintingDetails.operation = "";
             oPrintingDetails.document = 'WOODECO1';
+            oPrintingDetails.printingCopies = 1;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oPluginViewController, oPrintingDetails);
             await oSfcReceiptPrint.print();
+        },
+        _getPrinter: async function(){
+            let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
+            let oPrinter = oResource.getPrinterId();
+
+            if(oPrinter==="")
+            {
+                this._oErrorHandler.throwError("error.printing.noPrinter");
+            }
+            return oPrinter;
         }
 
     })

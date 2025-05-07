@@ -202,6 +202,7 @@ sap.ui.define([
                 this.getView().setBusy(true);
                 debugger;   
                 let aSelectionFirstRow = aSelections[0];
+                let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
                 let oReceiptParameters = { plant : oPodController.getUserPlant(),
                     order: aSelectionFirstRow.getShopOrder().getShopOrder(),
                     material: aSelectionFirstRow.getSfcData().getMaterial() ,
@@ -215,8 +216,11 @@ sap.ui.define([
                     operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
                     workCenter: oPodSelectionModel.workCenter,
                     palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
-                    packageNumber: parseInt(this.byId("inputPackageQuan").getValue()) };
-
+                    printingCopies: parseInt(this.byId("rbg1").getSelectedButton().getText()),
+                    packageNumber: parseInt(this.byId("inputPackageQuan").getValue()),
+                    printer: oResource.getPrinterId() };
+                
+                oReceiptParameters.printer 
                 ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeIssue();

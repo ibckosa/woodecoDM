@@ -1,0 +1,14 @@
+{
+  "welcomeFile": "/vPlgMultiOrders/index.html",
+  "authenticationMethod": "none",
+  "logout": {
+    "logoutEndpoint": "/do/logout"
+  },
+  "routes": [
+    {
+      "source": "^/vPlgMultiOrders/(.*)$",
+      "target": "$1",
+      "localDir": "webapp"
+    }
+  ]
+}

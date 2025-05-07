@@ -51,19 +51,24 @@ sap.ui.define([
 
             this._getSalesText();
 
+            let oPromises=[];
+            for(let i=0; i<this._oPrintDetails.printingCopies; i++){
+                
+                oPromises.push( this._executePrint() );
 
-            let sUrl = this._oController.getPublicApiRestDataSourceUri()  + this._oPrintDetails.endpoint;
+            }
+            await Promise.all(oPromises);
 
-            return await new Promise((resolve,reject)=>{
-                this._oController.ajaxPostRequest(sUrl, this._oPrintingInterface,
-                    (oResponseData) => {
-                        resolve();
-                    },
-                    (oError, sHttpErrorMessage) => {
-                        reject(oError);
-                    }
-                );
-            });
+            // return await new Promise((resolve,reject)=>{
+            //     this._oController.ajaxPostRequest(sUrl, this._oPrintingInterface,
+            //         (oResponseData) => {
+            //             resolve();
+            //         },
+            //         (oError, sHttpErrorMessage) => {
+            //             reject(oError);
+            //         }
+            //     );
+            // });
 
         },
 
@@ -132,6 +137,19 @@ sap.ui.define([
                 this._oPrintingInterface.SALES_TEXT = this._oPrintingInterface.SALES_TEXT.replaceAll("$&", "\n")
             }
 
+        },
+        _executePrint: async function(){
+            let sUrl = this._oController.getPublicApiRestDataSourceUri()  + this._oPrintDetails.endpoint;
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPostRequest(sUrl, this._oPrintingInterface,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        reject(oError);
+                    }
+                );
+            });
         }
     });
 

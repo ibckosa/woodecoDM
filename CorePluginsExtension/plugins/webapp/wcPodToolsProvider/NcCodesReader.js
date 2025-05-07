@@ -35,23 +35,36 @@ sap.ui.define([
         this._oWorkCenter = oWorkCenter;
         this._oResource = oResource;
         let oCodes = await this._getCodesOfGroup(oResource);
+        let oCodesDetail = await this._getCodeDetailsParallel(oCodes);
+        let oReasonCodes = await this._getResourceReasonCodeParallel(oCodesDetail);
 
         for(var i = 0; i < oCodes.length; i++){
             let oCode = oCodes[i];
-            let oCodeDetails = await this._getCodeDetails(oCode);
-            let oResourceReasonCode = await this._getResourceReasonCode(oCodeDetails.oeeCode, oCode.plant, oResource );
+            let oCodeDetails = oCodesDetail.find( code=>{ return code.code === oCode.code });
+            let oReasonCode = oReasonCodes.find( reasonCode => {return reasonCode.oeeCode === oCodeDetails.oeeCode } );
+            //let oCodeDetails = await this._getCodeDetails(oCode);
 
-
-            oReturn.push({
-                lineChecked: false,
-                group: oResource,
-                code: oCode.code,
-                dataType: oCodeDetails.dataType,
-                codeDescription: oCodeDetails.description,
-                quantity: 0,
-                resourceReasonCode: oResourceReasonCode
-            });
+            if(oCodeDetails&&oReasonCode){
+                //let oResourceReasonCode = await this._getResourceReasonCode(oCodeDetails.oeeCode, oCode.plant, oResource );
+                oReturn.push({
+                    lineChecked: false,
+                    group: oResource,
+                    code: oCode.code,
+                    dataType: oCodeDetails.dataType,
+                    codeDescription: oCodeDetails.description,
+                    quantity: 0,
+                    resourceReasonCode: oReasonCode.reasonCode
+                });
+            }
         }
+        return oReturn;
+    };
+
+    oNcCodesReader._getCodeDetailsParallel = async function(oCodes){
+        
+        let oCodePromises = oCodes.map( code => this._getCodeDetails(code) );
+        let oReturn = await Promise.all(oCodePromises);
+        debugger;
         return oReturn;
     };
 
@@ -78,8 +91,8 @@ sap.ui.define([
     oNcCodesReader._getCodeDetails = async function(oCode) {
             let oReturn = {description: "",
                            oeeCode: "",
-                           dataType: ""
-            };
+                           dataType: "",
+                           code: "" };
 
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "nonconformancecode/v1/nonconformancecodes";
             let oRequestParameters = { plant: oCode.plant,
@@ -94,18 +107,21 @@ sap.ui.define([
                                 oReturn.dataType = oResponseData[0].dataType;
                                 let oCustomField = oResponseData[0].customData.find((customField) => customField.attribute === "REASON_CODE");
                                 oReturn.oeeCode = oCustomField.value;
+                                oReturn.code = oResponseData[0].code;
                             }catch(error){}
                         }
                         resolve(oReturn);
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
                         resolve(oReturn);
+                        //resolve(oReturn);
                     }.bind(this)
                 );
             });
     };
     oNcCodesReader._getResourceReasonCode = async function(oeeCode, oPlant, oResource){
-        let oReturn = "";
+        let oReturn = { oeeCode: "", 
+                        reasonCode: "" };
 
         let sUrl = this._oController.getPublicApiRestDataSourceUri() + "resourceReasonCode/v1/resourceReasonCodes";
         let oRequestParameters = { plant: oPlant,
@@ -119,7 +135,8 @@ sap.ui.define([
                 function (oResponseData) {
                     if(oResponseData.length>0){
                         try{
-                            oReturn = oResponseData[0].keyId;
+                            oReturn.oeeCode = oeeCode;
+                            oReturn.reasonCode = oResponseData[0].keyId;
                         }catch(error){}
                     }
                     resolve(oReturn);
@@ -130,6 +147,13 @@ sap.ui.define([
             );
         });
     };
+    oNcCodesReader._getResourceReasonCodeParallel = async function(oCodes, oPlant, oResource){
+        let oReasonCodePromises = oCodes.map( code => this._getResourceReasonCode(code.oeeCode, this._oPlant, this._oResource) );
+        let oReturn = await Promise.all(oReasonCodePromises);
+        debugger;
+        return oReturn;
+    };
+
 
 
     return oNcCodesReader;

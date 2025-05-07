@@ -17,6 +17,16 @@ width="100%" height="100%">
         <content>
             <VBox justifyContent="Start" alignItems="Start" fitContainer="true" width="100%" height="60%">
                 <HBox justifyContent="Center" alignItems="Center" width="100%">
+                    <Label text="Liczba wydruków" id="sdasd" labelFor="rbg1" class="sapUiSmallMarginEnd fontText"/>
+                	<RadioButtonGroup id="rbg1" columns="5" class="printRadioButtonGroup">
+                        <RadioButton id="rg1" text="1" class="myRadioButtonGroup" />
+                        <RadioButton id="rg2" text="2" class="myRadioButtonGroup"/>
+                        <RadioButton id="rg3" text="3" class="myRadioButtonGroup"/>
+                        <RadioButton id="rg4" text="4" class="myRadioButtonGroup"/>
+                    </RadioButtonGroup>
+                </HBox>
+
+                <HBox justifyContent="Center" alignItems="Center" width="100%">
                         <Label text="{i18n>inputPackageQuan}" id="inputPackageQuanLabel" labelFor="inputPackageQuan" class="sapUiSmallMarginEnd fontText"/>
                         <Input id="inputPackageQuan" value="1" liveChange="onReceiptInputLiveChange" class="inputFont sapUiSmallMarginEnd " width="6rem"/>
                         <Label text="{i18n>inputPalleteQuanLabel}" id="inputPalleteQuanLabel" labelFor="inputPalleteQuan" class="sapUiSmallMarginEnd fontText"/>

@@ -44,6 +44,8 @@
      .sapMInputBase.inputFont .sapMInputBaseContentWrapper .sapMInputBaseInner{
         font-size: 2.5rem;
      }
-
+     .printRadioButtonGroup .sapMLabel {
+        font-size: 2rem;
+    }
 
 	

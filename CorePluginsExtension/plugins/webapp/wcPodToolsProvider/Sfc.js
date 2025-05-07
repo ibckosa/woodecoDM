@@ -117,5 +117,33 @@ sap.ui.define([
         });
     };
 
+    oSfc.getSfcsList = async function(oController, oParams){
+        let oRequest = { plant: this._oReceiptParameters.plant,
+                         workCenter: this._oReceiptParameters.workCenter,
+                         "filter.operation": this._oReceiptParameters.operationActivity,
+                         "filter.order": this._oReceiptParameters.order };
+        let oSfcs = this.getSfcsListApi(oController, oRequest);
+    }
+
+    oSfc.getSfcsListApi = async function(oController, oRequest, oPage = 0){
+        let sUrl = oController.getPublicApiRestDataSourceUri()  + "sfc/v1/worklist/sfcs";
+
+        let oParameters = { plant: this._oReceiptParameters.plant,
+                            workCenter: this._oReceiptParameters.workCenter,
+                            "filter.operation": this._oReceiptParameters.operationActivity,
+                            "filter.order": this._oReceiptParameters.order 
+                            };
+        return await  new Promise((resolve,reject)=>{
+            oController.ajaxGetRequest(sUrl, oParameters,
+                (oResponseData) => {
+                    resolve(oResponseData);
+                },
+                (oError, sHttpErrorMessage) => {
+                    reject(oError);
+                }
+            );
+        });
+    }
+
     return oSfc;
 });

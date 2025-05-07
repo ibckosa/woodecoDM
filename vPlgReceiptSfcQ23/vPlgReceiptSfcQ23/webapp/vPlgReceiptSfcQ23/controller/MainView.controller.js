@@ -9,8 +9,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
-    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository"
-], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader"
+], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView", {
@@ -111,7 +112,8 @@ sap.ui.define([
                 this._oResource = oPodSelectionModel.resource.resource;
 
                 var aSelection = this.getPodSelectionModel().getSelections()[0];
-                var oCodesTab = await this._getCodes(aSelection.getSfcData().getWorkCenter());
+                let oCodesTab = await NcCodesReader.readCodes(this, this.getPodController().getUserPlant(), this._oWorkCenter, this._oResource);
+                //var oCodesTab = await this._getCodes(aSelection.getSfcData().getWorkCenter());
                 var oModelData = { items: oCodesTab };
                 var oModel = new JSONModel(oModelData);
                 oView.setModel(oModel);

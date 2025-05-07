@@ -12,7 +12,9 @@ sap.ui.define([
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository"
-], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository) {
+], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository
+    ,
+) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceipt", {
         constructor: function(oController, oReceiptParameters){
@@ -39,7 +41,6 @@ sap.ui.define([
             let oSingleOperationSfc = true;
             let oLastOperation = false;
             let oMultiNumberPalletes = (this._oReceiptParameters.palletesNumber > 1 || this._oReceiptParameters.packageNumber > 1);
-
             this._oSfc = await SfcRepository.readSfcApi(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc);
             this._oOrder = await OrderRepository.readOrder(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.order);
             this._oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.material);
@@ -174,8 +175,8 @@ sap.ui.define([
                 this._oErrorHandler.throwError("errorSfcNotInWork");
             }
 
-            if(this._oMultiNumberPalletes===true){
-
+            if(this._oReceiptParameters.printer===""){
+                this._oErrorHandler.throwError("error.printing.noPrinter");
             }
         },
         _getStorageLocation: async function(){
@@ -488,10 +489,11 @@ sap.ui.define([
             oPrintingDetails.orderCustomValues = this._oOrder.getHeaderCustomValues();
             oPrintingDetails.materialCustomValues = this._oMaterial.getCustomValues();
             oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber;
-            oPrintingDetails.printer = 'IBC_BM';
+            oPrintingDetails.printer = this._oReceiptParameters.printer;
             oPrintingDetails.operation = this._oReceiptParameters.stepId;
             oPrintingDetails.document = 'WOODECO1';
             oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber;
+            oPrintingDetails.printingCopies = this._oReceiptParameters.printingCopies;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oController, oPrintingDetails);
             await oSfcReceiptPrint.print();
