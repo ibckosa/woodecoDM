@@ -74,7 +74,7 @@ sap.ui.define([
                     {
                         orderNumber: this._oOrderNumber,
                         itemNumber: oItemNumber,
-                        itemPosnr: "10",
+                        itemPosnr: parseInt(oItemNumber) * 10,
                         materialNumber: `Material${oItemNumber}`,
                         quantity: 120,
                         deliveredQuantity: 60,
@@ -88,6 +88,9 @@ sap.ui.define([
                     });
             }
 
+        },
+        getSfcs: function(){
+            return this._oDetails.sfcs;
         }
     });
 });

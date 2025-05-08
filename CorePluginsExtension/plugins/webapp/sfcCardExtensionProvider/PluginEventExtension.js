@@ -207,23 +207,38 @@ sap.ui.define([
 
                 var oPodController = oController.getPodController();                   
                 var oOrder = oFirstSelection.getShopOrder().getShopOrder();
-                let oSfcNumber = oFirstSelection.getSfc().getSfc();
                 var oPlant = oPodController.getUserPlant();
                 var oMaterial = oFirstSelection.getSfcData().getMaterial();
                 let oOrderInstance = await OrderRepository.readOrderByPassBuffer(oController, oPlant, oOrder);
                 let oMaterialInstance =  await MaterialRepository.getMaterialInstance(oController, oPlant, oMaterial);
                 var oMaterialData = oMaterialInstance.getDetails();
                 var oOrderData = oOrderInstance.getDetails();
+                let oSfcs = oOrderInstance.getSfcs();
+
+                let oSfcsInstances = await this._getSfcsInstances(oController, oPlant, oSfcs);
+                debugger;
+
                 //let oFieldConfiguration = this._getFieldConfiguration(oController, );
                 oSfcCardCustom.decors = await oMaterialInstance.getGraphics();
-                let oSfc = SfcRepository.getInstance(oController, oPlant, oMaterial);
+                let oTotalOrderQuan = 0;
+                let oDoneOrderQuan = 0;
                 
-                if(oOrderData.productionQuantity>0){
-                    oSfcCardCustom.progressIndicatorValue =  oOrderData.doneQuantityInProductionUom + " z " + oOrderData.productionQuantity;
-                    if(oOrderData.productionQuantity>0){
-                        oSfcCardCustom.percentProgress = parseInt( oOrderData.doneQuantityInProductionUom / oOrderData.productionQuantity * 100 ).toString();
-                    }
+                for(const sfcInstance of oSfcsInstances){
+                    oTotalOrderQuan = oTotalOrderQuan + sfcInstance.getTotalQuan(oFirstSelection.getSfcData().getOperation());
+                    oDoneOrderQuan = oDoneOrderQuan + sfcInstance.getDoneQuanOfOperation(oFirstSelection.getSfcData().getOperation());
                 }
+                
+                if(oTotalOrderQuan>0){
+                    oSfcCardCustom.progressIndicatorValue =  oDoneOrderQuan + " z " + oTotalOrderQuan;
+                    oSfcCardCustom.percentProgress = parseInt( oDoneOrderQuan / oTotalOrderQuan * 100 ).toString();
+                }
+                
+                // if(oOrderData.productionQuantity>0){
+                //     oSfcCardCustom.progressIndicatorValue =  oOrderData.doneQuantityInProductionUom + " z " + oOrderData.productionQuantity;
+                //     if(oOrderData.productionQuantity>0){
+                //         oSfcCardCustom.percentProgress = parseInt( oOrderData.doneQuantityInProductionUom / oOrderData.productionQuantity * 100 ).toString();
+                //     }
+                // }
 
                 if(oOrderData.customValues !== undefined){
                     for(var i = 0; i < oOrderData.customValues.length; i++ ){
@@ -383,6 +398,10 @@ sap.ui.define([
         },
         _getFieldConfiguration: function(oController){
 
+        },
+        _getSfcsInstances: async function(oController, oPlant, oSfcs){
+            let oPromises = oSfcs.map(sfc => SfcRepository.ReadSfcBypassBuffer(oController, oPlant, sfc) );
+            return await Promise.all(oPromises);
         }
     })
 });

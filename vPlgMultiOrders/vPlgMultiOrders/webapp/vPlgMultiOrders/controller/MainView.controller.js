@@ -31,9 +31,9 @@ sap.ui.define([
 
         },
 
-		onBeforeRenderingPlugin: function () {
+		onBeforeRenderingPlugin: async function () {
 
-			
+			await this._loadData();
 			
 		},
 
@@ -90,14 +90,14 @@ sap.ui.define([
             debugger;
             try {
                 var oPodSelectionModel = this.getPodSelectionModel();
-                var aSelections = oPodSelectionModel.getSelections();  
-                const oController = this;
+                var aSelections = oPodSelectionModel.getSelections(); 
                 var oFirstSelection = aSelections[0]; // pierwszy element tablicy
                 this._oPlant = this.getPodController().getUserPlant();
                 this._oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
                 this._oWorkCenter = oPodSelectionModel.workCenter;
                 this._oResource = oPodSelectionModel.resource.resource;
                 this._oOrder = await OrderRepository.readOrderByPassBuffer(this, this._oPlant, this._oOrderNumber);
+                debugger;
                 let oPositions = await this._oOrder.getOrderPositions();
                 let oCodesTab = await NcCodesReader.readCodes(this, this._oPlant, this._oWorkCenter, this._oResource);
                 // const aLinks = await LinkReader.readLinks(oController, oSfcNumber, oOrderNumber);

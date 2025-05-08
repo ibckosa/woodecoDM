@@ -52,7 +52,27 @@ sap.ui.define([
         },
         getSfcNumber(){
             return this._oDetails.sfc;
-        }
+        },
+        getTotalQuan: function(oOperation){
+            let oReturn = 0;
+            let oStep = this.getStepByOperation(oOperation);
+            if(oStep){
+                oReturn = oStep.quantityDone + oStep.quantityInQueue + oStep.quantityInWork + oStep.quantityRejected + oStep.quantityScrapped;
+            }
+
+            return oReturn;
+        },
+
+        getDoneQuanOfOperation: function(oOperation){
+            let oReturn = 0;
+            let oStep = this.getStepByOperation(oOperation);
+            if(oStep){
+                oReturn = oStep.quantityDone;
+            }
+
+            return oReturn;
+        },
+    
     });
 
     oSfc.splitSfc = async function(oController, oPlant, oSfc, oQuan){
@@ -144,6 +164,5 @@ sap.ui.define([
             );
         });
     }
-
     return oSfc;
 });
