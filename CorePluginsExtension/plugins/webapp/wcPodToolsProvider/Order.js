@@ -1,6 +1,7 @@
 sap.ui.define([
-    "sap/ui/base/Object"
-], function (ObjectUI5) {
+    "sap/ui/base/Object",
+    "ibc/dm/plugins/wcPodToolsProvider/ZLinkReader"
+], function (ObjectUI5, LinkReader) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.Order", {
         constructor: function(oController, oPlant, oOrderNumber){
@@ -58,6 +59,35 @@ sap.ui.define([
         },
         getHeaderCustomValues: function(){
             return this._oDetails.customValues.filter(customValue => { return  !customValue.attribute.startsWith("ITEM") });
+        },
+        getOrderPositions: async function(){
+            let oReturn = [];
+            let oLines = this._oDetails.customValues.filter(customValue=>{ return customValue.attribute.startsWith("ITEM") });
+
+
+            for(const line of oLines){
+                if(!line.value||line.value===""){continue;}
+                let oItemNumber = line.attribute.replace("ITEM_0", "");
+                oItemNumber = oItemNumber.replace("ITEM_", "");
+                let oLineAttributes = this.getOrderLineCustomValues(oItemNumber);
+                oReturn.push(
+                    {
+                        orderNumber: this._oOrderNumber,
+                        itemNumber: oItemNumber,
+                        itemPosnr: "10",
+                        materialNumber: `Material${oItemNumber}`,
+                        quantity: 120,
+                        deliveredQuantity: 60,
+                        salesOrder: `SalesOrder${oItemNumber}`,
+                        salesOrderItem: `SalesOrderItem${oItemNumber}`,
+                        length: 100,
+                        thickness: 100,
+                        width: 100,
+                        decors: [],
+                        files: await LinkReader.readLinks(this._oController,this._oPlant, this._oOrderNumber, oItemNumber)
+                    });
+            }
+
         }
     });
 });

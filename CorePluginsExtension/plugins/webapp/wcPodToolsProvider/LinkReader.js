@@ -1,16 +1,15 @@
 sap.ui.define([
     "sap/ui/base/Object",
-    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository", 
-    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (ObjectUI5, OrderRepository, SfcRepository, TextHandler) {
+], function (ObjectUI5, OrderRepository, TextHandler) {
     "use strict";
-    let oLinkReader =  ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.LinkReader", {
+    let oLinkReader =  ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.ZLinkReader", {
 
     });
 
 
-    oLinkReader.readLinks = async function (oController, oSfcNumber, oOrderNumber) {
+    oLinkReader.readLinks = async function (oController, oOrderNumber, oItemNumber = "1") {
         let oReturn = [];
         debugger;
         try{
@@ -18,10 +17,14 @@ sap.ui.define([
             let oOrder = await OrderRepository.readOrder(oController, oPlant, oOrderNumber);
             let oOrderDetails = oOrder.getDetails();
 
+            if(oItemNumber.length<2){
+                oItemNumber = `0${oItemNumber}`
+            }
 
-            let oFirstLineFields = oOrderDetails.customValues.find( customValue => { return customValue.attribute === "ITEM_01" } );
-            if(oFirstLineFields){
-                let oSplittedLine = oFirstLineFields.value.split("||");
+
+            let oLine = oOrderDetails.customValues.find( customValue => { return customValue.attribute === `ITEM_${oItemNumber}` } );
+            if(oLine){
+                let oSplittedLine = oLine.value.split("||");
                 const oLineValues = oSplittedLine
                 .filter(item => item.includes(":")) 
                 .map(item => {

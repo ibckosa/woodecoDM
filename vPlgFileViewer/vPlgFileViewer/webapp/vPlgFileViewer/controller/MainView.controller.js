@@ -2,7 +2,7 @@ sap.ui.define([
     'jquery.sap.global',
 	"sap/dm/dme/podfoundation/controller/PluginViewController",
 	"sap/ui/model/json/JSONModel",
-    "ibc/dm/plugins/wcPodToolsProvider/LinkReader",
+    "ibc/dm/plugins/wcPodToolsProvider/ZLinkReader",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
 ], function (jQuery, PluginViewController, JSONModel, LinkReader, ErrorHandler, TextHandler) {
@@ -57,11 +57,11 @@ sap.ui.define([
             var oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
         
    
-                const aLinks = await LinkReader.readLinks(oController, oSfcNumber, oOrderNumber);
+                const aLinks = await LinkReader.readLinks(oController, oOrderNumber);
                 const oModel = new JSONModel({ links: aLinks });
                 this.getView().setModel(oModel, "linkModel");
             } catch (error) {
-                this._oErrorHandle.handleError(error);
+                this._oErrorHandler.handleError(error);
             }
         },
 /*        

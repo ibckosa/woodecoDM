@@ -16,14 +16,18 @@ sap.ui.define([
                                                                 code.resource === oResource;  });
 
         if(!oCodesFromBuffer){
-            oCodeReturn = this._readCodesApi(oController, oPlant, oWorkCenter, oResource);
+            oCodeReturn = await this._readCodesApi(oController, oPlant, oWorkCenter, oResource);
             this._oCodes.push({ plant: oPlant,
                                 workCenter: oWorkCenter,
                                 resource: oResource,
                                 codes: oCodeReturn
             });
         }else{
+            for(const code of oCodesFromBuffer.codes){
+                code.quantity = 0;
+            }
             oCodeReturn = oCodesFromBuffer.codes;
+            
         }
         return oCodeReturn;
     };

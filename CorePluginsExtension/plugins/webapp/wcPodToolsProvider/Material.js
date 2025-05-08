@@ -77,7 +77,7 @@ sap.ui.define([
         getGraphics: async function(){
             let oReturn = [];
 
-            let oCustomDataGraphics = this._oDetails.customValues.filter( customValue => { return customValue.attribute === this.CONSTANTS.DECOR_FRONT ||
+            let oCustomDataGraphics = this._oDetails.customValues.filter( customValue => { return ( customValue.attribute === this.CONSTANTS.DECOR_FRONT ||
                                                                                                   customValue.attribute === this.CONSTANTS.DECOR_BACK ||
                                                                                                   customValue.attribute === this.CONSTANTS.STRUCTURE_FRONT ||
                                                                                                   customValue.attribute === this.CONSTANTS.STRUCTURE_BACK ||
@@ -88,7 +88,8 @@ sap.ui.define([
                                                                                                   customValue.attribute === this.CONSTANTS.CYLINDER_BACK_1||
                                                                                                   customValue.attribute === this.CONSTANTS.CYLINDER_BACK_1 ||
                                                                                                   customValue.attribute === this.CONSTANTS.CYLINDER_BACK_1 ||
-                                                                                                  customValue.attribute === this.CONSTANTS.CYLINDER_BACK_1 });
+                                                                                                  customValue.attribute === this.CONSTANTS.CYLINDER_BACK_1 ) &&
+                                                                                                  customGraphics.value && customGraphics.value !== "" });
 
 
             for(const customGraphics of oCustomDataGraphics){

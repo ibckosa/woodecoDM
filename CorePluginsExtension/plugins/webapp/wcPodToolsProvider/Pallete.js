@@ -258,7 +258,7 @@ sap.ui.define([
                     }
                 },
                 "useFullHandlingUnit": false, //true or false
-                "handlingUnitNumber": oLine.handlingUnit,
+                "handlingUnitNumber": oLine.palleteDetails.handlingUnit,
                 "storageLocation": oLine.storageLocation,
                 "isInventoryManaged": true,
                 "userId": this._oController.getUserId(),

@@ -1,14 +1,19 @@
 sap.ui.define([
     'jquery.sap.global',
 	"sap/dm/dme/podfoundation/controller/PluginViewController",
-	"sap/ui/model/json/JSONModel"
-], function (jQuery, PluginViewController, JSONModel) {
+	"sap/ui/model/json/JSONModel",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader"
+], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders.controller.MainView", {
 		onInit: function () {
 			PluginViewController.prototype.onInit.apply(this, arguments);
-			
+			this._oTextHandler = new TextHandler();
+            this._oErrorHandler = new ErrorHandler(this);
 			           
             
 		},
@@ -80,6 +85,27 @@ sap.ui.define([
 			PluginViewController.prototype.onExit.apply(this, arguments);
 
 
-		}
+		},
+        _loadData: async function () {
+            debugger;
+            try {
+                var oPodSelectionModel = this.getPodSelectionModel();
+                var aSelections = oPodSelectionModel.getSelections();  
+                const oController = this;
+                var oFirstSelection = aSelections[0]; // pierwszy element tablicy
+                this._oPlant = this.getPodController().getUserPlant();
+                this._oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
+                this._oWorkCenter = oPodSelectionModel.workCenter;
+                this._oResource = oPodSelectionModel.resource.resource;
+                this._oOrder = await OrderRepository.readOrderByPassBuffer(this, this._oPlant, this._oOrderNumber);
+                let oPositions = await this._oOrder.getOrderPositions();
+                let oCodesTab = await NcCodesReader.readCodes(this, this._oPlant, this._oWorkCenter, this._oResource);
+                // const aLinks = await LinkReader.readLinks(oController, oSfcNumber, oOrderNumber);
+                const oModel = new JSONModel({ positions: oPositions, codes: oCodesTab });
+                this.getView().setModel(oModel, "multiOrdersModel");
+            } catch (error) {
+                this._oErrorHandler.handleError(error);
+            }
+        }
 	});
 });

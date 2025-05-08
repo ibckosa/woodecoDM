@@ -12,7 +12,7 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceipt",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
-        "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
 ], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary, ErrorHandler, SfcRepository, IssuesManager, SfcReceipt, ResourceRepository, TextHandler) {
     "use strict";
 
