@@ -207,6 +207,7 @@ sap.ui.define([
 
                 var oPodController = oController.getPodController();                   
                 var oOrder = oFirstSelection.getShopOrder().getShopOrder();
+                var oSfcNumber = oFirstSelection.getSfc().getSfc();
                 var oPlant = oPodController.getUserPlant();
                 var oMaterial = oFirstSelection.getSfcData().getMaterial();
                 let oOrderInstance = await OrderRepository.readOrderByPassBuffer(oController, oPlant, oOrder);
@@ -215,18 +216,27 @@ sap.ui.define([
                 var oOrderData = oOrderInstance.getDetails();
                 let oSfcs = oOrderInstance.getSfcs();
 
+                let oSfc = await SfcRepository.getInstance(oController, oPlant, oSfcNumber);
+                let oSteps  = oSfc.getSteps();
+                let oFirstStep = oSteps[0];
                 let oSfcsInstances = await this._getSfcsInstances(oController, oPlant, oSfcs);
-                debugger;
-
-                //let oFieldConfiguration = this._getFieldConfiguration(oController, );
-                oSfcCardCustom.decors = await oMaterialInstance.getGraphics();
                 let oTotalOrderQuan = 0;
                 let oDoneOrderQuan = 0;
-                
+
                 for(const sfcInstance of oSfcsInstances){
                     oTotalOrderQuan = oTotalOrderQuan + sfcInstance.getTotalQuan(oFirstSelection.getSfcData().getOperation());
                     oDoneOrderQuan = oDoneOrderQuan + sfcInstance.getDoneQuanOfOperation(oFirstSelection.getSfcData().getOperation());
                 }
+                if(oFirstStep.operation.operation === oFirstSelection.getSfcData().getOperation()){
+                    oTotalOrderQuan = oOrderData.productionQuantity;
+                }
+                debugger;
+
+                //let oFieldConfiguration = this._getFieldConfiguration(oController, );
+                oSfcCardCustom.decors = await oMaterialInstance.getGraphics();
+
+                
+
                 
                 if(oTotalOrderQuan>0){
                     oSfcCardCustom.progressIndicatorValue =  oDoneOrderQuan + " z " + oTotalOrderQuan;
