@@ -218,7 +218,8 @@ sap.ui.define([
                     palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
                     printingCopies: parseInt(this.byId("rbg1").getSelectedButton().getText()),
                     packageNumber: parseInt(this.byId("inputPackageQuan").getValue()),
-                    printer: oResource.getPrinterId() };
+                    printer: oResource.getPrinterId(),
+                    automaticIssues: oResource.getConsumptionMode(true)==="AUTOMATIC" };
                 
                 oReceiptParameters.printer 
                 ///uruchamianie nowego kodu

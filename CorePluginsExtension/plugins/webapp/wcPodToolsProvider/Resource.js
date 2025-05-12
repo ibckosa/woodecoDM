@@ -1,12 +1,14 @@
 sap.ui.define([
-    "sap/ui/base/Object"
-], function (Object) {
+    "sap/ui/base/Object",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
+], function (Object, ErrorHandler) {
     "use strict";
     return Object.extend("ibc.dm.plugins.wcPodToolsProvider.Resource", {
         constructor: function(oController, oPlant, oResourceNumber){
             this._oController = oController;
             this._oResourceNumber = oResourceNumber;
             this._oPlant = oPlant;
+            this._oErrorHandler = new ErrorHandler(_oController);
         },
         readResourceData: async function(){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "resource/v2/resources";
@@ -26,7 +28,7 @@ sap.ui.define([
 
             });
         },
-        getResourceErpId: function(){
+        getResourceErpId: function(errorWhenEmpty = false){
             let oReturn = "";
 
             try{
@@ -35,7 +37,7 @@ sap.ui.define([
             }catch(oError){}
             return oReturn;
         },
-        getNcCodeType: function(){
+        getNcCodeType: function(errorWhenEmpty = false){
             let oReturn = "";
 
             try{
@@ -44,7 +46,7 @@ sap.ui.define([
             }catch(oError){}
             return oReturn;
         },
-        getFunctionalLocation(){
+        getFunctionalLocation(errorWhenEmpty = false){
             let oReturn = "";
 
             try{
@@ -62,7 +64,7 @@ sap.ui.define([
             }catch(oError){}
             return oReturn;
         },
-        getPrinterId(){
+        getPrinterId(errorWhenEmpty = false){
             let oReturn = "";
 
             try{
@@ -70,6 +72,19 @@ sap.ui.define([
                 oReturn = oBinCustomValue.value;
             }catch(oError){}
             return oReturn;
+        },
+        getConsumptionMode(errorWhenEmpty = false){
+            let oReturn = "";
+
+            try{
+                let oBinCustomValue = this._oDetails.customValues.find(customValue => { return customValue.attribute === "CONSUMPTION_MODE"});
+                oReturn = oBinCustomValue.value;
+            }catch(oError){}
+
+            if(errorWhenEmpty&&oReturn===""){
+                this._oController.throwErrorPopup("error.resource.noConsumptionMode");
+            }
+            return oReturn.toUpperCase();
         }
     });
 });

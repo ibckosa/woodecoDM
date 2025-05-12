@@ -205,16 +205,25 @@ sap.ui.define([
                 press: this.onButtonAdditionIssue.bind(this),
                 visible: oButtonsVisible.additionIssue
             });
+
+            let oButtonAdditionMHuIssue = new Button({
+                text: this._textHandler.getText("labels.loghu.button.additionalMHuIssue"),
+                width: "15rem",
+                press: this.onButtonAdditionMHuIssue.bind(this),
+                visible: oButtonsVisible.additionIssue
+            });
             oButtonReservation.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
             oButtonEndReservation.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
             oButtonReturn.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
             oButtonReturnNpw.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
             oButtonAdditionIssue.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
+            oButtonAdditionMHuIssue.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
             oHBoxBtn.addItem(oButtonReservation);
             oHBoxBtn.addItem(oButtonEndReservation);
             oHBoxBtn.addItem(oButtonReturn);
             oHBoxBtn.addItem(oButtonReturnNpw);
             oHBoxBtn.addItem(oButtonAdditionIssue);
+            oHBoxBtn.addItem(oButtonAdditionMHuIssue);
             return oHBoxBtn;
         },
         _getDialogData: async function () {
@@ -338,6 +347,47 @@ sap.ui.define([
             }
         },
 
+        onButtonAdditionMHuIssue: async function(){
+            try{
+                this._oDialogLog.setBusy(true);
+                this._checkSelectedReservedItem();
+                let oSelectedItems = this._getSelectedItems();
+                for(const item of oSelectedItems){
+                    try{
+                        let oPallete  = new Palette(this._oPluginViewController);
+                        await oPallete.additionalIssue(item, item.quantity, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity);
+                        this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteAdditionalIssue"),true,true);
+
+                    }catch(oError){
+                        this._oErrorHandler.handleError(oError);
+                    }
+                }
+                setTimeout( async ()=> {    await this._getDialogData();
+                                            this._oDialogLog.setBusy(false);},1500);
+            }catch(oError){
+                this._oDialogLog.setBusy(false);
+                this._oErrorHandler.handleError(oError);
+            }
+
+
+            // try{
+            //     let oPallete  = new Palette(this._oPluginViewController);
+            //     let oItem = this._getSelectedItem();
+            //     let oQuanAdditional = await AdditionalIssueDialog.showDialog(oItem);
+            //     if(oQuanAdditional>0){
+            //         //await this._additionalIssue();
+            //         this._oDialogLog.setBusy(true)
+            //         await oPallete.additionalIssue(oItem, oQuanAdditional, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity);
+            //         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteAdditionalIssue"),true,true);
+            //         setTimeout( async ()=> {  await this._getDialogData();
+            //                                 this._oDialogLog.setBusy(false);},1500);
+            //     }
+            // }catch(oError){
+            //     this._oDialogLog.setBusy(false);
+            //     this._oErrorHandler.handleError(oError);
+            // }
+        },
+
         _getSelectedItems: function(){
             let oItems = this._oDialogLog.getModel().getData().items;
 
@@ -353,6 +403,16 @@ sap.ui.define([
                 return oSelectedItems[0];
             }else{
                 this._oErrorHandler.throwError("error.logHu.notOneLineSelected");
+            }
+        },
+
+        _checkSelectedReservedItem: function(){
+            let oItems = this._oDialogLog.getModel().getData().items;
+
+            let reservedItem = oItems.find(item => { return item.lineSelected === true && item.reservation !== "" });
+
+            if(reservedItem){
+                this._oErrorHandler.throwErrorPopup("error.logHU.issuePalleteReserver");
             }
         },
 

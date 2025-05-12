@@ -35,6 +35,7 @@ sap.ui.define([
             //     operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
             //     workCenter: aSelectionFirstRow.getSfcData().getWorkCenter() };
             //     plant: plant
+            //     automaticIssues: false/true
         },
 
         executeIssue: async function(){
@@ -133,7 +134,10 @@ sap.ui.define([
 
             let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
                                                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
-            await oIssuesManager.prepareIssues();
+            if(this._oReceiptParameters.automaticIssues){
+                await oIssuesManager.prepareIssues();
+            }
+            
             
             if(oSfcAvailQuan < this._oReceiptParameters.quantity){
                 await this._executeSfcMerge();
@@ -160,7 +164,9 @@ sap.ui.define([
             }else{
                 await this._executeMmReceipt();
             }
-            await oIssuesManager.executeIssues();
+            if(this._oReceiptParameters.automaticIssues){
+                await oIssuesManager.executeIssues();
+            }
         },
 
         _getSfcStep: function(){

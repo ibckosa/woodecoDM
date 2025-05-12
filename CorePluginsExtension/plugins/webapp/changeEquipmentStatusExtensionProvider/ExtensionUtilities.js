@@ -5,8 +5,9 @@ sap.ui.define([
     "sap/m/TextArea",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
-    "sap/dm/dme/formatter/StatusFormatter"
-], function (BaseObject, CheckBox, Label, TextArea, TextHandler, ResourceRepository, StatusFormatter) {
+    "sap/dm/dme/formatter/StatusFormatter",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
+], function (BaseObject, CheckBox, Label, TextArea, TextHandler, ResourceRepository, StatusFormatter, ErrorHandler) {
     "use strict";
 
     /**
@@ -158,6 +159,7 @@ sap.ui.define([
         },
 
         changeResourceStatus: async function(oUrl, oRequest, oController){
+            let oErrorHandler = new ErrorHandler(oController);
             try{
                 if(oRequest.status === "Przezbrojenie"){
                     oRequest.status = "SCHEDULED_DOWN";
@@ -167,22 +169,27 @@ sap.ui.define([
                     let oComment = this._oTextArea.getValue();
                     if(this._oChecbkox.getSelected())
                     {
-                        await this._createErpNotification(oRequest, oController, oComment)
+                        await this._createErpNotification(oRequest, oController, oComment, oErrorHandler)
                         oComment = "Wysłane do DUR\n" + oComment;
                     }
                     oRequest.comments = oComment;
                 }
                 oController.handleSaveResourceStatus(oUrl, oRequest);
             }
-            catch(oError){}
+            catch(oError){
+                oErrorHandler.handleError(oError);
+            }
 
 
             
         },
-        _createErpNotification: async function(oDurRequest, oController, oComment){
+        _createErpNotification: async function(oDurRequest, oController, oComment, oErrorHandler){
 
             debugger;
-            let oEndPoint = this._getNotifEndpoint(oController);
+            let oEndPoint = this._getNotifEndpoint(oController, oErrorHandler);
+            if(oEndPoint===""){
+                oErrorHandler.throwErrorPopup("error.notifiaction.noEndpoint");
+            }
             let oPlant = oController.getPodController().getUserPlant();
             let oPodSelectionModel = oController.getPodSelectionModel();
             let oDescription = oComment.replaceAll("\n", "|@#|");
@@ -190,6 +197,9 @@ sap.ui.define([
             let oSapDateTime = this._getCurrentSapDateTime();
             let oResource = await ResourceRepository.getResourceInstance(oController, oPlant, oPodSelectionModel.resource.resource);
             let oFucntionalLocalization = oResource.getFunctionalLocation();
+            if(oFucntionalLocalization===""){
+                oErrorHandler.throwErrorPopup("error.notifiaction.noFunctionalLocalization");
+            }
             let oParameters = {
                 DESCRIPTION: oDescription,
                 ORDER: oFucntionalLocalization,
