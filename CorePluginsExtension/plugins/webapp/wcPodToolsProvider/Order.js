@@ -1,6 +1,6 @@
 sap.ui.define([
     "sap/ui/base/Object",
-    "ibc/dm/plugins/wcPodToolsProvider/ZLinkReader"
+    "ibc/dm/plugins/wcPodToolsProvider/LinkReader"
 ], function (ObjectUI5, LinkReader) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.Order", {
@@ -70,27 +70,59 @@ sap.ui.define([
                 let oItemNumber = line.attribute.replace("ITEM_0", "");
                 oItemNumber = oItemNumber.replace("ITEM_", "");
                 let oLineAttributes = this.getOrderLineCustomValues(oItemNumber);
-                oReturn.push(
-                    {
-                        orderNumber: this._oOrderNumber,
-                        itemNumber: oItemNumber,
-                        itemPosnr: parseInt(oItemNumber) * 10,
-                        materialNumber: `Material${oItemNumber}`,
-                        quantity: 120,
-                        deliveredQuantity: 60,
-                        salesOrder: `SalesOrder${oItemNumber}`,
-                        salesOrderItem: `SalesOrderItem${oItemNumber}`,
-                        length: 100,
-                        thickness: 100,
-                        width: 100,
-                        decors: [],
-                        files: await LinkReader.readLinks(this._oController,this._oPlant, this._oOrderNumber, oItemNumber)
-                    });
+                let oMoStructure = this._getMultiOrdersStructure();
+                for(const attribute of oLineAttributes){
+                    switch(attribute.field_name){
+                        case "LA":
+                            oMoStructure.length = attribute.field_value;
+                            break;
+                        case "BR":
+                            oMoStructure.width = attribute.field_value;
+                            break;
+                        case "DI":
+                            oMoStructure.thickness = attribute.field_value;
+                            break;
+                        case "SO":
+                            oMoStructure.salesOrder = attribute.field_value;
+                            break;
+                        case "SOIT":
+                            oMoStructure.salesOrderItem = attribute.field_value;
+                            break;
+                        case "MAT":
+                            oMoStructure.materialNumber = attribute.field_value;
+                            break;
+                    }
+                }
+                oMoStructure.itemNumber = oItemNumber;
+                oMoStructure.orderNumber =  this._oOrderNumber;
+                oMoStructure.materialNumber = `Material${oItemNumber}`;
+                oMoStructure.quantity = 120;
+                oMoStructure.deliveredQuantity = 60;
+                oMoStructure.files = await LinkReader.readLinks(this._oController,this._oPlant, this._oOrderNumber, oItemNumber);
+                oMoStructure.itemPosnr = parseInt(oItemNumber) * 10;
+                oReturn.push(oMoStructure);
             }
 
         },
         getSfcs: function(){
             return this._oDetails.sfcs;
+        },
+        _getMultiOrdersStructure: function(){
+            return {
+                orderNumber: "",
+                itemNumber: "",
+                itemPosnr: "",
+                materialNumber: "",
+                quantity: 0,
+                deliveredQuantity: 0,
+                salesOrder: "",
+                salesOrderItem: "",
+                length: 0,
+                thickness: 0,
+                width: 0,
+                decors: [],
+                files: []
+            }
         }
     });
 });

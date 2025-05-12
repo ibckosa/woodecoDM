@@ -4,7 +4,7 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
 ], function (ObjectUI5, OrderRepository, TextHandler) {
     "use strict";
-    let oLinkReader =  ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.ZLinkReader", {
+    let oLinkReader =  ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.LinkReader", {
 
     });
 

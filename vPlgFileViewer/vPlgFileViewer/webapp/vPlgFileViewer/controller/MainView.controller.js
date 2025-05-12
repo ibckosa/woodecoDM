@@ -4,8 +4,9 @@ sap.ui.define([
 	"sap/ui/model/json/JSONModel",
     "ibc/dm/plugins/wcPodToolsProvider/ZLinkReader",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
-    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (jQuery, PluginViewController, JSONModel, LinkReader, ErrorHandler, TextHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository"
+], function (jQuery, PluginViewController, JSONModel, LinkReader, ErrorHandler, TextHandler, OrderRepository) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgFileViewer.vPlgFileViewer.controller.MainView", {
