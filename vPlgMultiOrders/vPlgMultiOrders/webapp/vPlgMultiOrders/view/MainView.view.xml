@@ -1,37 +1,213 @@
 <mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form" xmlns:core="sap.ui.core" xmlns:html="http://www.w3.org/1999/xhtml" controllerName="ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders.controller.MainView" width="100%" height="100%">
-		
-        <Panel 
-                id="panelPlugin"  
-                width="100%"
-                height="100%"
-                expandable="false"
-                expanded="false"
-                accessibleRole="Region"
-                backgroundDesign="Transparent"
-                class="sapUiNoContentPadding">  
-        <headerToolbar>
-            <Toolbar height="3rem">
-                <Button
-                    id="backButton"
-                    visible="false"
-                    text="{i18n>template.back.btn}"
-                    tooltip="{i18n>template.back.tooltip}"
-                    icon="sap-icon://nav-back"
-                    press="onBackPress"/>
-                <Title id="headerTitle" text=""/>
-                <ToolbarSpacer/>
-                <Button
-                    id="closeButton"
-                    visible="false"
-                    tooltip="{i18n>template.close.tooltip}"
+
+    <Panel
+    id="panelPlugin"
+    width="100%"
+    height="100%"
+    expandable="false"
+    expanded="false"
+    accessibleRole="Region"
+    backgroundDesign="Transparent"
+    class="sapUiNoContentPadding">
+    <!-- Nowy układ pod panelem -->
+                <HBox width="100%" class="sapUiSmallMarginTop">
+            <!-- Lewa kolumna: tabela -->
+            <VBox width="35%" class="sapUiTinyMarginEnd">
+                    <Table
+                    id="ordersTable"
+                    mode="SingleSelectMaster"
+                    items="{multiOrdersModel>/positions}"
+                    selectionChange="onOrderSelect">
+                        <columns>
+                            <Column><Text text="Długość"/></Column>
+                            <Column><Text text="Szerokość"/></Column>
+                            <Column><Text text="Zlecenie sprzedaży"/></Column>
+                            <Column><Text text="Pozycja"/></Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem type="Active" press="onOrderSelect">
+                                <cells>
+                                    <Text text="{multiOrdersModel>length}"/>
+                                    <Text text="{multiOrdersModel>width}"/>
+                                    <Text text="{multiOrdersModel>orderNumber}"/>
+                                    <Text text="{multiOrdersModel>itemPosnr}"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+
+            </VBox>
+
+            <!-- Prawa kolumna: szczegóły i akcje -->
+            <VBox width="65%" class="sapUiTinyMarginBegin">
+                <!-- Nagłówek z dynamicznymi danymi i paskiem postępu -->
+                <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                      <!-- <Text
+                            text="{
+                                parts: [
+                                    'selectedOrder>/width',
+                                    'selectedOrder>/thickness',
+                                    'selectedOrder>/length',
+                                    'selectedOrder>/packingCode'
+                                ],
+                                formatter: '.formatAllDimensions'
+                            }"
+                            class="sapUiTinyMarginEnd"/>
+--> 
+                                        <Text
+                        text="{
+                            parts: ['viewModel>/selectedOrder/length', 'viewModel>/selectedOrder/width', 'viewModel>/selectedOrder/thickness'],
+                            formatter: '.formatDimensions'
+                        }"
+                        class="sapUiTinyMarginEnd"
+                    />
+                    <!-- Pasek postępu -->
+                    <HBox alignItems="Center" class="sapUiTinyMarginBegin">
+                        <Text
+                            text="{
+                                parts: [
+                                    {path: 'progressModel>/currentValue'},
+                                    {path: 'progressModel>/maxValue'}
+                                ],
+                                formatter: '.formatProgressText'
+                            }"
+                            class="sapUiTinyMarginEnd"
+                        />
+                        <ProgressIndicator
+                            percentValue="{
+                                parts: [
+                                    {path: 'viewModel>/selectedOrder/deliveredQuantity'},
+                                    {path: 'viewModel>/selectedOrder/quantity'}
+                                ],
+                                formatter: '.calculateProgress'
+                            }"
+                            displayValue="{
+                                parts: [
+                                    {path: 'viewModel>/selectedOrder/deliveredQuantity'},
+                                    {path: 'viewModel>/selectedOrder/quantity'}
+                                ],
+                                formatter: '.formatProgressText'
+                            }"
+                            state="Success"
+                            width="10rem"
+                            class="sapUiTinyMarginEnd"
+                        />
+                    
+                    </HBox>
+                </HBox>
+                    <HBox width="100%" justifyContent="End" class="sapUiSmallMarginBottom">
+                        <Button
+                            id="btnSalesText"
+                            text="Sales Text"
+                            type="Emphasized" 
+                            press="onSalesTextPress"
+                            class="sapUiTinyMarginEnd"
+                        />
+                        <Button
+                            id="btnDekor"
+                            text="Dekor"
+                            type="Emphasized"
+                            press="onDekorPress"
+                        />
+                    </HBox>
+
+                    <Table
+                    id="filesTable"
+                    width="100%"
+                    inset="false"
+                    class="sapUiSmallMarginBottom"
+                    items="{viewModel>/selectedOrder/files}">
+                    <!-- Nagłówki kolumn -->
+                    <columns>
+                        <Column>
+                            <Text text="Opis pliku"/>
+                        </Column>
+                        <Column hAlign="End" width="8rem">
+                            <Text text="Wyświetl plik"/>
+                        </Column>
+                    </columns>
+
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <!-- Wyświetlanie opisu pliku -->
+                                <Text text="{viewModel>fileDescription}" />
+                                <!-- Przycisk wyświetlenia pliku -->
+                                <Button 
+                                    text="Wyświetl plik" 
+                                    type="Transparent" 
+                                    press="onFileViewPress"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+
+                <HBox alignItems="Center" justifyContent="Center">
+                <!-- Q1 - OK Button -->
+                    <VBox alignItems="Center" class="sapUiSmallMarginEnd">
+                    <Button
+                    id="btnQ1"
+                    icon="sap-icon://accept"
+                    type="Transparent"
+                    class="doubleCircleButton greenCircle"
+                    press="onQ1Press"
+                    />
+                    <Text text="Q1 - OK" class="circleButtonText"/>
+                    </VBox>
+
+                <!-- Q2/Q3 Button -->
+                    <VBox alignItems="Center">
+                    <Button
+                    id="btnQ2Q3"
                     icon="sap-icon://decline"
-                    press="onClosePress"/>
-            </Toolbar>
-        </headerToolbar>
-        <content> 
-            <Text id="textPlugin" text="template" class="textFontSize" textAlign="Center" width="100%"/>
-        </content>
-	    </Panel>		
-        
-  
+                    type="Transparent"
+                    class="doubleCircleButton redCircle"
+                    press="onQ2Q3Press"
+                    />
+                    <Text text="Q2 / Q3" class="circleButtonText"/>
+                    </VBox>
+                </HBox>
+
+                <VBox id="q1Section" visible="false" class="sapUiSmallMarginTop" alignItems="Center">
+                    <!-- Wiersz z tekstami i inputami, wyśrodkowany -->
+                    <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                        <Text text="Number of pallets" class="sapUiTinyMarginEnd"/>
+                        <Input id="numPallets" value="1" width="3rem" class="sapUiTinyMarginEnd"/>
+                        <Text text="Quantity in pallet" class="sapUiTinyMarginBeginEnd"/>
+                        <Input id="qtyInPallet" value="18" width="4rem" class="sapUiTinyMarginEnd"/>
+                        <Text text="SZT" class="sapUiTinyMarginEnd"/>
+                    </HBox>
+                    <!-- Osobny wiersz na przycisk, wyśrodkowany -->
+                    <HBox alignItems="Center" justifyContent="Center">
+                        <Button id="btnConfirm" text="Confirm" type="Accept" press="onConfirmPress"/>
+                    </HBox>
+                </VBox>
+
+
+
+                <VBox id="q2q3Section" visible="false" class="sapUiSmallMarginTop">
+    <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+        <Text text="Przyczyna" class="sapUiTinyMarginEnd"/>
+<ComboBox
+    id="q3ReasonsList"
+    width="25rem"
+    placeholder="Wybierz przyczynę odrzucenia..."
+    selectionChange="onQ3SelectionChange"
+    items="{multiOrdersModel>/codes}"
+    class="sapUiTinyMarginEnd">
+    <core:Item key="{multiOrdersModel>code}" text="{multiOrdersModel>codeDescription}"/>
+</ComboBox>
+        <Input id="wadyCiecia" value="0" width="3rem" class="sapUiTinyMarginEnd"/>
+        <Button id="btnWadyAccept" icon="sap-icon://accept" type="Accept" press="onWadyAcceptPress"/>
+    </HBox>
+</VBox>
+
+
+            </VBox>
+        </HBox>
+
+
+</Panel>
+
+
 </mvc:View>

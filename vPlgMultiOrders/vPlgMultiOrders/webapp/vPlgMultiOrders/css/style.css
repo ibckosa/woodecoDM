@@ -1,1 +1,83 @@
-/* Enter your custom styles here */
+.doubleCircleButton {
+    border-radius: 50% !important;
+    padding: 0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px #4CAF50; /* podwójna obwódka, proporcjonalnie zmniejszona */
+    border: 2px solid #4CAF50 !important;
+    background: #fff !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.doubleCircleButton:focus,
+.doubleCircleButton.sapMBtn:focus,
+.doubleCircleButton .sapMBtnInner:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px #4CAF50 !important; /* lub inny box-shadow, jeśli chcesz zachować podwójną obwódkę */
+}
+
+
+.greenCircle {
+    box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px #4CAF50;
+    border-color: #4CAF50 !important;
+    color: #4CAF50 !important;
+}
+.redCircle {
+    box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px #F44336;
+    border-color: #F44336 !important;
+    color: #F44336 !important;
+}
+
+.doubleCircleButton.sapMBtn:hover,
+.doubleCircleButton.sapMBtn:active,
+.doubleCircleButton.sapMBtn.sapMBtnActive,
+.doubleCircleButton.sapMBtn:focus {
+    background: transparent !important;
+    box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px #4CAF50 !important; /* lub red dla redCircle */
+    outline: none !important;
+}
+
+.doubleCircleButton .sapMBtnInner,
+.doubleCircleButton .sapMBtnContent {
+    background: transparent !important;
+}
+.doubleCircleButton.sapMBtn:hover,
+.doubleCircleButton.sapMBtn:active,
+.doubleCircleButton.sapMBtn.sapMBtnActive,
+.doubleCircleButton.sapMBtn:focus {
+    background: transparent !important;
+    box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px #4CAF50 !important; /* lub red dla redCircle */
+    outline: none !important;
+}
+
+.doubleCircleButton .sapMBtnInner,
+.doubleCircleButton .sapMBtnContent {
+    background: transparent !important;
+}
+.circleButtonText {
+    font-weight: bold;
+    margin-top: 1rem; /* lub inna wartość, np. 0.75rem, jeśli chcesz mniejszy odstęp */
+    display: block;   /* zapewnia, że margines górny zadziała */
+    text-align: center;
+}
+
+.greenCircle--active {
+    background: #4CAF50 !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    border: 2px solid #4CAF50 !important;
+}
+.redCircle--active {
+    background: #ee380a !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    border: 2px solid #ee380a !important;
+}
+.doubleCircleButton.sapMBtn:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px #2196f3 !important; /* niebieska cienka obwódka */
+}
