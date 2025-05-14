@@ -72,11 +72,11 @@ sap.ui.define([
         },
 
         onOperationChangeEvent: function (sChannelId, sEventId, oData) {
-            this.loadModel();
+            //this.loadModel();
         },
 
         onWorkListSelectEvent: function (sChannelId, sEventId, oData) {
-            this.loadModel();
+            //this.loadModel();
         },
 
         loadModel: async function () {
@@ -241,7 +241,7 @@ sap.ui.define([
             var sInput = oSelection.getInput();
             if (sInput && sInput !== "") {
                 var oCustomField = oSelection.getCustomFields();
-                var oCustomFieldValue = oCustomField["SHOP_ORDER.ITEM_1"];
+                var oCustomFieldValue = oCustomField["SHOP_ORDER.ITEM_01"];
                 if(oCustomFieldValue!=undefined){ var oCustomFieldValueSplitted = oCustomFieldValue.split("||"); }
                 
                 if(oCustomFieldValueSplitted != undefined && oCustomFieldValueSplitted.length>2){

@@ -85,13 +85,13 @@ sap.ui.define([
         },
 
         onOperationChangeEvent: function (sChannelId, sEventId, oData) {
-            this.loadData();
-            return;
+            // this.loadData();
+            // return;
         },
 
         onWorkListSelectEvent: function (sChannelId, sEventId, oData) {
-            this.loadData();
-            return;
+            // this.loadData();
+            // return;
         },
 
         loadData: async function(){
@@ -238,13 +238,16 @@ sap.ui.define([
                 let oSelectedItem = oEvent.getSource().getBindingContext().getObject();
                 let oSfcDetails = await this._getSfcDetails();
                 let oResource = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), this._oResource);
+                let oExecuteIssue =  oResource.getConsumptionMode(true)==="AUTOMATIC";
                 oSelectedItem.quantity = parseInt(oSelectedItem.quantity);
                 this._executeChecksBeforeScrap(oSelectedItem, oSfcDetails);
                 let oScrapQuantity = parseInt(oSelectedItem.quantity);
                 let oComment = await this._getComment(oSelectedItem.dataType);
                 debugger;
                 let oIssuesManager = new IssuesManager(this, this.getPodController().getUserPlant(), this._oWorkCenter, this._oResource, aSelection.getShopOrder().getShopOrder(), aSelection.getSfc().getSfc(), aSelection.getSfcData().getOperation(), oSelectedItem.quantity);
-                await oIssuesManager.prepareIssues();
+                if(oExecuteIssue){
+                    await oIssuesManager.prepareIssues();
+                }
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
                     let oNewSfc = await this._executeSfcSplit(oScrapQuantity,oSfcDetails);
                     oSfcDetails.sfc = oNewSfc;
@@ -255,9 +258,12 @@ sap.ui.define([
                     await this._closeNonconformance(this.getPodController().getUserPlant() , oNonconformanceId);
                 }
                 await this._executeSfcScrap(oScrapQuantity,oSfcDetails, oSelectedItem.resourceReasonCode);
-                await oIssuesManager.executeIssues();
+                if(oExecuteIssue){
+                    await oIssuesManager.executeIssues();
+                }
                 this._showMessageSuccess("success.ProccessFinished");
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
+                    this.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
                     this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
                 }else{
                     this.getPodSelectionModel().setInputValue("");
@@ -279,6 +285,8 @@ sap.ui.define([
             let oSfc = await SfcRepository.getInstance(this, this.getPodController().getUserPlant(), oSfcNumber);
             await oSfc.readData();
             let oStep = oSfc.getStepByOperation(aSelection.getSfcData().getOperation());
+            let oSteps = oSfc.getSteps();
+            let oLastStep = oSfc.getLastStep();
             let sUrl = this.getPublicApiRestDataSourceUri() + "/inventory/v1/inventory/goodsReceipts/summarize";
             let oRequestParameters = {
                 plant: this.getPodController().getUserPlant(),
@@ -298,6 +306,8 @@ sap.ui.define([
                         oReturn.resource =  aSelection.getSfcData().getWorkCenter();
                         oReturn.workCenter =  aSelection.getSfcData().getWorkCenter();
                         oReturn.sfcQuantityInWork = oStep.quantityInWork;
+                        oReturn.multiOperation = oSteps.length > 1;
+                        oReturn.lastOperation = oStep === oLastStep;
 
                         let oSfcReceipts = oResponseData.sfcs[0].items;
                         if(oSfcReceipts && oSfcReceipts.length > 0){
@@ -326,7 +336,9 @@ sap.ui.define([
                       sfcQuantity: 0,
                       sfcDoneQuantity: 0,
                       sfcLeftQuantity: 0,
-                      sfcQuantityInWork: 0 };
+                      sfcQuantityInWork: 0,
+                      multiOperation: false,
+                      lastOperation: false };
         },
 
         _throwError: function(oErrorTextId){
@@ -366,7 +378,7 @@ sap.ui.define([
                 this._oErrorHandler.throwError("error.q23.sfcNotEnoughQuantity");
             }
 
-            if(oSelectedItem.quantity>oSfcDetails.sfcQuantityInWork){
+            if(oSelectedItem.quantity>oSfcDetails.sfcQuantityInWork && (!oSfcDetails.multiOperation || !oSfcDetails.lastOperation)){
                 this._oErrorHandler.throwError("error.q23.sfcNotInWork");
             }
 

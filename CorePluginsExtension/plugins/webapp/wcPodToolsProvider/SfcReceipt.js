@@ -60,7 +60,7 @@ sap.ui.define([
                 oLastOperation = true;
             }
 
-            this._generalChecks();
+            this._generalChecks(oSingleOperationSfc, oLastOperation);
             this._oReceiptParameters.sfc = this._oSfc.getSfcNumber();
             if(oSingleOperationSfc){
                 await this._issueSingleOper();
@@ -89,7 +89,9 @@ sap.ui.define([
             let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
             let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
                                                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
-            await oIssuesManager.prepareIssues();
+            if(this._oReceiptParameters.automaticIssues){
+                await oIssuesManager.prepareIssues();
+            }
             let oStorageLocation = await this._getStorageLocation();
             if(oStorageLocation.isEWMManagedStorageLocation){
                 if(this._oReceiptParameters.quantity < oSfcStep.quantityInWork){
@@ -105,7 +107,10 @@ sap.ui.define([
             }else{
                 await this._executeMmReceipt();
             }
-            await oIssuesManager.executeIssues();
+            if(this._oReceiptParameters.automaticIssues){
+                await oIssuesManager.executeIssues();
+            }
+            
         },
 
         _issueMultiNotLastOper: async function(){
@@ -113,7 +118,10 @@ sap.ui.define([
             let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
             let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
                                                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
-            await oIssuesManager.prepareIssues();
+            if(this._oReceiptParameters.automaticIssues){
+                await oIssuesManager.prepareIssues();
+            }
+            
             let oStorageLocation = await this._getStorageLocation();
             if(oStorageLocation.isEWMManagedStorageLocation){
                 if(this._oReceiptParameters.quantity < oSfcStep.quantityInWork){
@@ -125,7 +133,10 @@ sap.ui.define([
             }
 
             await this._executeYieldConfirmation();
-            await oIssuesManager.executeIssues();
+            if(this._oReceiptParameters.automaticIssues){
+                await oIssuesManager.executeIssues();
+            }
+
         },
 
         _issueMultiLastOper: async function(){
@@ -141,8 +152,8 @@ sap.ui.define([
             
             if(oSfcAvailQuan < this._oReceiptParameters.quantity){
                 await this._executeSfcMerge();
-            }else if(oSfcStep.quantityInWork < oSfcStep.quantityInWork){
-                this._oErrorHandler.throwError("errorSfcNotInWork");
+            }else if(oSfcStep.quantityInWork < this._oReceiptParameters.quantity){
+                await Sfc.startSfcs(this._oController, this._oReceiptParameters.plant, [this._oSfc.getSfcNumber()], this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource );
             }
             
 
@@ -176,8 +187,8 @@ sap.ui.define([
             }
             return oSfcStep;
         },
-        _generalChecks: function(){
-            if(this._oSfc.getStatusCode() !== "403"){
+        _generalChecks: function(isSingleOperation, isLastOperation){
+            if(this._oSfc.getStatusCode() !== "403" && ( isSingleOperation || !isLastOperation )){
                 this._oErrorHandler.throwError("errorSfcNotInWork");
             }
 
@@ -514,10 +525,15 @@ sap.ui.define([
 
             let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
                 this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, oQuantity);
-            await oIssuesManager.prepareIssues();
+            if(this._oReceiptParameters.automaticIssues){
+                await oIssuesManager.prepareIssues();
+            }
+            
             
             if(oQuantity>oSfcAvailQuan){
                 await this._executeSfcMerge(false);
+            }else{
+                await Sfc.startSfcs(this._oController, this._oReceiptParameters.plant, [this._oSfc.getSfcNumber()], this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource );
             }
 
             if(this._oReceiptParameters.packageNumber>1){
@@ -541,7 +557,9 @@ sap.ui.define([
                 oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
                     this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber);
                 
-                await oIssuesManager.prepareIssues();
+                if(this._oReceiptParameters.automaticIssues){
+                    await oIssuesManager.prepareIssues();
+                }
 
                 let oStorageLocation = await this._getStorageLocation();
                 if(oStorageLocation.isEWMManagedStorageLocation){
@@ -558,7 +576,10 @@ sap.ui.define([
                 }else{
                     await this._executeMmReceipt();
                 }
-                await oIssuesManager.executeIssues();
+                if(this._oReceiptParameters.automaticIssues){
+                    await oIssuesManager.executeIssues();
+                }
+               
                 await this._printLabel(_oPrintingEndpoint);
             }
         },

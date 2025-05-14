@@ -8,7 +8,7 @@ sap.ui.define([
             this._oController = oController;
             this._oResourceNumber = oResourceNumber;
             this._oPlant = oPlant;
-            this._oErrorHandler = new ErrorHandler(_oController);
+            this._oErrorHandler = new ErrorHandler(this._oController);
         },
         readResourceData: async function(){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "resource/v2/resources";
@@ -82,7 +82,7 @@ sap.ui.define([
             }catch(oError){}
 
             if(errorWhenEmpty&&oReturn===""){
-                this._oController.throwErrorPopup("error.resource.noConsumptionMode");
+                this._oErrorHandler.throwErrorPopup("error.resource.noConsumptionMode");
             }
             return oReturn.toUpperCase();
         }

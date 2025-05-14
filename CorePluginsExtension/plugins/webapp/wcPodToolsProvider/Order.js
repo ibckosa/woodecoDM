@@ -102,6 +102,7 @@ sap.ui.define([
                 oMoStructure.itemPosnr = parseInt(oItemNumber) * 10;
                 oReturn.push(oMoStructure);
             }
+            return oReturn;
 
         },
         getSfcs: function(){

@@ -67,6 +67,7 @@ sap.ui.define([
         },
 
         updateCustomData: function(){
+            try{
             let oController = this.getController();
             if (!oController) {
                 return;
@@ -138,6 +139,9 @@ sap.ui.define([
             }
 
             this._getCustomData(oController, oPodSelectionModel);
+            }catch(oError){
+                
+            }
         },
         _getCustomData: async function(oController, oPodSelectionModel){
 
