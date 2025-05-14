@@ -1,7 +1,8 @@
 sap.ui.define([
     "sap/ui/base/Object",
-    "ibc/dm/plugins/wcPodToolsProvider/LinkReader"
-], function (ObjectUI5, LinkReader) {
+    "ibc/dm/plugins/wcPodToolsProvider/LinkReader",
+    "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository"
+], function (ObjectUI5, LinkReader, MaterialRepository) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.Order", {
         constructor: function(oController, oPlant, oOrderNumber){
@@ -95,11 +96,14 @@ sap.ui.define([
                 }
                 oMoStructure.itemNumber = oItemNumber;
                 oMoStructure.orderNumber =  this._oOrderNumber;
-                oMoStructure.materialNumber = `Material${oItemNumber}`;
                 oMoStructure.quantity = 120;
                 oMoStructure.deliveredQuantity = 60;
-                oMoStructure.files = await LinkReader.readLinks(this._oController,this._oPlant, this._oOrderNumber, oItemNumber);
+                oMoStructure.files = await LinkReader.readLinks(this._oController, this._oPlant, this._oOrderNumber, oItemNumber);
                 oMoStructure.itemPosnr = parseInt(oItemNumber) * 10;
+                if(oMoStructure.materialNumber){
+                   let oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oPlant, oMoStructure.materialNumber);
+                   oMoStructure.decors = await oMaterial.getGraphics();
+                }
                 oReturn.push(oMoStructure);
             }
             return oReturn;
@@ -118,6 +122,7 @@ sap.ui.define([
                 deliveredQuantity: 0,
                 salesOrder: "",
                 salesOrderItem: "",
+                salesText: "Tekst sprzedażowy",
                 length: 0,
                 thickness: 0,
                 width: 0,

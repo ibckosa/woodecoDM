@@ -10,8 +10,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader"
-], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader) {
+    "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader",
+    "ibc/dm/plugins/wcPodToolsProvider/Sfc"
+], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader, Sfc) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView", {
@@ -90,8 +91,8 @@ sap.ui.define([
         },
 
         onWorkListSelectEvent: function (sChannelId, sEventId, oData) {
-            // this.loadData();
-            // return;
+            this.loadData();
+            return;
         },
 
         loadData: async function(){
@@ -235,12 +236,13 @@ sap.ui.define([
         onWasteButton: async function(oEvent){
             try{
                 let aSelection = this.getPodSelectionModel().getSelections()[0];
+                let oSfcFirst = aSelection.getSfc().getSfc();
                 let oSelectedItem = oEvent.getSource().getBindingContext().getObject();
                 let oSfcDetails = await this._getSfcDetails();
                 let oResource = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), this._oResource);
                 let oExecuteIssue =  oResource.getConsumptionMode(true)==="AUTOMATIC";
                 oSelectedItem.quantity = parseInt(oSelectedItem.quantity);
-                this._executeChecksBeforeScrap(oSelectedItem, oSfcDetails);
+                await this._executeChecksBeforeScrap(oSelectedItem, oSfcDetails);
                 let oScrapQuantity = parseInt(oSelectedItem.quantity);
                 let oComment = await this._getComment(oSelectedItem.dataType);
                 debugger;
@@ -263,6 +265,7 @@ sap.ui.define([
                 }
                 this._showMessageSuccess("success.ProccessFinished");
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
+                    this.getPodSelectionModel().setInputValue(oSfcFirst);
                     this.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
                     this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
                 }else{
@@ -373,13 +376,16 @@ sap.ui.define([
             const sText = this._getTextFromError(oError);
             this.showErrorMessage(sText, true, true);
         },
-        _executeChecksBeforeScrap: function(oSelectedItem, oSfcDetails){
+        _executeChecksBeforeScrap: async function(oSelectedItem, oSfcDetails){
             if(oSelectedItem.quantity>oSfcDetails.sfcLeftQuantity){
                 this._oErrorHandler.throwError("error.q23.sfcNotEnoughQuantity");
             }
 
             if(oSelectedItem.quantity>oSfcDetails.sfcQuantityInWork && (!oSfcDetails.multiOperation || !oSfcDetails.lastOperation)){
                 this._oErrorHandler.throwError("error.q23.sfcNotInWork");
+            }
+            else if(oSfcDetails.multiOperation && oSfcDetails.lastOperation && oSelectedItem.quantity>oSfcDetails.sfcQuantityInWork){
+                await Sfc.startSfcs(this, oSfcDetails.plant, [oSfcDetails.sfc], oSfcDetails.operation, this._oResource );
             }
 
         },
