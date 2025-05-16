@@ -49,7 +49,7 @@ sap.ui.define([
             this._oOrder = await OrderRepository.readOrder(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.order);
             this._oSfc = await SfcRepository.readSfcApi(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc);
             this._oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.material);
-
+            let _oPrintingEndpoint = this._getPrintingEndPoint();
 
             this._fillMissingParameters();
             this._generalChecks();
@@ -61,18 +61,18 @@ sap.ui.define([
                 await this._checkRequiredParams();
                 await this._checkConfirmMm();
             }
-            await this._executeQuantityConfirmation();
-            if(oStorageLocation.isEWMManagedStorageLocation === true){
-                await this._executeEwmReceipt();
-            }else{
-                await this._executeMmReceipt();
-            }         
-            
-            // this._reloadQ1Plugin = true;
-            await this._printLabel(_oPrintingEndpoint);
-            this._refreshPod();
 
-            
+            for(let i=0; i<this._oReceiptParameters.palletesNumber;i++){
+                await this._executeQuantityConfirmation();
+                if(oStorageLocation.isEWMManagedStorageLocation === true){
+                    await this._executeEwmReceipt();
+                }else{
+                    await this._executeMmReceipt();
+                }                        
+                await this._printLabel(_oPrintingEndpoint);
+            }
+
+            this._refreshPod();
         },
 
         _getSfcStep: function(){
@@ -178,7 +178,7 @@ sap.ui.define([
                 shopOrder: this._oReceiptParameters.order,
                 sfc: this._oReceiptParameters.sfc,
                 operationActivity: this._oReceiptParameters.operationActivity,
-                yieldQuantity: this._oReceiptParameters.quantity,
+                yieldQuantity: this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber,
                 yieldQuantityUnit: this._oReceiptParameters.unitOfMeasure,
                 workCenter: this._oReceiptParameters.workCenter
             }
@@ -200,17 +200,17 @@ sap.ui.define([
         },
         _executeEwmReceipt: async function(){
             let oHu = await HuGenerator.generate(this._oController, this._oReceiptParameters.material, this._oReceiptParameters.materialVersion, this._oReceiptParameters.plant);
-            let sUrl = this._oController.getSfcExecutionDataSourceUri()  + "inventory/v1/inventory/ewmGoodsReceipts";
+            let sUrl = this._oController.getPublicApiRestDataSourceUri()  + "inventory/v1/inventory/ewmGoodsReceipts";
             this._oReceiptParameters.handlingUnit = oHu;
 
             let oParameters = { lineItems: [ { material: this._oReceiptParameters.material,
                                                materialVersion: this._oReceiptParameters.materialVersion,
                                                packingMaterial: "PALETA",
                                                handlingUnit: oHu,
-                                               quantity: { unitOfMeasure: { commercialUnitOfMeasure: this._oReceiptParameters.unitOfMeasure }, value: this._oReceiptParameters.quantity },
+                                               quantity: { unitOfMeasure: { commercialUnitOfMeasure: this._oReceiptParameters.unitOfMeasure }, value: this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber },
                                                requireQuantityToleranceCheck: false,
                                                sfc: this._oReceiptParameters.sfc }],
-                                order: "",
+                                order: this._oReceiptParameters.order,
                                 plant: this._oReceiptParameters.plant,
                                 additionalParameters: [ { parameterName: "SALES_ORDER",
                                                           parameterValue: this._oReceiptParameters.salesOrder },
@@ -219,7 +219,7 @@ sap.ui.define([
              };
 
             return await new Promise((resolve,reject)=>{
-                AjaxUtil.post(sUrl, oParameters,
+                this._oController.ajaxPostRequest(sUrl, oParameters,
                     (oResponseData) => {
                         this._oController.showSuccessMessage(this._oTextHandler.getText("messageReceiptSuccess"), true, true);
                         resolve();
@@ -236,7 +236,7 @@ sap.ui.define([
         },
         _refreshPod: function(){
             let oPodSelectionModel = this._oController.getPodSelectionModel();
-            if(parseInt(this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber) >= parseInt(this._oReceiptParameters.sfcQuantity)){
+            if(parseInt(this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber * this._oReceiptParameters.palletesNumber) >= parseInt(this._oReceiptParameters.sfcQuantity)){
                 oPodSelectionModel.setInputValue("");
                 oPodSelectionModel.clearSelections();
 
@@ -258,7 +258,7 @@ sap.ui.define([
         },
         _fillMissingParameters: function(){
             this._oReceiptParameters.storageLocation = this._oOrder.getPutawayStorageLocation();
-            this._oReceiptParameters.unitOfMeasure = this._oOrder.getUom();
+            this._oReceiptParameters.unitOfMeasure = this._oOrder.getInternalUom();
         },
         _getPrintingEndPoint: function(){
             let oReturn = this._oController.getConfigurationValue("printerEndPoint");
@@ -267,6 +267,29 @@ sap.ui.define([
                 this._oErrorHandler.throwErrorPopup("error.printing.noEndpoint");
             }
             return oReturn;
+        },
+        _printLabel: async function(oEndpoint){
+            let oPrintingDetails = {};
+            oPrintingDetails.endpoint = oEndpoint;
+            oPrintingDetails.plant  = this._oReceiptParameters.plant;
+            oPrintingDetails.order = this._oReceiptParameters.order;
+            oPrintingDetails.workCenter = this._oReceiptParameters.workCenter;
+            oPrintingDetails.resource = this._oReceiptParameters.resource;
+            oPrintingDetails.sfc = this._oReceiptParameters.sfc;
+            oPrintingDetails.material = this._oReceiptParameters.material;
+            oPrintingDetails.HU = this._oReceiptParameters.handlingUnit;
+            oPrintingDetails.orderLineCustomValues = this._oOrder.getOrderLineCustomValues(1);
+            oPrintingDetails.orderCustomValues = this._oOrder.getHeaderCustomValues();
+            oPrintingDetails.materialCustomValues = this._oMaterial.getCustomValues();
+            oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber;
+            oPrintingDetails.printer = this._oReceiptParameters.printer;
+            oPrintingDetails.operation = this._oReceiptParameters.stepId;
+            oPrintingDetails.document = 'WOODECO1';
+            oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber;
+            oPrintingDetails.printingCopies = this._oReceiptParameters.printingCopies;
+            
+            let oSfcReceiptPrint = new SfcReceiptPrint(this._oController, oPrintingDetails);
+            await oSfcReceiptPrint.print();
         }
     });
 });

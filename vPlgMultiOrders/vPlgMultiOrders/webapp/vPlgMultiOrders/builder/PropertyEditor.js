@@ -23,19 +23,17 @@ sap.ui.define([
 			this.addSwitch(oPropertyFormContainer, "closeButtonVisible", oData);
 						
 			this.addInputField(oPropertyFormContainer, "title", oData);
-			this.addInputField(oPropertyFormContainer, "text", oData);
-
+			this.addInputField(oPropertyFormContainer, "printerEndPoint", oData);
             oFormContainer = oPropertyFormContainer;
 		},
 		
 		getDefaultPropertyData: function(){
 			return {
-				
+				"printerEndPoint": "",
 				"backButtonVisible": true,
 				"closeButtonVisible": true,
                 "title": "vPlgMultiOrders",
-				"text": "vPlgMultiOrders"
-                
+               
 			};
 		}
 

@@ -153,7 +153,7 @@
                                         <Label text="{i18n>inputPalleteQuanLabel}" id="inputPalleteQuanLabel" labelFor="inputPalleteQuan" class="sapUiSmallMarginEnd fontText"/>
                                         <Input id="inputPalleteQuan" value="1" liveChange="onReceiptInputLiveChange" class="inputFont sapUiSmallMarginEnd " width="6rem"/>
                                         <Label id="inputReceiptQuantityLabel" text="" labelFor="inputReceiptQuantity" class="sapUiSmallMarginEnd fontText"/>
-                                        <Input id="inputReceiptQuantity" value="{/receiptQuan}" liveChange="onReceiptInputLiveChange" class="inputFont" width="18rem"/>
+                                        <Input id="inputReceiptQuantity" value="1" liveChange="onReceiptInputLiveChange" class="inputFont" width="18rem"/>
                                         <Label text="{/uom}"  id = "labelUom" class="sapUiSmallMarginBegin fontText"/>
                                 </HBox>
                                 <HBox justifyContent="Center" alignItems="Center" width="100%">

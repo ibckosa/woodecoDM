@@ -153,7 +153,7 @@ sap.ui.define([
         onButtonReceipt: async function () {
             // Logika zatwierdzania dla Q1
             try{
-                let selectedItem = this.getView().getModel("viewModel").getData();
+                let selectedOrder = this.getView().getModel("viewModel").getData();
                 let oPodController = this.getPodController();
                 let oPodSelectionModel = this.getPodSelectionModel();
                 let aSelections = oPodSelectionModel.getSelections();  
@@ -175,14 +175,13 @@ sap.ui.define([
                     sfcQuantity: parseInt(aSelectionFirstRow.getSfcData().getQuantity()),
                     operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
                     workCenter: oPodSelectionModel.workCenter,
-                    palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
+                    palletesNumber: parseInt(this.byId("inputPackageQuan").getValue()),
                     printingCopies: parseInt(this.byId("rbg1").getSelectedButton().getText()),
-                    packageNumber: parseInt(this.byId("inputPackageQuan").getValue()),
+                    packageNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
                     printer: oResource.getPrinterId(),
-                    salesOrder: selectedItem.salesOrder,
-                    salesOrderItem: selectedItem.salesOrderItem };
+                    salesOrder: selectedOrder.selectedOrder.salesOrder,
+                    salesOrderItem: selectedOrder.selectedOrder.salesOrderItem                };
                 
-                oReceiptParameters.printer 
                 ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcMOReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeReceipt();
@@ -306,6 +305,13 @@ sap.ui.define([
             });
         
             oDialog.open();
+        },
+        onReceiptInputLiveChange: function(oEvent) {
+            var value = oEvent.getParameter("value");
+            var newValue = value.replace(/[^0-9]/g, ''); 
+            if (value !== newValue) {
+                oEvent.getSource().setValue(newValue);
+            }
         },
         onOrderSelect: function(oEvent) {
             var oTable = oEvent.getSource();
