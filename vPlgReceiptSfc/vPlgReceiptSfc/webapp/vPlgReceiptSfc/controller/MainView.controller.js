@@ -12,8 +12,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceipt",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary, ErrorHandler, SfcRepository, IssuesManager, SfcReceipt, ResourceRepository, TextHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
+], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary, ErrorHandler, SfcRepository, IssuesManager, SfcReceipt, ResourceRepository, TextHandler, OrderRepository) {
     "use strict";
 
     var oLogger = Log.getLogger("exampleExecutionPlugin", Log.Level.INFO);
@@ -93,7 +94,7 @@ sap.ui.define([
                     this.getView().setBusyIndicatorDelay(0);
                     this.getView().setBusy(true);
                     await this._setVisibilityOfPalleteNumber();
-                    let oCustomQuan = this._getCustomQuan( oFirstSelection );
+                    let oCustomQuan = await this._getCustomQuan( oFirstSelection );
                     await this._setInputQuantity(oFirstSelection,oCustomQuan)
                     this._oCurrentSfc = oFirstSelection.getSfc().getSfc();
                     this._reloadQ1Plugin = false;
@@ -234,24 +235,37 @@ sap.ui.define([
             }
             
         },
-        _getCustomQuan: function(oSelection){
+        _getCustomQuan: async function(oSelection){
             var oCustomquan = { isSetted: false,
                                 value: 0 };
+            
 
-            var sInput = oSelection.getInput();
-            if (sInput && sInput !== "") {
-                var oCustomField = oSelection.getCustomFields();
-                var oCustomFieldValue = oCustomField["SHOP_ORDER.ITEM_01"];
-                if(oCustomFieldValue!=undefined){ var oCustomFieldValueSplitted = oCustomFieldValue.split("||"); }
-                
-                if(oCustomFieldValueSplitted != undefined && oCustomFieldValueSplitted.length>2){
-                    var oValue = oCustomFieldValueSplitted[2].substring(7,10);
-                    if(!isNaN(oValue)){
-                        oCustomquan.isSetted = true;
-                        oCustomquan.value = Number(oValue); 
-                    }
+            let oOrderInstance = await OrderRepository.readOrder(this, this.getPodController().getUserPlant(), oSelection.getShopOrder().getShopOrder());
+            let oPackingCode = oOrderInstance.getPackingCode();
+
+            if(oPackingCode){
+                let oPartOfPackingCode = oPackingCode.substring(7,10);
+                if(!isNaN(oPartOfPackingCode)){
+                    oCustomquan.isSetted = true;
+                    oCustomquan.value = Number(oPartOfPackingCode); 
                 }
             }
+
+
+            // var sInput = oSelection.getInput();
+            // if (sInput && sInput !== "") {
+            //     var oCustomField = oSelection.getCustomFields();
+            //     var oCustomFieldValue = oCustomField["SHOP_ORDER.ITEM_01"];
+            //     if(oCustomFieldValue!=undefined){ var oCustomFieldValueSplitted = oCustomFieldValue.split("||"); }
+                
+            //     if(oCustomFieldValueSplitted != undefined && oCustomFieldValueSplitted.length>2){
+            //         var oValue = oCustomFieldValueSplitted[2].substring(7,10);
+            //         if(!isNaN(oValue)){
+            //             oCustomquan.isSetted = true;
+            //             oCustomquan.value = Number(oValue); 
+            //         }
+            //     }
+            // }
             return oCustomquan;
         },
         _setInputQuantity: async function(oSelection, oCustomQuan){

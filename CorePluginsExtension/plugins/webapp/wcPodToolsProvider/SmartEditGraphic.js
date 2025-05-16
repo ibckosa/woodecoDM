@@ -20,12 +20,10 @@ sap.ui.define([
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPostRequest(sUrl, oParameters,
                     (oResponseData) => {
-                        debugger;
                         this._oDetails = oResponseData.responseData;
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {
-                        debugger;
                         reject(oError);
                     }   
                 );

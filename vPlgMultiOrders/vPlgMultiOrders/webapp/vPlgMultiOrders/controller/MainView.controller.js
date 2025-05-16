@@ -5,8 +5,10 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader"
-], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader) {
+    "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcMOReceipt",
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository"
+], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader, SfcMOReceipt, ResourceRepository) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders.controller.MainView", {
@@ -17,7 +19,8 @@ sap.ui.define([
             var oViewModel = new sap.ui.model.json.JSONModel({
                 selectedOrder: {}
             });
-            this.getView().setModel(oViewModel, "viewModel");           
+            this.getView().setModel(oViewModel, "viewModel");   
+            this._oErrorHandler = new ErrorHandler(this);        
 		},
 
 
@@ -25,29 +28,16 @@ sap.ui.define([
 
         onAfterRendering: function(){
            
-            this.getView().byId("backButton").setVisible(this.getConfiguration().backButtonVisible);
-            this.getView().byId("closeButton").setVisible(this.getConfiguration().closeButtonVisible);
+            // this.getView().byId("backButton").setVisible(this.getConfiguration().backButtonVisible);
+            // this.getView().byId("closeButton").setVisible(this.getConfiguration().closeButtonVisible);
             
-            this.getView().byId("headerTitle").setText(this.getConfiguration().title);
-            this.getView().byId("textPlugin").setText(this.getConfiguration().text); 
-            //zaznaczenie Q1 i pierwszego wiersza 
-            this.onQ1Press();
-            var oTable = this.getView().byId("ordersTable");
-    var aItems = oTable.getItems();
-    if (aItems.length > 0) {
-        var oFirstItem = aItems[0];
-        oTable.setSelectedItem(oFirstItem); // Zaznacz pierwszy wiersz
-
-        // Pobierz dane pierwszego wiersza i ustaw w modelu viewModel
-        var oContext = oFirstItem.getBindingContext("multiOrdersModel");
-        var oData = oContext.getObject();
-        var oViewModel = this.getView().getModel("viewModel");
-        oViewModel.setProperty("/selectedOrder", oData);
-    }
+            // this.getView().byId("headerTitle").setText(this.getConfiguration().title);
+            // this.getView().byId("textPlugin").setText(this.getConfiguration().text); 
         },
 
 		onBeforeRenderingPlugin: async function () {
-
+            this.subscribe("PodSelectionChangeEvent", this.onPodSelectionChangeEvent, this);
+            this.subscribe("WorklistSelectEvent", this.onWorkListSelectEvent, this);
 			await this._loadData();
 			
 		},
@@ -62,6 +52,18 @@ sap.ui.define([
 
         getCustomNotificationEvents: function(sTopic) {
             //return ["template"];
+        },
+
+        onPodSelectionChangeEvent: function (sChannelId, sEventId, oData) {
+            this.loadModel();
+        },
+
+        onOperationChangeEvent: function (sChannelId, sEventId, oData) {
+            //this.loadModel();
+        },
+
+        onWorkListSelectEvent: function (sChannelId, sEventId, oData) {
+            this.loadModel();
         },
 
 
@@ -99,14 +101,15 @@ sap.ui.define([
 		onExit: function () {
 			PluginViewController.prototype.onExit.apply(this, arguments);
 
-
+            this.unsubscribe("PodSelectionChangeEvent", this.onPodSelectionChangeEvent, this);
+            this.unsubscribe("WorklistSelectEvent", this.onWorkListSelectEvent, this);
 		},
         _loadData: async function () {
             debugger;
             try {
                 var oPodSelectionModel = this.getPodSelectionModel();
                 var aSelections = oPodSelectionModel.getSelections(); 
-                var oFirstSelection = aSelections[0]; // pierwszy element tablicy
+                var oFirstSelection = aSelections[0]; 
                 this._oPlant = this.getPodController().getUserPlant();
                 this._oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
                 this._oWorkCenter = oPodSelectionModel.workCenter;
@@ -115,9 +118,14 @@ sap.ui.define([
                 debugger;
                 let oPositions = await this._oOrder.getOrderPositions();
                 let oCodesTab = await NcCodesReader.readCodes(this, this._oPlant, this._oWorkCenter, this._oResource);
-                // const aLinks = await LinkReader.readLinks(oController, oSfcNumber, oOrderNumber);
                 const oModel = new JSONModel({ positions: oPositions, codes: oCodesTab });
                 this.getView().setModel(oModel, "multiOrdersModel");
+                if(oPositions.length > 0){
+                    let oFirstPosition = oPositions[0];
+                    var oViewModel = this.getView().getModel("viewModel");
+                    oViewModel.setProperty("/selectedOrder", oFirstPosition);
+                    
+                }
             } catch (error) {
                 this._oErrorHandler.handleError(error);
             }
@@ -142,13 +150,49 @@ sap.ui.define([
             var oButtonQ1 = this.getView().byId("btnQ1");
             oButtonQ1.removeStyleClass("greenCircle--active");
         },
-        onConfirmPress: function () {
+        onButtonReceipt: async function () {
             // Logika zatwierdzania dla Q1
-            var numPallets = this.getView().byId("numPallets").getValue();
-            var qtyInPallet = this.getView().byId("qtyInPallet").getValue();
-            
-            // Tu dodać logikę zatwierdzania
-            sap.m.MessageToast.show("Zatwierdzono: " + numPallets + " palet, " + qtyInPallet + " sztuk na palecie");
+            try{
+                let selectedItem = this.getView().getModel("viewModel").getData();
+                let oPodController = this.getPodController();
+                let oPodSelectionModel = this.getPodSelectionModel();
+                let aSelections = oPodSelectionModel.getSelections();  
+                if(aSelections.length < 1){ return; };
+                this.getView().setBusyIndicatorDelay(0);
+                this.getView().setBusy(true);
+                debugger;   
+                let aSelectionFirstRow = aSelections[0];
+                let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
+                let oReceiptParameters = { plant : oPodController.getUserPlant(),
+                    order: aSelectionFirstRow.getShopOrder().getShopOrder(),
+                    material: aSelectionFirstRow.getSfcData().getMaterial() ,
+                    materialVersion: aSelectionFirstRow.getSfcData().getMaterialVersion(),
+                    quantity: parseInt(this.byId("inputReceiptQuantity").getValue()),
+                    unitOfMeasure: "",		
+                    sfc: aSelectionFirstRow.getSfc().getSfc(),
+                    storageLocation: "",
+                    resource: oPodSelectionModel.resource.resource,
+                    sfcQuantity: parseInt(aSelectionFirstRow.getSfcData().getQuantity()),
+                    operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
+                    workCenter: oPodSelectionModel.workCenter,
+                    palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
+                    printingCopies: parseInt(this.byId("rbg1").getSelectedButton().getText()),
+                    packageNumber: parseInt(this.byId("inputPackageQuan").getValue()),
+                    printer: oResource.getPrinterId(),
+                    salesOrder: selectedItem.salesOrder,
+                    salesOrderItem: selectedItem.salesOrderItem };
+                
+                oReceiptParameters.printer 
+                ///uruchamianie nowego kodu
+                    let oSfcReceipt = new SfcMOReceipt(this, oReceiptParameters);
+                    await oSfcReceipt.executeReceipt();
+                    this._reloadQ1Plugin = true;
+                    this.getView().setBusy(false);
+
+            }catch(oError){
+                this.getView().setBusy(false);
+                this._oErrorHandler.handleError(oError);
+            }
         },
         onWadyAcceptPress: function () {
             // zatwierdzania dla wad 
@@ -306,7 +350,7 @@ sap.ui.define([
         },
         
         formatProgressText: function(deliveredQuantity, quantity) {
-            return deliveredQuantity + " / " + quantity; // Tworzy tekst w formacie X / Y
+            return deliveredQuantity + " z " + quantity; // Tworzy tekst w formacie X / Y
         },
 
 	});

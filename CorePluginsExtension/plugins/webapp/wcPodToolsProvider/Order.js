@@ -92,13 +92,21 @@ sap.ui.define([
                         case "MAT":
                             oMoStructure.materialNumber = attribute.field_value;
                             break;
+                        case "PQ":
+                            oMoStructure.quantity = attribute.field_value;
+                            break;
+                        case "ZZVERP":
+                            oMoStructure.packagingCode = attribute.field_value;
+                            break;
+                        case "SALES_TEXT_PL":
+                            oMoStructure.salesText = attribute.field_value;
+                            break;
                     }
                 }
                 oMoStructure.itemNumber = oItemNumber;
                 oMoStructure.orderNumber =  this._oOrderNumber;
-                oMoStructure.quantity = 120;
-                oMoStructure.deliveredQuantity = 60;
-                oMoStructure.files = await LinkReader.readLinks(this._oController, this._oPlant, this._oOrderNumber, oItemNumber);
+                oMoStructure.deliveredQuantity = 69;
+                oMoStructure.files = await LinkReader.readLinksFromInstance(this, oItemNumber);
                 oMoStructure.itemPosnr = parseInt(oItemNumber) * 10;
                 if(oMoStructure.materialNumber){
                    let oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oPlant, oMoStructure.materialNumber);
@@ -122,13 +130,28 @@ sap.ui.define([
                 deliveredQuantity: 0,
                 salesOrder: "",
                 salesOrderItem: "",
-                salesText: "Tekst sprzedażowy",
+                salesText: "",
+                packagingCode: "",
                 length: 0,
                 thickness: 0,
                 width: 0,
                 decors: [],
                 files: []
             }
+        },
+        getPackingCode: function(itemNumber = 1){
+            let oReturn = "";
+            try{
+                let lineValues = this.getOrderLineCustomValues(itemNumber);
+                let packingCode = lineValues.find(value=>{return value.field_name === "ZZVERP"});
+                if(packingCode){
+                    oReturn = packingCode.field_value;
+                }
+            }catch(oError){}
+
+
+
+            return oReturn;
         }
     });
 });
