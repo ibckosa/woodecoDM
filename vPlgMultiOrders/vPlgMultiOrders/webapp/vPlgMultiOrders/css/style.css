@@ -91,8 +91,8 @@
   
 .sapMBtn.bigButton .sapMBtnInner {
     text-align: center;
-    font-size: 2rem;
-    height: 4rem;
+    font-size: 1.5rem;
+    height: 2.5rem;
     background-color: #107E3E;
     color: white;
     display: flex;
@@ -100,40 +100,22 @@
     justify-content: center;
     }
 
-    .sapMBtn.smallButton .sapMBtnInner {
-        text-align: center;
-        font-size: 1.3rem;
-        height: 2rem;    
-        }
-    
-    .fontTitle{
-        font-size: 1.3rem;
-    }
     .fontText{
-        font-size: 2.5rem;
+        font-size: 1.4rem;
     }
-
-    .fontText2{
-        font-size: 1.3rem;
-    }
-
-    .fontTextRodo3{
-        font-size: 1rem;
-        font-style: italic;
-
-    }
-
     .sapMInputBase.inputFont{
-        height: 3rem;
+        height: 1.4rem;
      }
     .sapMInputBase.inputFont .sapMInputBaseContentWrapper{
-        height: 3rem;
+        height: 1.8rem;
      }
      .sapMInputBase.inputFont .sapMInputBaseContentWrapper .sapMInputBaseInner{
-        font-size: 2.5rem;
+        font-size: 1.4rem;
      }
      .printRadioButtonGroup .sapMLabel {
-        font-size: 2rem;
+        font-size: 1.4rem;
     }
-
+    .selectedRowBackground {
+        background-color: #DCD5C1 !important;
+      }
 	

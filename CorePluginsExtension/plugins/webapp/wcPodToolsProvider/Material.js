@@ -151,6 +151,26 @@ sap.ui.define([
         },
         getCustomValues(){
             return this._oDetails.customValues;
+        },
+        getThickness(){
+            let oReturn = "";
+
+            try{
+                let oPackagingMaterial = this._oDetails.customValues.find(customValue => { return customValue.attribute === 'THICKNESS' });
+                oReturn = oPackagingMaterial.value;
+            }catch(oError){}
+
+            return oReturn;
+        },
+        getSalesText(langugage="PL"){
+            let oReturn = "";
+
+            try{
+                let oPackagingMaterial = this._oDetails.customValues.find(customValue => { return customValue.attribute === `SALES_TEXT_${langugage}` });
+                oReturn = oPackagingMaterial.value;
+            }catch(oError){}
+
+            return oReturn;
         }
     });
 });

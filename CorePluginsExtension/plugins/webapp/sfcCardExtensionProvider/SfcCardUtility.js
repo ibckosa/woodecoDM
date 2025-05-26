@@ -108,6 +108,7 @@ sap.ui.define([
                 showValue: true,
                 displayOnly: true,
                 width: "15rem",
+                visible: "{customData>/sfcCardCustomVisibility/progressIndicatorValue}",
                 percentValue: "{customData>/sfcCardCustom/percentProgress}",
                 displayValue: "{customData>/sfcCardCustom/progressIndicatorValue}"
             });
@@ -171,8 +172,8 @@ sap.ui.define([
         },
         _addInformationTextField: function(oInformationContainer, fieldName){
             let oInformationControl = new VerticalLayout({
-                visible: "{customData>/sfcCardCustomVisibility/"+fieldName+"}"
-                //visible: "{= ${customData>/sfcCardCustom/"+fieldName+"} !== '' && ${customData>/sfcCardCustom/"+fieldName+"} !== undefined}"
+               // visible: "{customData>/sfcCardCustomVisibility/"+fieldName+"}"
+                visible: "{= ${customData>/sfcCardCustom/"+fieldName+"} !== '' && ${customData>/sfcCardCustom/"+fieldName+"} !== undefined  && ${customData>/sfcCardCustomVisibility/"+fieldName+"} }"
             });
             oInformationControl.addStyleClass("sapUiNoContentPadding");
             oInformationControl.addStyleClass("sapUiMediumMarginEnd");
@@ -200,7 +201,8 @@ sap.ui.define([
         },
         _addInformationButton(oInformationContainer, fieldName){
             let oInformationControl = new VerticalLayout({
-                visible: "{= ${customData>/sfcCardCustomVisibility/"+fieldName+"}}"
+                visible: "{= ${customData>/sfcCardCustom/"+fieldName+"} !== '' && ${customData>/sfcCardCustom/"+fieldName+"} !== undefined  && ${customData>/sfcCardCustomVisibility/"+fieldName+"} }"
+                //visible: "{= ${customData>/sfcCardCustomVisibility/"+fieldName+"}}"
                 //visible: "{= ${customData>/sfcCardCustom/"+fieldName+"} !== '' && ${customData>/sfcCardCustom/"+fieldName+"} !== undefined}"
             });
             oInformationControl.addStyleClass("sapUiNoContentPadding");
@@ -232,6 +234,7 @@ sap.ui.define([
         },
         _addDekorButton: function(oInformationContainer){
             let oInformationControl = new VerticalLayout({
+                visible: "{customData>/sfcCardCustomVisibility/decors}"
                 //visible: "{= ${customData>/sfcCardCustom/"+fieldName+"} !== '' && ${customData>/sfcCardCustom/"+fieldName+"} !== undefined}"
             });
             oInformationControl.addStyleClass("sapUiNoContentPadding");

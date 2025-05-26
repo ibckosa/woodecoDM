@@ -51,26 +51,28 @@ sap.ui.define([
             }
 
             await this._executeSfcScrap();
-
-            this._showMessageSuccess("success.ProccessFinished");
-            if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
-                this.getPodSelectionModel().setInputValue(this._oParameters.sfc);
-                this.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
-                this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-            }else{
-                this.getPodSelectionModel().setInputValue("");
-                this.getPodSelectionModel().clearSelections();
-                this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-                this.onClosePress();
-                this.navigateToMainPage();
-            }
+            this._oController.showSuccessMessage(this._oTextHandler.getText("success.q23.ProccessFinished"), true, true);
+            this._oController.getPodSelectionModel().setInputValue(this._oParameters.sfc);
+            this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
+            this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+            // if(this._oParameters.leftQuantity>this._oParameters.quantity){
+            //     this._oController.getPodSelectionModel().setInputValue(this._oParameters.sfc);
+            //     this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
+            //     this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+            // }else{
+            //     this._oController.getPodSelectionModel().setInputValue("");
+            //     this._oController.getPodSelectionModel().clearSelections();
+            //     this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+            //     this._oController.onClosePress();
+            //     this._oController.navigateToMainPage();
+            // }
         },
         
 
         _executeCheksMO: function(){
-            if(this._oParameters.quantity>this._oParameters.leftQuantity){
-                this._oErrorHandler.throwError("error.q23.sfcNotEnoughQuantity");
-            }
+            // if(this._oParameters.quantity>this._oParameters.leftQuantity){
+            //     this._oErrorHandler.throwError("error.q23.sfcNotEnoughQuantity");
+            // }
 
             if(this._oParameters.quantity>this._oParameters.quantityInWork){
                 this._oErrorHandler.throwError("error.q23.sfcNotInWork");
@@ -82,15 +84,15 @@ sap.ui.define([
         _getComment: async function (isCommentRequired = false) {
             return await new Promise((resolve, reject) => {
                 this._resolveComment = resolve;
-                this._isCommentRequired = oDataType;
+                this._isCommentRequired = isCommentRequired;
                 if (!this.oApproveDialog) {
                     this.oApproveDialog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
-                        title: this._geti18nText("dialogTitleLabel"),
+                        title: this._oTextHandler.getText("dialogTitleLabel"),
                         content: new sap.m.TextArea({ width: "30rem", rows: 12, id: "commentTextArea" }),
                         beginButton: new sap.m.Button({
                             type: mobileLibrary.ButtonType.Emphasized,
-                            text: this._geti18nText("dialogAcceptButtonLabel"),
+                            text: this._oTextHandler.getText("dialogAcceptButtonLabel"),
                             press: async function () {
                                 let oReturn = "";
                                 debugger;
@@ -102,8 +104,11 @@ sap.ui.define([
                                     }
                                     oTextArea.setValue("");
                                     this.oApproveDialog.close();
+                                    this.oApproveDialog.destroy();
                                     this._resolveComment(oReturn);
-                                } catch (oError) { this._oErrorHandler.handleError(oError) }
+                                } catch (oError) { 
+                                    this._oErrorHandler.handleError(oError) 
+                                }
                             }.bind(this)
                         })
                     });
@@ -112,7 +117,7 @@ sap.ui.define([
             });
         },
         _executeSfcScrap: async function(oScrapQuantity, oSfcDetails, oResourceReasonCode){
-            var sUrl = this.getPublicApiRestDataSourceUri() + "quantityConfirmation/v1/confirm";
+            var sUrl = this._oController.getPublicApiRestDataSourceUri() + "quantityConfirmation/v1/confirm";
             // var oRequestParameters = {
             //     plant: oSfcDetails.plant,
             //     operation: oSfcDetails.operation,
@@ -134,7 +139,7 @@ sap.ui.define([
             }
 
             return await new Promise((resolve,reject)=>{
-                this.ajaxPostRequest(sUrl, oRequestParameters,
+                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
                     oResponseData => {
                         resolve();
                     },
@@ -165,7 +170,7 @@ sap.ui.define([
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "nonconformance/v1/log";
 
             let oRequestParameters = {
-                code: this._oParameters.ncCode,
+                code: this._oParameters.nonconformanceCode,
                 dataFields: [
                     {
                        key: "COMMENTS",

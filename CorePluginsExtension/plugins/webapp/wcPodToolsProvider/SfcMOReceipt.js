@@ -39,6 +39,7 @@ sap.ui.define([
             //     workCenter: aSelectionFirstRow.getSfcData().getWorkCenter() };
             //     sales_item: "",
             //     sales_item_position ""
+            //     itemNumberErp
             
             //     plant: plant
             //     automaticIssues: false/true
@@ -89,6 +90,15 @@ sap.ui.define([
 
             if(this._oReceiptParameters.printer===""){
                 this._oErrorHandler.throwError("error.printing.noPrinter");
+            }
+
+
+            if(this._oOrder.getOARequired()){
+                let orderInput = this._oOrder.getInputOrder();
+                let orderInputDate = this._oOrder.getInputOrderDate();
+                if(!orderInput||!orderInputDate){
+                    this._oErrorHandler.throwError("error.multiOrders.OAOrderNotAssigned");
+                }
             }
         },
         _getStorageLocation: async function(){
@@ -209,11 +219,14 @@ sap.ui.define([
                                                handlingUnit: oHu,
                                                quantity: { unitOfMeasure: { commercialUnitOfMeasure: this._oReceiptParameters.unitOfMeasure }, value: this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber },
                                                requireQuantityToleranceCheck: false,
+                                               comments: `${this._oReceiptParameters.salesOrder}${this._oReceiptParameters.salesOrderItem}`,
                                                sfc: this._oReceiptParameters.sfc }],
                                 order: this._oReceiptParameters.order,
                                 plant: this._oReceiptParameters.plant,
                                 additionalParameters: [ { parameterName: "SALES_ORDER",
                                                           parameterValue: this._oReceiptParameters.salesOrder },
+                                                        { parameterName: "ITEM_NUMBER",
+                                                          parameterValue: this._oReceiptParameters.itemNumberErp },
                                                         { parameterName: "SALES_ORDER_ITEM",
                                                           parameterValue: this._oReceiptParameters.salesOrderItem } ]
              };
@@ -278,7 +291,7 @@ sap.ui.define([
             oPrintingDetails.sfc = this._oReceiptParameters.sfc;
             oPrintingDetails.material = this._oReceiptParameters.material;
             oPrintingDetails.HU = this._oReceiptParameters.handlingUnit;
-            oPrintingDetails.orderLineCustomValues = this._oOrder.getOrderLineCustomValues(1);
+            oPrintingDetails.orderLineCustomValues = this._oOrder.getOrderLineCustomValues(this._oReceiptParameters.itemNumber);
             oPrintingDetails.orderCustomValues = this._oOrder.getHeaderCustomValues();
             oPrintingDetails.materialCustomValues = this._oMaterial.getCustomValues();
             oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber;

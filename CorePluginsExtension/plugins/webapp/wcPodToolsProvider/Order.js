@@ -67,9 +67,10 @@ sap.ui.define([
         },
         getOrderPositions: async function(){
             let oReturn = [];
-            let oLines = this._oDetails.customValues.filter(customValue=>{ return customValue.attribute.startsWith("ITEM") });
+            let oLines = this._oDetails.customValues.filter(customValue=>{ return customValue.attribute.startsWith("ITEM") &&
+                                                                                   customValue.attribute !== "ITEM_1"  });
 
-
+            let oReceipts = await this._getOrderReceipts();
             for(const line of oLines){
                 if(!line.value||line.value===""){continue;}
                 let oItemNumber = line.attribute.replace("ITEM_0", "");
@@ -84,9 +85,6 @@ sap.ui.define([
                         case "BR":
                             oMoStructure.width = attribute.field_value;
                             break;
-                        case "DI":
-                            oMoStructure.thickness = attribute.field_value;
-                            break;
                         case "SO":
                             oMoStructure.salesOrder = attribute.field_value;
                             break;
@@ -97,24 +95,34 @@ sap.ui.define([
                             oMoStructure.materialNumber = attribute.field_value;
                             break;
                         case "PQ":
-                            oMoStructure.quantity = attribute.field_value;
+                            oMoStructure.quantity = parseInt(attribute.field_value);
                             break;
                         case "ZZVERP":
                             oMoStructure.packagingCode = attribute.field_value;
                             break;
-                        case "SALES_TEXT_PL":
-                            oMoStructure.salesText = attribute.field_value;
+                        case "AUFPS":
+                            oMoStructure.itemNumberErp = attribute.field_value;
                             break;
                     }
                 }
                 oMoStructure.itemNumber = oItemNumber;
                 oMoStructure.orderNumber =  this._oOrderNumber;
-                oMoStructure.deliveredQuantity = 69;
                 oMoStructure.files = await LinkReader.readLinksFromInstance(this, oItemNumber);
                 oMoStructure.itemPosnr = parseInt(oItemNumber) * 10;
+                let filteredReceipts = oReceipts.filter(receipt=>{ return receipt.comments&&
+                                                                          receipt.comments === `${oMoStructure.salesOrder}${oMoStructure.salesOrderItem}` &&
+                                                                          receipt.material  === oMoStructure.materialNumber });
+
+                for(const receipt of filteredReceipts){
+                    oMoStructure.deliveredQuantity = oMoStructure.deliveredQuantity + receipt.quantityInBaseUnit.value;
+                }
+
+                oMoStructure.leftQuantity = oMoStructure.quantity - oMoStructure.deliveredQuantity;
                 if(oMoStructure.materialNumber){
                    let oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oPlant, oMoStructure.materialNumber);
                    oMoStructure.decors = await oMaterial.getGraphics();
+                   oMoStructure.thickness = oMaterial.getThickness();
+                   oMoStructure.salesText = oMaterial.getSalesText("PL");
                 }
                 oReturn.push(oMoStructure);
             }
@@ -128,6 +136,7 @@ sap.ui.define([
             return {
                 orderNumber: "",
                 itemNumber: "",
+                itemNumberErp: "",
                 itemPosnr: "",
                 materialNumber: "",
                 quantity: 0,
@@ -152,10 +161,130 @@ sap.ui.define([
                     oReturn = packingCode.field_value;
                 }
             }catch(oError){}
+            return oReturn;
+        },
+        _getOrderReceipts: async function(){
+            var oParameters = { order: this._oOrderNumber,
+                                plant: this._oPlant,
+                                size: 300,
+                                page: 0 };
 
+            let oFirstCall = await this._callGetOrderReceipts(oParameters);
 
+            return oFirstCall.content;
+
+        },
+        _callGetOrderReceipts: async function(oParameters){
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventory/goodsReceipts";
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxGetRequest(sUrl, oParameters,
+                     (oResponseData) => {
+                        resolve(oResponseData);
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        reject(oError);
+                    }   
+                );
+
+            });
+        },
+        
+        saveCustomData: async function(){
+            if(this._oDetails.customValuesBuffered){
+                let sUrl = this._oController.getPublicApiRestDataSourceUri() + "order/v1/orders/customValues";
+
+                let parameters = { plant: this._oPlant,
+                                   order: this._oOrderNumber,
+                                   customValues: this._oDetails.customValuesBuffered };
+    
+                return await new Promise((resolve,reject)=>{
+                    this._oController.ajaxPatchRequest(sUrl, parameters,
+                         (oResponseData) => {
+                            this._oDetails.customValues = this._oDetails.customValuesBuffered;
+                            this._oDetails.customValuesBuffered = null;
+                            resolve(oResponseData);
+                        },
+                        (oError) => {
+                            this._oDetails.customValuesBuffered = null;
+                            reject(oError);
+                        }   
+                    );
+    
+                });
+            }
+
+        },
+        setOrderInput: function(orderInput){
+            this._setBufferedCustomData();
+
+            this._oDetails.customValuesBuffered = this._oDetails.customValuesBuffered.filter( buffer => { return buffer.attribute !== "INPUT_ORDER" && buffer.attribute !== "ITEM_1" });
+
+            this._oDetails.customValuesBuffered.push({ attribute: "INPUT_ORDER",
+                                                       value:      orderInput });
+        },
+        setOrderInputDate: function(orderInputDate){
+            this._setBufferedCustomData();
+            this._oDetails.customValuesBuffered = this._oDetails.customValuesBuffered.filter( buffer => { return buffer.attribute !== "INPUT_ORDER_DATE" && buffer.attribute !== "ITEM_1" });
+
+            this._oDetails.customValuesBuffered.push({ attribute: "INPUT_ORDER_DATE",
+                                                       value:     orderInputDate });
+
+        },
+        _setBufferedCustomData: function(){
+            if(!this._oDetails.customValuesBuffered){
+                this._oDetails.customValuesBuffered = this._oDetails.customValues;
+            }
+        },
+        getStartDate: function(){
+            return this._oDetails.actualStartDate;
+        },
+        getEndDate: function(){
+            return this._oDetails.actualCompletionDate;
+        },
+        getInputOrder: function(){
+            let oReturn = "";
+
+            try{
+                let inputOrder = this._oDetails.customValues.find(customValue => { return customValue.attribute === 'INPUT_ORDER' });
+                oReturn = inputOrder.value;
+            }catch(oError){}
+
+            return oReturn;
+        },
+        getInputOrderDate: function(){
+            let oReturn = "";
+
+            try{
+                let inputOrderDate = this._oDetails.customValues.find(customValue => { return customValue.attribute === 'INPUT_ORDER_DATE' });
+                oReturn = inputOrderDate.value;
+            }catch(oError){}
+
+            return oReturn;
+        },
+        getOARequired: function(){
+            let oReturn = false;
+
+            try{
+                let oLineAttributes = this.getOrderLineCustomValues(1);
+                let gs251 = oLineAttributes.find(line => { return line.field_name === 'GS1_251' });
+                if(gs251&&gs251.field_value==="ON"){
+                    oReturn = true;
+                }
+            }catch(oError){}
+
+            return oReturn;
+        },
+        getOrderType: function(){
+            let oReturn = "";
+
+            try{
+                let orderType = this._oDetails.customValues.find(customValue => { return customValue.attribute === 'ORDER_TYPE' });
+                oReturn = orderType.value;
+            }catch(oError){}
 
             return oReturn;
         }
+
+        
     });
 });

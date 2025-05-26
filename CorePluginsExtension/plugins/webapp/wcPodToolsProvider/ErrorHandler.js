@@ -30,13 +30,13 @@ sap.ui.define([
 
             if(oError===undefined){
                 oReturn = this._textHandler.getText("error.generalError");
-            }else if(oError.displayMessage !== undefined){
+            }else if(oError.displayMessage){
                 oReturn = oError.displayMessage;
-            }else if(oError.causeMessage !== undefined){
+            }else if(oError.causeMessage){
                 oReturn = oError.causeMessage;
-            }else if(oError.message !== undefined){
+            }else if(oError.message){
                 oReturn = oError.message;
-            }else if(oError.errorMessage !== undefined){
+            }else if(oError.errorMessage){
                 oReturn = oError.errorMessage;
             }else{
                 oReturn = oError;

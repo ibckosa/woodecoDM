@@ -275,6 +275,10 @@ sap.ui.define([
                             
                             debugger;
                         }catch(oErr){debugger;}
+
+                        if(oBomComponent&&oBomComponent.componentType.toUpperCase() !== "NORMAL"){
+                            item.setVisible(false);
+                        }
                         
                         
                         item.getCells().forEach(cell=>{

@@ -104,31 +104,7 @@ sap.ui.define([
                                                         percentProgress: "0",
                                                         decors: []
                                                      },
-                                                     sfcCardCustomVisibility: { optimizationNumber: false,
-                                                        recipeNumber: false,
-                                                        blockNumber: false,
-                                                        customerName: false,
-                                                        artFam: false,
-                                                        thickness: false,
-                                                        length: false,
-                                                        width: false,
-                                                        remarksButton: false,
-                                                        crossCompany: false,
-                                                        blatMaterialTop: false,
-                                                        blatMaterialDown: false,
-                                                        blatThicknessTop: false,
-                                                        blatThicknessDown: false,
-                                                        salesTextPL: false,
-                                                        salesTextEN: false,
-                                                        salesTextDE: false,
-                                                        artfamCom: false,
-                                                        artfamEle: false,
-                                                        artfamGrp: false,
-                                                        artfamRohlpE: false,
-                                                        artfamRohlpatte: false,
-                                                        ruType: false,
-                                                        progressIndicatorValue: false,
-                                                        decor: false }
+                                                     sfcCardCustomVisibility: this._getVisibilityStructure()
 
                                                      
                     };
@@ -152,30 +128,7 @@ sap.ui.define([
             }
            // let oGraphic = SmartEditGraphicRepository.getGraphic(oController, "PD3000");
 
-            let  sfcCardCustomVisibility = { optimizationNumber: false,
-                                             recipeNumber: false,
-                                                blockNumber: false,
-                                                customerName: false,
-                                                artFam: false,
-                                                thickness: false,
-                                                length: false,
-                                                width: false,
-                                                remarksButton: false,
-                                                crossCompany: false,
-                                                blatMaterialTop: false,
-                                                blatMaterialDown: false,
-                                                blatThicknessTop: false,
-                                                blatThicknessDown: false,
-                                                salesTextPL: false,
-                                                salesTextEN: false,
-                                                salesTextDE: false,
-                                                artfamCom: false,
-                                                artfamEle: false,
-                                                artfamGrp: false,
-                                                artfamRohlpE: false,
-                                                artfamRohlpatte: false,
-                                                ruType: false,
-                                                progressIndicatorValue: false };
+            let  sfcCardCustomVisibility = this._getVisibilityStructure();
 
 
             try{
@@ -236,7 +189,7 @@ sap.ui.define([
                 }
                 debugger;
 
-                //let oFieldConfiguration = this._getFieldConfiguration(oController, );
+                
                 oSfcCardCustom.decors = await oMaterialInstance.getGraphics();
 
                 
@@ -246,46 +199,29 @@ sap.ui.define([
                     oSfcCardCustom.progressIndicatorValue =  oDoneOrderQuan + " z " + oTotalOrderQuan;
                     oSfcCardCustom.percentProgress = parseInt( oDoneOrderQuan / oTotalOrderQuan * 100 ).toString();
                 }
-                
-                // if(oOrderData.productionQuantity>0){
-                //     oSfcCardCustom.progressIndicatorValue =  oOrderData.doneQuantityInProductionUom + " z " + oOrderData.productionQuantity;
-                //     if(oOrderData.productionQuantity>0){
-                //         oSfcCardCustom.percentProgress = parseInt( oOrderData.doneQuantityInProductionUom / oOrderData.productionQuantity * 100 ).toString();
-                //     }
-                // }
 
                 if(oOrderData.customValues !== undefined){
                     for(var i = 0; i < oOrderData.customValues.length; i++ ){
                         if(oOrderData.customValues[i].attribute === "HEADER_OPTIMNO"){
                             oSfcCardCustom.optimizationNumber = oOrderData.customValues[i].value;
-                            if(oSfcCardCustom.optimizationNumber){sfcCardCustomVisibility.optimizationNumber = true;}
                         }else if(oOrderData.customValues[i].attribute === "HEADER_BLOCKNO"){
                             oSfcCardCustom.blockNumber = oOrderData.customValues[i].value;
-                            if(oSfcCardCustom.blockNumber){sfcCardCustomVisibility.blockNumber = true;}
                         }else if(oOrderData.customValues[i].attribute === "CUSTOMER_NAME"){
                             oSfcCardCustom.customerName = oOrderData.customValues[i].value;
-                            if(oSfcCardCustom.customerName){sfcCardCustomVisibility.customerName = true;}
                         }else if(oOrderData.customValues[i].attribute === "HEADER_REMARKS"){
                             oSfcCardCustom.remarksButton = oOrderData.customValues[i].value;
-                            if(oSfcCardCustom.remarksButton){sfcCardCustomVisibility.remarksButton = true;}
                         }else if(oOrderData.customValues[i].attribute === "HEADER_THICKNESS"){
                             oSfcCardCustom.thickness = oOrderData.customValues[i].value;
-                            if(oSfcCardCustom.thickness){sfcCardCustomVisibility.thickness = true;}
                         }else if(oOrderData.customValues[i].attribute === "HEADER_LENGTH"){
                             oSfcCardCustom.length = oOrderData.customValues[i].value;
-                            if(oSfcCardCustom.length){sfcCardCustomVisibility.length = true;}
                         }else if(oOrderData.customValues[i].attribute === "HEADER_WIDTH"){
                             oSfcCardCustom.width = oOrderData.customValues[i].value;
-                            if(oSfcCardCustom.width){sfcCardCustomVisibility.width = true;}
                         }else if(oOrderData.customValues[i].attribute === "HEADER_ARTFAM"){
                             oSfcCardCustom.artFam = oOrderData.customValues[i].value;
-                            if(oSfcCardCustom.artFam){sfcCardCustomVisibility.artFam = true;}
                         }else if(oOrderData.customValues[i].attribute === "HEADER_RECIPE"){
                             oSfcCardCustom.recipeNumber = oOrderData.customValues[i].value;
-                            if(oSfcCardCustom.recipeNumber){sfcCardCustomVisibility.thickness = true;}
                         }else if(oOrderData.customValues[i].attribute === "HEADER_CROSS_COMPANY"){
                             oSfcCardCustom.crossCompany = oOrderData.customValues[i].value;
-                            if(oSfcCardCustom.crossCompany){sfcCardCustomVisibility.thickness = true;}
                         }
                         
                     }
@@ -296,31 +232,24 @@ sap.ui.define([
                         switch(oMaterialData.customValues[i].attribute) {
                             case "THICKNESS":
                                 oSfcCardCustom.thickness = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.thickness){sfcCardCustomVisibility.thickness = true;}
                                 break;
                             case "RECIPE_IMPREGNATION":
                                 oSfcCardCustom.recipeNumber = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.recipeNumber){sfcCardCustomVisibility.recipeNumber = true;}
                                 break;
                             case "ARTFAM_COM":
                                 oSfcCardCustom.artfamCom = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.artfamCom){sfcCardCustomVisibility.artfamCom = true;}
                                 break;
                             case "ARTFAM_ELE":
                                 oSfcCardCustom.artfamEle = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.artfamEle){sfcCardCustomVisibility.artfamEle = true;}
                                 break;
                             case "ARTFAM_GRP":
                                 oSfcCardCustom.artfamGrp = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.artfamGrp){sfcCardCustomVisibility.artfamGrp = true;}
                                 break;
                             case "ARTFAM_ROHPL_E":
                                 oSfcCardCustom.artfamRohlpE = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.artfamRohlpE){sfcCardCustomVisibility.artfamRohlpE = true;}
                                 break;
                             case "ARTFAM_ROHPLATTE":
                                 oSfcCardCustom.artfamRohlpatte = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.artfamRohlpatte){sfcCardCustomVisibility.artfamRohlpatte = true;}
                                 break;
                             case "RU_TYPE":
                                 oSfcCardCustom.ruType = oMaterialData.customValues[i].value;
@@ -328,36 +257,29 @@ sap.ui.define([
                                 break;
                             case "SALES_TEXT_PL":
                                 oSfcCardCustom.salesTextPL = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.salesTextPL){sfcCardCustomVisibility.salesTextPL = true;}
                                 break;
                             case "SALES_TEXT_EN":
                                 oSfcCardCustom.salesTextEN = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.salesTextEN){sfcCardCustomVisibility.salesTextEN = true;}
                                 break;
                             case "SALES_TEXT_DE":
                                 oSfcCardCustom.salesTextDE = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.salesTextDE){sfcCardCustomVisibility.salesTextDE = true;}
                                 break;
                             case "BLAT_MATERIAL_TOP":
                                 oSfcCardCustom.blatMaterialTop = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.blatMaterialTop){sfcCardCustomVisibility.blatMaterialTop = true;}
                                 break;
                             case "BLAT_MATERIAL_DOWN":
                                 oSfcCardCustom.blatMaterialDown = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.blatMaterialDown){sfcCardCustomVisibility.blatMaterialDown = true;}
                                 break;
                             case "BLAT_THICKNESS_TOP":
                                 oSfcCardCustom.blatThicknessTop = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.blatThicknessTop){sfcCardCustomVisibility.blatThicknessTop = true;}
                                 break;
                             case "BLAT_THICKNESS_DOWN":
                                 oSfcCardCustom.blatThicknessDown = oMaterialData.customValues[i].value;
-                                if(oSfcCardCustom.blatThicknessDown){sfcCardCustomVisibility.blatThicknessDown = true;}
                                 break;
                         }
                     }
                 }
-
+                sfcCardCustomVisibility = this._getFieldConfiguration(oController, oOrderInstance);
                 
             }catch(e){
                 //oPodSelectionModel.customData.sfcCardCustom = {};
@@ -410,12 +332,55 @@ sap.ui.define([
 
             });
         },
-        _getFieldConfiguration: function(oController){
+        _getFieldConfiguration: function(oController, oOrderInstance){
+            let oReturn = this._getVisibilityStructure();
+            let orderType =  oOrderInstance.getOrderType();
+
+            let fieldsConfiguration = oController.getConfigurationValue(`fields${orderType}`);
+
+            if(fieldsConfiguration){
+                let visibleFields = fieldsConfiguration.split(";");
+
+                for(const field of visibleFields){
+                    if (oReturn.hasOwnProperty(field)) {
+                        oReturn[field] = true;
+                    }
+
+                }
+            }
+            return oReturn;
 
         },
         _getSfcsInstances: async function(oController, oPlant, oSfcs){
             let oPromises = oSfcs.map(sfc => SfcRepository.ReadSfcBypassBuffer(oController, oPlant, sfc) );
             return await Promise.all(oPromises);
+        },
+        _getVisibilityStructure: function(){
+            return { optimizationNumber: false,
+                   recipeNumber: false,
+                   blockNumber: false,
+                   customerName: false,
+                   artFam: false,
+                   thickness: false,
+                   length: false,
+                   width: false,
+                   remarksButton: false,
+                   crossCompany: false,
+                   blatMaterialTop: false,
+                   blatMaterialDown: false,
+                   blatThicknessTop: false,
+                   blatThicknessDown: false,
+                   salesTextPL: false,
+                   salesTextEN: false,
+                   salesTextDE: false,
+                   artfamCom: false,
+                   artfamEle: false,
+                   artfamGrp: false,
+                   artfamRohlpE: false,
+                   artfamRohlpatte: false,
+                   ruType: false,
+                   progressIndicatorValue: false,
+                   decors: false };
         }
     })
 });

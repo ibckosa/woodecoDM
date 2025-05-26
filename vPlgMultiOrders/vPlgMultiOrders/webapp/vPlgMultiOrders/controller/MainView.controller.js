@@ -7,8 +7,11 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
     "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader",
     "ibc/dm/plugins/wcPodToolsProvider/SfcMOReceipt",
-    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository"
-], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader, SfcMOReceipt, ResourceRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcQ23",
+    "sap/ui/core/Fragment",
+    "sap/m/library"
+], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader, SfcMOReceipt, ResourceRepository, SfcQ23, Fragment, mobileLibrary) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders.controller.MainView", {
@@ -24,6 +27,9 @@ sap.ui.define([
 		},
 
 
+        onBeforeRendering:  async function () {   
+            await this._loadData();
+        },
 
 
         onAfterRendering: function(){
@@ -38,7 +44,7 @@ sap.ui.define([
 		onBeforeRenderingPlugin: async function () {
             this.subscribe("PodSelectionChangeEvent", this.onPodSelectionChangeEvent, this);
             this.subscribe("WorklistSelectEvent", this.onWorkListSelectEvent, this);
-			await this._loadData();
+			//await this._loadData();
 			
 		},
 
@@ -54,16 +60,16 @@ sap.ui.define([
             //return ["template"];
         },
 
-        onPodSelectionChangeEvent: function (sChannelId, sEventId, oData) {
-            this.loadModel();
+        onPodSelectionChangeEvent: async function (sChannelId, sEventId, oData) {
+            await this._loadData();
         },
 
         onOperationChangeEvent: function (sChannelId, sEventId, oData) {
             //this.loadModel();
         },
 
-        onWorkListSelectEvent: function (sChannelId, sEventId, oData) {
-            this.loadModel();
+        onWorkListSelectEvent: async function (sChannelId, sEventId, oData) {
+            await this._loadData();
         },
 
 
@@ -105,8 +111,9 @@ sap.ui.define([
             this.unsubscribe("WorklistSelectEvent", this.onWorkListSelectEvent, this);
 		},
         _loadData: async function () {
-            debugger;
             try {
+                this.getView().setBusyIndicatorDelay(0);
+                this.getView().setBusy(true);
                 var oPodSelectionModel = this.getPodSelectionModel();
                 var aSelections = oPodSelectionModel.getSelections(); 
                 var oFirstSelection = aSelections[0]; 
@@ -115,18 +122,26 @@ sap.ui.define([
                 this._oWorkCenter = oPodSelectionModel.workCenter;
                 this._oResource = oPodSelectionModel.resource.resource;
                 this._oOrder = await OrderRepository.readOrderByPassBuffer(this, this._oPlant, this._oOrderNumber);
-                debugger;
                 let oPositions = await this._oOrder.getOrderPositions();
                 let oCodesTab = await NcCodesReader.readCodes(this, this._oPlant, this._oWorkCenter, this._oResource);
                 const oModel = new JSONModel({ positions: oPositions, codes: oCodesTab });
                 this.getView().setModel(oModel, "multiOrdersModel");
-                if(oPositions.length > 0){
+                if( ( !this._oOrderNumberPrevious || this._oOrderNumberPrevious !== this._oOrderNumber ) && oPositions.length > 0){
                     let oFirstPosition = oPositions[0];
-                    var oViewModel = this.getView().getModel("viewModel");
+                    let oViewModel = this.getView().getModel("viewModel");
                     oViewModel.setProperty("/selectedOrder", oFirstPosition);
-                    
+                    this._setSelectedFirstPosition();
+                    this._oOrderNumberPrevious = this._oOrderNumber;
+                }else if(this._oOrderNumberPrevious && this._oOrderNumberPrevious === this._oOrderNumber   && oPositions.length > 0){
+                    this._refreshSelectedOrder(oPositions);
+                }else if(oPositions.length === 0){
+                    let oViewModel = this.getView().getModel("viewModel");
+                    oViewModel.setProperty("/selectedOrder", null);
                 }
+                await this._setFieldVisibility();
+                this.getView().setBusy(false);
             } catch (error) {
+                this.getView().setBusy(false);
                 this._oErrorHandler.handleError(error);
             }
         },
@@ -159,13 +174,12 @@ sap.ui.define([
                 let aSelections = oPodSelectionModel.getSelections();  
                 if(aSelections.length < 1){ return; };
                 this.getView().setBusyIndicatorDelay(0);
-                this.getView().setBusy(true);
-                debugger;   
+                this.getView().setBusy(true); 
                 let aSelectionFirstRow = aSelections[0];
                 let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
                 let oReceiptParameters = { plant : oPodController.getUserPlant(),
                     order: aSelectionFirstRow.getShopOrder().getShopOrder(),
-                    material: aSelectionFirstRow.getSfcData().getMaterial() ,
+                    material: selectedOrder.selectedOrder.materialNumber,
                     materialVersion: aSelectionFirstRow.getSfcData().getMaterialVersion(),
                     quantity: parseInt(this.byId("inputReceiptQuantity").getValue()),
                     unitOfMeasure: "",		
@@ -175,51 +189,67 @@ sap.ui.define([
                     sfcQuantity: parseInt(aSelectionFirstRow.getSfcData().getQuantity()),
                     operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
                     workCenter: oPodSelectionModel.workCenter,
-                    palletesNumber: parseInt(this.byId("inputPackageQuan").getValue()),
+                    palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
                     printingCopies: parseInt(this.byId("rbg1").getSelectedButton().getText()),
-                    packageNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
+                    packageNumber: parseInt(this.byId("inputPackageQuan").getValue()),
                     printer: oResource.getPrinterId(),
                     salesOrder: selectedOrder.selectedOrder.salesOrder,
-                    salesOrderItem: selectedOrder.selectedOrder.salesOrderItem                };
+                    salesOrderItem: selectedOrder.selectedOrder.salesOrderItem,
+                    itemNumber: selectedOrder.selectedOrder.itemNumber,
+                    itemNumberErp: selectedOrder.selectedOrder.itemNumberErp  };
                 
                 ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcMOReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeReceipt();
                     this._reloadQ1Plugin = true;
                     this.getView().setBusy(false);
-
+                    setTimeout( async ()=> { await this._loadData();},1500);
             }catch(oError){
                 this.getView().setBusy(false);
                 this._oErrorHandler.handleError(oError);
             }
         },
-        onWadyAcceptPress: function () {
-            // zatwierdzania dla wad 
-            var wadyCiecia = this.getView().byId("wadyCiecia").getValue();
-            
-            // logika zatwierdzania wad
-            sap.m.MessageToast.show("Zatwierdzono wady cięcia: " + wadyCiecia + " sztuk");
+        onButtonQ23: async function(oEvent){
+            try{
+                let selectedCode = this.getView().byId("q23ReasonsList").getSelectedItem().getBindingContext("multiOrdersModel").getObject();
+                let selectedOrder = this.getView().getModel("viewModel").getData();
+                let oPodController = this.getPodController();
+                let oPodSelectionModel = this.getPodSelectionModel();
+                let aSelections = oPodSelectionModel.getSelections();  
+                if(aSelections.length < 1){ return; };
+                let aSelectionFirstRow = aSelections[0];
+
+                this.getView().setBusyIndicatorDelay(0);
+                this.getView().setBusy(true);
+
+    
+                let q23Parameters = {   quantity: parseInt(this.byId("inputQ23").getValue()),
+                                        leftQuantity: selectedOrder.selectedOrder.leftQuantity,
+                                        plant: oPodController.getUserPlant(),
+                                        workCenter: oPodSelectionModel.workCenter,
+                                        resource: oPodSelectionModel.resource.resource,
+                                        order: aSelectionFirstRow.getShopOrder().getShopOrder(),
+                                        sfc: aSelectionFirstRow.getSfc().getSfc(),
+                                        operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
+                                        isCommentRequired: selectedCode.dataType ==="NC_DATA_COMMENT_REQUIERED",
+                                        nonconformanceCode: selectedCode.code,
+                                        resourceReasonCode: selectedCode.resourceReasonCode };
+
+
+                let oSfcQ23 = new SfcQ23(this, q23Parameters);
+                await oSfcQ23.executeMO();
+
+
+
+                this.getView().setBusy(false);
+            }catch(oError){
+                this.getView().setBusy(false);
+                this._oErrorHandler.handleError(oError);
+            }            
         },
+
         onQ3SelectionChange: function (oEvent) {
-            var oSelectedItem = oEvent.getParameter("selectedItem");
-            if (oSelectedItem) {
-                var selectedCode = oSelectedItem.getKey();
-                var selectedDescription = oSelectedItem.getText();
-        
-                // Wyświetl komunikat lub wykonaj inne działania z wybraną wartością
-                sap.m.MessageToast.show("Wybrana przyczyna: " + selectedDescription + " (Kod: " + selectedCode + ")");
-        
-                // Zamknięcie listy rozwijanej
-                var oComboBox = this.byId("q3ReasonsList");
-                oComboBox.close();
-        
-                // Opcjonalnie: ustawienie danych w modelu
-                var oViewModel = this.getView().getModel("viewModel");
-                oViewModel.setProperty("/selectedReason", {
-                    code: selectedCode,
-                    description: selectedDescription
-                });
-            }
+            
         },
         onDekorPress: function() {
             // Pobierz dane decors z modelu viewModel
@@ -322,6 +352,13 @@ sap.ui.define([
         
                 var oViewModel = this.getView().getModel("viewModel");
                 oViewModel.setProperty("/selectedOrder", oData);
+                oSelectedItem.addStyleClass("selectedRowBackground");
+
+                if(this._oPreviousSelectedItem){
+                    this._oPreviousSelectedItem.removeStyleClass("selectedRowBackground");
+                }
+                this._oPreviousSelectedItem = oSelectedItem;
+
             }
         },
         onOrdersTableUpdateFinished: function(oEvent) {
@@ -336,15 +373,15 @@ sap.ui.define([
             }
         },
         onSalesTextPress: function () {
-            // Pobierz dane wybranej pozycji z modelu viewModel
-            var oViewModel = this.getView().getModel("viewModel");
-            var sSalesText = oViewModel.getProperty("/selectedOrder/salesText");
+            let orderItemDetails = this.getView().getModel("viewModel").getData();
+
+            let salesText = orderItemDetails.selectedOrder.salesText.replaceAll("$&","\n");
         
             // Wyświetl tekst sprzedażowy jako komunikat
-            if (sSalesText) {
-                sap.m.MessageToast.show("Tekst sprzedażowy: " + sSalesText);
+            if (salesText) {
+                sap.m.MessageBox.information(salesText);
             } else {
-                sap.m.MessageToast.show("Brak tekstu sprzedażowego dla wybranej pozycji.");
+                sap.m.MessageBox.information("Brak tekstu sprzedażowego dla wybranej pozycji.");
             }
         },
 
@@ -358,6 +395,240 @@ sap.ui.define([
         formatProgressText: function(deliveredQuantity, quantity) {
             return deliveredQuantity + " z " + quantity; // Tworzy tekst w formacie X / Y
         },
+        onFileViewPress: function(oEvent){
+            let oItem = oEvent.getSource().getParent().getBindingContext("viewModel").getObject();
+            let sLink = oItem.fileLink;
+        
+            if (sLink) {
+                window.open(sLink, "_blank");
+            }
+        },
+        _setFieldVisibility: async function(){
+            try{
+                let oPodSelectionModel = this.getPodSelectionModel();
+                let oWorkCenter = oPodSelectionModel.workCenter;
+                let oResourceNumber = oPodSelectionModel.resource.resource;
+                let oResource = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), oResourceNumber);
+                let oFunctionalLocation = oResource.getQ1Scheme();
+
+                if(oFunctionalLocation==="1"){
+                    this.byId("inputPackageQuan").setVisible(true);
+                    this.byId("inputPackageQuanLabel").setVisible(true);
+
+                    this.byId("inputPalleteQuanLabel").setVisible(false);
+                    this.byId("inputPalleteQuan").setVisible(false);
+
+                }else if(oFunctionalLocation==="2"){
+                    this.byId("inputPackageQuan").setVisible(true);
+                    this.byId("inputPackageQuanLabel").setVisible(true);
+
+                    this.byId("inputPalleteQuanLabel").setVisible(true);
+                    this.byId("inputPalleteQuan").setVisible(true);
+                    //wszystko
+
+                }else if(oFunctionalLocation==="3"){
+                    this.byId("inputPackageQuan").setVisible(false);
+                    this.byId("inputPackageQuanLabel").setVisible(false);
+
+                    this.byId("inputPalleteQuanLabel").setVisible(true);
+                    this.byId("inputPalleteQuan").setVisible(true);
+                }else{
+                    let oModelData = this.getView().getModel().getData();
+                    this.byId("inputPackageQuan").setVisible(false);
+                    this.byId("inputPackageQuanLabel").setVisible(false);
+
+                    this.byId("inputPalleteQuanLabel").setVisible(false);
+                    this.byId("inputPalleteQuan").setVisible(false);
+
+                    // if(oModelData.isCustomQuan){
+                    //     this.byId("inputReceiptQuantityLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityLabelPallet"));
+                    // }else{
+                    //     this.byId("inputReceiptQuantityLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityLabel"));
+                    // }
+                }
+                this.getView().byId("btnOrderAssign").setVisible(this._oOrder.getOARequired());
+
+            }catch(oError){
+            }
+        },
+        _setSelectedFirstPosition: function(){
+            try{
+                let positionItems = this.getView().byId("ordersTable").getItems();
+                for(let i=0;i<positionItems.length;i++){
+                    let item = positionItems[i];
+                    if(i===0){
+                        item.addStyleClass("selectedRowBackground");
+                        this._oPreviousSelectedItem = item;
+                    }else{
+                        item.removeStyleClass("selectedRowBackground");
+                    }
+                }
+                
+            }catch(oError){
+                debugger;
+            }
+
+
+        },
+
+        onOrderAssign: function(){
+            if (!this._OADialog) {
+                Fragment.load({
+                    name: "ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders.fragment.AssignOrderWindow",
+                    controller: this
+                }).then(oDialog => {
+                    this._OADialog = oDialog;
+                    this.getView().addDependent(oDialog);
+                    this._setOADialogValues();
+                    oDialog.open();
+                });
+            } else {
+                this._setOADialogValues();
+                this._OADialog.open();
+            }
+            
+        },
+        onCloseOADialog: function () {
+            this._OADialog.close();
+        },
+        onOkOADialog: async function () {
+            try{
+                //this._oOrder
+                let orderInput = sap.ui.getCore().byId("orderInput").getValue();
+                let orderInputDate = sap.ui.getCore().byId("orderInputDate").getValue();
+                await this._orderInputChecks(orderInput, orderInputDate);
+
+                this._oOrder.setOrderInput(orderInput);
+                this._oOrder.setOrderInputDate(orderInputDate);
+                await this._oOrder.saveCustomData();
+
+                this._OADialog.close();
+            }catch(oError){
+                this._oErrorHandler.handleError(oError);
+            }
+
+            
+        },
+        _orderInputChecks: async function(orderInput, orderInputDate){
+            let orderInputInstance;
+            if(!orderInput){
+                this._oErrorHandler.throwErrorPopup("error.multiOrders.noOrderInput");
+            }
+
+            if(!orderInputDate){
+                this._oErrorHandler.throwErrorPopup("error.multiOrders.noOrderInputDate");
+            }
+
+            var oRegExp = /^\d{4}-\d{2}-\d{2}$/;
+            if (!oRegExp.test(orderInputDate)) {
+                this._oErrorHandler.throwErrorPopup("error.multiOrders.OADateFormat");
+            }
+
+            try{
+                orderInputInstance = await OrderRepository.readOrder(this, this._oPlant, orderInput);
+
+            }catch(oError){
+                await this._dialogNoOAOrder(orderInput)
+                //this._oErrorHandler.throwErrorPopup("Nie znaleziono zlecenia.");
+            }
+
+            if(orderInputInstance){
+                let startOrderDate = orderInputInstance.getStartDate();
+                let endOrderDate = orderInputInstance.getEndDate();
+
+                if(!startOrderDate){
+                    this._oErrorHandler.throwErrorPopup("error.multiOrders.OAOrderNotStarted")
+                }
+                let oRequestedDate = new Date(orderInputDate);
+                let oStartOrderDate = new Date(startOrderDate);
+                oStartOrderDate.setHours(0, 0, 0, 0);
+
+                if(oStartOrderDate>oRequestedDate){
+                    this._oErrorHandler.throwErrorPopup("error.multiOrders.OAWrongDate1")
+                }
+
+                if(endOrderDate){
+                    let oEndOrderDate = new Date(startOrderDate);
+                    if(oEndOrderDate<oRequestedDate){
+                        this._oErrorHandler.throwErrorPopup("error.multiOrders.OAWrongDate2")
+                    }
+
+                }
+            }
+
+        },
+        onChange: function (oEvent) {
+            var oDatePicker = oEvent.getSource();
+            var sValue = oDatePicker.getValue();
+            
+            // RegExp do walidacji formatu "yyyy-MM-dd"
+            var oRegExp = /^\d{4}-\d{2}-\d{2}$/;
+            
+            if (!oRegExp.test(sValue)) {
+                // Jeśli wartość nie pasuje do formatu, ustawienie błędu
+                oDatePicker.setValueState(sap.ui.core.ValueState.Error);
+                oDatePicker.setValueStateText("error.multiOrders.OADateFormat");
+            } else {
+                // Jeśli wartość jest poprawna, usuwamy błąd
+                oDatePicker.setValueState(sap.ui.core.ValueState.None);
+            }
+        },
+        _setOADialogValues: function(){
+            let oInputOrderValue = this._oOrder.getInputOrder();
+            let oInputOrderDateValue = this._oOrder.getInputOrderDate();
+            let orderInput = sap.ui.getCore().byId("orderInput");
+            let orderInputDate = sap.ui.getCore().byId("orderInputDate")
+
+            orderInput.setValue(oInputOrderValue);
+            orderInputDate.setValue(oInputOrderDateValue);
+        },
+
+        _dialogNoOAOrder: async function(orderInput){
+            return await new Promise((resolve,reject)=>{
+                this._resolveNoOrder = resolve;
+                this._rejectNoOrder = reject;
+                if (!this.oApproveDialog) {
+                    this.oApproveDialog = new sap.m.Dialog({
+                        type: mobileLibrary.DialogType.Message,
+                        title: this._oTextHandler.getText("error.multiOrders.noAOOrderTitle"),
+                        content: new sap.m.Text({ text: this._oTextHandler.getText("error.multiOrders.noAOOrderQuestion") }),
+                        beginButton: new sap.m.Button({
+                            type: mobileLibrary.ButtonType.Emphasized,
+                            text: this._oTextHandler.getText("error.multiOrders.noAOOrderYes"),
+                            press: async function () {
+                                    this.oApproveDialog.close();
+                                    this._resolveNoOrder();
+                            }.bind(this)
+                        }),
+                        endButton: new sap.m.Button({
+                            text: this._oTextHandler.getText("error.multiOrders.noAOOrderNo"),
+                            press: function () {
+                                this.oApproveDialog.close();
+                                this._rejectNoOrder({ message: "",
+                                                        displayType: "NO_DISPLAY" })
+                                this._oErrorHandler.throwErrorNoDisplay("");
+                            }.bind(this)
+                        })
+                    });
+                }
+
+               this.oApproveDialog.open();
+            });
+        },
+        _refreshSelectedOrder: function(oPositions){
+            try{
+                let viewModel = this.getView().getModel("viewModel");
+                let viewModelData = viewModel.getData();
+                let selectedPosition = oPositions.find( position => { return position.itemNumber === viewModelData.selectedOrder.itemNumber });
+                if(selectedPosition){
+                    viewModelData.selectedOrder = selectedPosition;
+                    viewModel.setData(viewModelData);
+                }
+
+            }catch(oError){
+
+            }
+        }
 
 	});
 });

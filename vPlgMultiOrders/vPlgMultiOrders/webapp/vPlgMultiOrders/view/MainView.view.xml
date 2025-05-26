@@ -8,11 +8,9 @@
     expanded="false"
     accessibleRole="Region"
     backgroundDesign="Transparent"
-    class="sapUiNoContentPadding">
-    <!-- Nowy układ pod panelem -->
+    class="sapUiContentPadding">
         <HBox width="100%">
-            <!-- Lewa kolumna: tabela -->
-            <VBox width="35%" class="sapUiTinyMarginEnd">
+            <VBox width="30%" class="sapUiTinyMarginEnd">
                     <Table
                     id="ordersTable"
                     mode="SingleSelectMaster"
@@ -35,92 +33,96 @@
                             </ColumnListItem>
                         </items>
                     </Table>
-
             </VBox>
 
-            <!-- Prawa kolumna: szczegóły i akcje -->
-            <VBox width="65%" class="sapUiTinyMarginBegin">
-                <!-- Nagłówek z dynamicznymi danymi i paskiem postępu -->
-                <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
-                    <Label text="Długość:"/>
-                    <Label text= "{viewModel>/selectedOrder/length}"/>
-                </l:VerticalLayout>
+            <VBox width="70%" class="sapUiTinyMarginBegin">
+                <HBox alignItems="Center" class="sapUiSmallMarginBottom sapUiSmallMarginBegin">
+                    <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
+                        <Label text="Długość:"/>
+                        <Label text= "{viewModel>/selectedOrder/length}"/>
+                    </l:VerticalLayout>
 
-                <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
-                    <Label text="Szerokość:"/>
-                    <Label text= "{viewModel>/selectedOrder/width}"/>
-                </l:VerticalLayout>
+                    <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
+                        <Label text="Szerokość:"/>
+                        <Label text= "{viewModel>/selectedOrder/width}"/>
+                    </l:VerticalLayout>
 
-                <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
-                    <Label text="Grubość:"/>
-                    <Label text= "{viewModel>/selectedOrder/thickness}"/>
-                </l:VerticalLayout>
+                    <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
+                        <Label text="Grubość:"/>
+                        <Label text= "{viewModel>/selectedOrder/thickness}"/>
+                    </l:VerticalLayout>
 
-                <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
-                    <Label text="Kod pakowania:"/>
-                    <Label text= "{viewModel>/selectedOrder/packagingCode}"/>
-                </l:VerticalLayout>
+                    <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
+                        <Label text="Kod pakowania:"/>
+                        <Label text= "{viewModel>/selectedOrder/packagingCode}"/>
+                    </l:VerticalLayout>
 
-                <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
-                        <ProgressIndicator
-                            percentValue="{
-                                parts: [
-                                    {path: 'viewModel>/selectedOrder/deliveredQuantity'},
-                                    {path: 'viewModel>/selectedOrder/quantity'}
-                                ],
-                                formatter: '.calculateProgress'
-                            }"
-                            displayValue="{
-                                parts: [
-                                    {path: 'viewModel>/selectedOrder/deliveredQuantity'},
-                                    {path: 'viewModel>/selectedOrder/quantity'}
-                                ],
-                                formatter: '.formatProgressText'
-                            }"
-                            displayOnly="true"
-                            state="Success"
-                            width="15rem"
-                        />
-                </l:VerticalLayout>
-                <HBox width="100%" justifyContent="End">
-                    <Button
-                        id="btnSalesText"
-                        text="Sales Text"
-                        type="Emphasized" 
-                        press="onSalesTextPress"
-                        class="sapUiTinyMarginEnd"/>
-                    <Button
-                        id="btnDekor"
-                        text="Dekor"
-                        type="Emphasized"
-                        press="onDekorPress"/>
-                </HBox>
+                    <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
+                            <ProgressIndicator
+                                percentValue="{
+                                    parts: [
+                                        {path: 'viewModel>/selectedOrder/deliveredQuantity'},
+                                        {path: 'viewModel>/selectedOrder/quantity'}
+                                    ],
+                                    formatter: '.calculateProgress'
+                                }"
+                                displayValue="{
+                                    parts: [
+                                        {path: 'viewModel>/selectedOrder/deliveredQuantity'},
+                                        {path: 'viewModel>/selectedOrder/quantity'}
+                                    ],
+                                    formatter: '.formatProgressText'
+                                }"
+                                displayOnly="true"
+                                state="Success"
+                                width="15rem"
+                            />
+                    </l:VerticalLayout>
+                    
+                    <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
+                        <Button
+                            id="btnOrderAssign"
+                            text="Przypisanie zlecenia"
+                            type="Emphasized" 
+                            press="onOrderAssign"
+                            class="sapUiTinyMarginEnd"/>
+                    </l:VerticalLayout>
+
+                    <HBox width="100%" justifyContent="End">
+                        <Button
+                            id="btnSalesText"
+                            text="{i18n>salesText}"
+                            type="Emphasized" 
+                            press="onSalesTextPress"
+                            class="sapUiTinyMarginEnd"/>
+                        <Button
+                            id="btnDekor"
+                            text="Dekor"
+                            type="Emphasized"
+                            press="onDekorPress"/>
+                    </HBox>
                 
                 </HBox>
                     <Table
-                    id="filesTable"
-                    width="100%"
-                    growing="false"
-                    sticky="ColumnHeaders"
-                    inset="false"
-                    items="{viewModel>/selectedOrder/files}">
-                    <!-- Nagłówki kolumn -->
+                        id="filesTable"
+                        width="100%"
+                        growing="false"
+                        sticky="ColumnHeaders"
+                        inset="false"
+                        items="{viewModel>/selectedOrder/files}">
                     <columns>
                         <Column>
                             <Text text="Opis pliku"/>
                         </Column>
                         <Column hAlign="End" width="8rem">
-                            <Text text="Wyświetl plik"/>
+                            <Text text=""/>
                         </Column>
                     </columns>
 
                     <items>
                         <ColumnListItem>
                             <cells>
-                                <!-- Wyświetlanie opisu pliku -->
                                 <Text text="{viewModel>fileDescription}" />
-                                <!-- Przycisk wyświetlenia pliku -->
                                 <Button 
                                     text="Wyświetl plik" 
                                     type="Transparent" 
@@ -135,7 +137,7 @@
                     expanded="{device>/isNoPhone}"
                     class="sapUiResponsiveContentPadding tabbedBar">
                     <items>
-                        <IconTabFilter icon="sap-icon://hint" key="info" iconColor="Positive" text="Q1 - OK">
+                        <IconTabFilter icon="sap-icon://arrow-down" key="info" iconColor="Positive" text="Q1 - OK">
                             <VBox class="sapUiSmallMarginTop" alignItems="Center">
                                 <HBox justifyContent="Center" alignItems="Center" width="100%">
                                     <Label text="Liczba wydruków" id="sdasd" labelFor="rbg1" class="sapUiSmallMarginEnd fontText"/>
@@ -148,41 +150,28 @@
                                 </HBox>
 
                                 <HBox justifyContent="Center" alignItems="Center" width="100%">
-                                        <Label text="{i18n>inputPackageQuan}" id="inputPackageQuanLabel" labelFor="inputPackageQuan" class="sapUiSmallMarginEnd fontText"/>
-                                        <Input id="inputPackageQuan" value="1" liveChange="onReceiptInputLiveChange" class="inputFont sapUiSmallMarginEnd " width="6rem"/>
                                         <Label text="{i18n>inputPalleteQuanLabel}" id="inputPalleteQuanLabel" labelFor="inputPalleteQuan" class="sapUiSmallMarginEnd fontText"/>
-                                        <Input id="inputPalleteQuan" value="1" liveChange="onReceiptInputLiveChange" class="inputFont sapUiSmallMarginEnd " width="6rem"/>
-                                        <Label id="inputReceiptQuantityLabel" text="" labelFor="inputReceiptQuantity" class="sapUiSmallMarginEnd fontText"/>
-                                        <Input id="inputReceiptQuantity" value="1" liveChange="onReceiptInputLiveChange" class="inputFont" width="18rem"/>
+                                        <Input id="inputPalleteQuan" value="1" liveChange="onReceiptInputLiveChange" class="inputFont sapUiSmallMarginEnd " width="5rem"/>
+                                        <Label text="{i18n>inputPackageQuan}" id="inputPackageQuanLabel" labelFor="inputPackageQuan" class="sapUiSmallMarginEnd fontText"/>
+                                        <Input id="inputPackageQuan" value="1" liveChange="onReceiptInputLiveChange" class="inputFont sapUiSmallMarginEnd " width="5rem"/>
+                                        <Label id="inputReceiptQuantityLabel" text="{i18n>inputQuantityLabelPallet}" labelFor="inputReceiptQuantity" class="sapUiSmallMarginEnd fontText"/>
+                                        <Input id="inputReceiptQuantity" value="1" liveChange="onReceiptInputLiveChange" class="inputFont" width="7rem"/>
                                         <Label text="{/uom}"  id = "labelUom" class="sapUiSmallMarginBegin fontText"/>
                                 </HBox>
                                 <HBox justifyContent="Center" alignItems="Center" width="100%">
-                                    <Button text="{i18n>buttonReceiptLabel}"  class="bigButton"
+                                    <Button text="{i18n>buttonReceiptLabel}"  class="bigButton sapUiSmallMarginTop"
                                             press="onButtonReceipt"
                                             id="buttonReceipt" width="14rem" />
                                 </HBox>
                             </VBox>
 
-
-                            <!-- <VBox id="q1Section" class="sapUiSmallMarginTop" alignItems="Center">
-                                <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                    <Text text="Number of pallets" class="sapUiTinyMarginEnd"/>
-                                    <Input id="numPallets" value="1" width="3rem" class="sapUiTinyMarginEnd"/>
-                                    <Text text="Quantity in pallet" class="sapUiTinyMarginBeginEnd"/>
-                                    <Input id="qtyInPallet" value="18" width="4rem" class="sapUiTinyMarginEnd"/>
-                                    <Text text="SZT" class="sapUiTinyMarginEnd"/>
-                                </HBox>
-                                <HBox alignItems="Center" justifyContent="Center">
-                                    <Button id="btnConfirm" text="Confirm" type="Accept" press="onConfirmPress"/>
-                                </HBox>
-                            </VBox> -->
                         </IconTabFilter>
-                        <IconTabFilter icon="sap-icon://hint" key="info" iconColor="Negative" text="Q2 / Q3">
+                        <IconTabFilter icon="sap-icon://message-error" key="info" iconColor="Negative" text="Q3">
                             <VBox id="q2q3Section" class="sapUiSmallMarginTop">
                                 <HBox alignItems="Center" class="sapUiSmallMarginBottom">
                                         <Text text="Przyczyna" class="sapUiTinyMarginEnd"/>
                                     <ComboBox
-                                        id="q3ReasonsList"
+                                        id="q23ReasonsList"
                                         width="25rem"
                                         placeholder="Wybierz przyczynę"
                                         selectionChange="onQ3SelectionChange"
@@ -190,8 +179,8 @@
                                         class="sapUiTinyMarginEnd">
                                         <core:Item key="{multiOrdersModel>code}" text="{multiOrdersModel>codeDescription}"/>
                                     </ComboBox>
-                                    <Input id="wadyCiecia" value="0" width="3rem" class="sapUiTinyMarginEnd"/>
-                                    <Button id="btnWadyAccept" icon="sap-icon://accept" type="Accept" press="onWadyAcceptPress"/>
+                                    <Input id="inputQ23" liveChange="onReceiptInputLiveChange" value="0" width="3rem" class="sapUiTinyMarginEnd"/>
+                                    <Button id="btnQ23" icon="sap-icon://accept" type="Accept" press="onButtonQ23"/>
                                 </HBox>
                             </VBox>
                         </IconTabFilter>
