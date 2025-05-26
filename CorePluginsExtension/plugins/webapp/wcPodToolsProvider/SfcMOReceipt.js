@@ -47,7 +47,7 @@ sap.ui.define([
 
         executeReceipt: async function(){
 
-            this._oOrder = await OrderRepository.readOrder(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.order);
+            this._oOrder = await OrderRepository.readOrderByPassBuffer(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.order);
             this._oSfc = await SfcRepository.readSfcApi(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc);
             this._oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.material);
             let _oPrintingEndpoint = this._getPrintingEndPoint();

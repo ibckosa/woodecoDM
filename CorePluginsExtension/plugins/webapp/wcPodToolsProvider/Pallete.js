@@ -310,7 +310,7 @@ sap.ui.define([
                 "isInventoryManaged": true,
                 "userId": this._oController.getUserId(),
                 "dateTime": this._getIssueDt(),
-                "comments": "",
+                "comments": "ADDITIONAL_ISSUE",
                 "calculatedData": null,
                 "customFieldData":  null
             };

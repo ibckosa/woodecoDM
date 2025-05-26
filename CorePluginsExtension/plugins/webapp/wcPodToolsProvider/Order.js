@@ -283,7 +283,40 @@ sap.ui.define([
             }catch(oError){}
 
             return oReturn;
+        },
+        getIsOrderMO: function(){
+            let oReturn = false;
+
+            let oLines = this._oDetails.customValues.filter(customValue=>{ return customValue.attribute.startsWith("ITEM") &&
+                                                                                  customValue.attribute !== "ITEM_1" &&
+                                                                                  customValue.value !== ""   });
+
+            if(oLines.length>1){
+                oReturn = true;
+            }
+
+            return oReturn;
+        },
+        getHeaderMaterial: function(){
+            return this._oDetails.material.material;
+        },
+        getReceipts: async function(){
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventory/goodsReceipts";
+            var oParameters = { order: this._oOrderNumber,
+                                plant: this._oPlant,
+                                size: 200 };
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxGetRequest(sUrl, oParameters,
+                     (oResponseData) => {
+                        resolve(oResponseData.content);
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        resolve([]);
+                    }   
+                );
+            });
         }
+
 
         
     });
