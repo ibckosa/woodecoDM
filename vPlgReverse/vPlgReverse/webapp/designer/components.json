@@ -1,0 +1,15 @@
+{
+	"components": [
+		{
+			"id": "vPlgReverse",
+			"type": "VIEW_PLUGIN",
+			"allowMultipleInstances": false,
+			"name": "ibc.dm.vPlgReverse.vPlgReverse",
+			"propertyEditor": "ibc.dm.vPlgReverse.vPlgReverse.builder.PropertyEditor",
+			"i18n": "ibc.dm.vPlgReverse.vPlgReverse.i18n.i18n",
+            "productionProcessEnabled": true,
+           "productionProcessTitle": "vPlgReverse",
+			"supportedPodTypes": ["WORK_CENTER","OPERATION","ORDER"]
+		}   
+	]
+}

@@ -1,0 +1,14 @@
+{
+  "welcomeFile": "/vPlgReverse/index.html",
+  "authenticationMethod": "none",
+  "logout": {
+    "logoutEndpoint": "/do/logout"
+  },
+  "routes": [
+    {
+      "source": "^/vPlgReverse/(.*)$",
+      "target": "$1",
+      "localDir": "webapp"
+    }
+  ]
+}
