@@ -5,14 +5,16 @@ sap.ui.define([
     "sap/dm/dme/podfoundation/util/PodUtility",
     "sap/m/Column",
     "sap/m/Text",
-    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler"
-], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, PodUtility, Column, Text, PalleteQueueHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, PodUtility, Column, Text, PalleteQueueHandler, TextHandler) {
     "use strict";
 
     return PluginControllerExtension.extend("ibc.dm.plugins.componentListExtensionProvider.PluginEventExtension", {
         constructor: function (oExtensionUtilities) {
             this._oExtensionUtilities = oExtensionUtilities;
             this._oPalleteQueueHandler = new PalleteQueueHandler();
+            this._oTextHandler = new TextHandler();
         },
 
         getOverrideExecution: function(sOverrideMember) {
@@ -228,7 +230,7 @@ sap.ui.define([
             // 
             // AKTUALIZACJA MODELU I BINDINGU 
             //             
-            function fnUpdateTableItems(oTable,bomComponents, oPodController, oController,that ){
+            function fnUpdateTableItems(oTable,bomComponents, oPodController, oController, that){
 
                 var bSort = false;
                 var oCompQuanFromOrder = false;
@@ -295,7 +297,7 @@ sap.ui.define([
                                                 }
                                             }
                                         );
-                                        cell.getContent()[1].setText(_getText("buttonAssembleLabel",oPodController));
+                                        cell.getContent()[1].setText(that._oTextHandler.getText("labels.component.buttonConsume"));
                                         cell.getContent()[1].attachPress(that._onPaletteQueuePress.bind(that));
                                     }
                                 } catch (error) {

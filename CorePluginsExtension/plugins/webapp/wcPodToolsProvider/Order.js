@@ -304,7 +304,7 @@ sap.ui.define([
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventory/goodsReceipts";
             var oParameters = { order: this._oOrderNumber,
                                 plant: this._oPlant,
-                                size: 200 };
+                                size: 300 };
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxGetRequest(sUrl, oParameters,
                      (oResponseData) => {
@@ -315,6 +315,12 @@ sap.ui.define([
                     }   
                 );
             });
+        },
+        getBomNumber: function(){
+            return this._oDetails.bom.bom;
+        },
+        getBomType: function(){
+            return this._oDetails.bom.type;
         }
 
 

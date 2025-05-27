@@ -11,14 +11,16 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
     "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader",
-    "ibc/dm/plugins/wcPodToolsProvider/Sfc"
-], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader, Sfc) {
+    "ibc/dm/plugins/wcPodToolsProvider/Sfc",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader, Sfc, TextHandler) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView", {
 		onInit: function () {
 			PluginViewController.prototype.onInit.apply(this, arguments);
             this._oErrorHandler = new ErrorHandler(this);
+            this._oTextHandler = new TextHandler();
 		},
 
 
@@ -475,11 +477,11 @@ sap.ui.define([
                 if (!this.oApproveDialog) {
                     this.oApproveDialog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
-                        title: this._geti18nText("dialogTitleLabel"),
+                        title: this._oTextHandler.getText("dialogTitleLabel"),
                         content: new TextArea({ width: "30rem", rows: 12, id: "commentTextArea" }),
                         beginButton: new Button({
                             type: mobileLibrary.ButtonType.Emphasized,
-                            text: this._geti18nText("dialogAcceptButtonLabel"),
+                            text: this._oTextHandler.getText("dialogAcceptButtonLabel"),
                             press: async function () {
                                 let oReturn = "";
                                 debugger;

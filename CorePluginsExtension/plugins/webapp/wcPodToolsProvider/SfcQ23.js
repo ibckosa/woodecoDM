@@ -88,11 +88,11 @@ sap.ui.define([
                 if (!this.oApproveDialog) {
                     this.oApproveDialog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
-                        title: this._oTextHandler.getText("dialogTitleLabel"),
+                        title: this._oTextHandler.getText("labels.q23.commentTitleDialog"),
                         content: new sap.m.TextArea({ width: "30rem", rows: 12, id: "commentTextArea" }),
                         beginButton: new sap.m.Button({
                             type: mobileLibrary.ButtonType.Emphasized,
-                            text: this._oTextHandler.getText("dialogAcceptButtonLabel"),
+                            text: this._oTextHandler.getText("labels.q23.dialogAcceptButton"),
                             press: async function () {
                                 let oReturn = "";
                                 debugger;
