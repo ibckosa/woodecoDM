@@ -102,7 +102,7 @@ sap.ui.define([
             let oRequestParameters = { plant: oCode.plant,
                                         code: oCode.code, };
 
-           return await new Promise((resolve,reject)=>{
+           return new Promise((resolve,reject)=>{
                 this._oController.ajaxGetRequest(sUrl, oRequestParameters,
                     function (oResponseData) {
                         if(oResponseData.length>0){
@@ -134,7 +134,7 @@ sap.ui.define([
 
         if(oeeCode===""){return oReturn;}
 
-        return await new Promise((resolve,reject)=>{
+        return new Promise((resolve,reject)=>{
             this._oController.ajaxGetRequest(sUrl, oRequestParameters,
                 function (oResponseData) {
                     if(oResponseData.length>0){

@@ -196,7 +196,9 @@ sap.ui.define([
                     salesOrder: selectedOrder.selectedOrder.salesOrder,
                     salesOrderItem: selectedOrder.selectedOrder.salesOrderItem,
                     itemNumber: selectedOrder.selectedOrder.itemNumber,
-                    itemNumberErp: selectedOrder.selectedOrder.itemNumberErp  };
+                    itemNumberErp: selectedOrder.selectedOrder.itemNumberErp,
+                    f: selectedOrder.selectedOrder.quantityPerPalletMax,
+                    quantityPerPalletMin: selectedOrder.selectedOrder.quantityPerPalletMin };
                 
                 ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcMOReceipt(this, oReceiptParameters);

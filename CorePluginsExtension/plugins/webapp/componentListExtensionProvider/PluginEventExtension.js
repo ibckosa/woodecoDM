@@ -6,8 +6,10 @@ sap.ui.define([
     "sap/m/Column",
     "sap/m/Text",
     "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler",
-    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, PodUtility, Column, Text, PalleteQueueHandler, TextHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/BomRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository"
+], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, PodUtility, Column, Text, PalleteQueueHandler, TextHandler, BomRepository, OrderRepository) {
     "use strict";
 
     return PluginControllerExtension.extend("ibc.dm.plugins.componentListExtensionProvider.PluginEventExtension", {
@@ -191,7 +193,7 @@ sap.ui.define([
             try {
                 var oController = this.getController();;
                 oPodContr._bomReader.then(result=>{
-                    fnUpdateTableItems(oTable,result,oPodContr, oController, this);
+                    fnUpdateTableItems(oTable,result,oPodContr, oController, this, oMdl.getProperty("/shopOrder").shopOrder);
                 });
             } catch (error) {
                 
@@ -230,12 +232,16 @@ sap.ui.define([
             // 
             // AKTUALIZACJA MODELU I BINDINGU 
             //             
-            function fnUpdateTableItems(oTable,bomComponents, oPodController, oController, that){
+            async function fnUpdateTableItems(oTable,bomComponents, oPodController, oController, that, shopOrder){
 
                 var bSort = false;
                 var oCompQuanFromOrder = false;
 
                 var oConfiguration = oController.getConfiguration();
+                let orderInstance = await OrderRepository.readOrder(oController, that.getController().getPodController().getUserPlant(), shopOrder);
+                let bomInstance = await BomRepository.getInstance(oController, that.getController().getPodController().getUserPlant(), orderInstance.getBomNumber(), orderInstance.getBomType() );
+                
+                
 
                 if(oConfiguration&& typeof oConfiguration.compQuanFromOrder !== "undefined"){
                     oCompQuanFromOrder = oConfiguration.compQuanFromOrder;
@@ -263,7 +269,7 @@ sap.ui.define([
                         
                         if( typeof item.getBindingContext().getObject().erpBackflushing !== "boolean"  ){
                             bSort = true;
-                            if(bomComponents.find((line) => line.sequence == itemCompSeq && line.erpBackflushing)){
+                            if(bomComponents.find((line) => line.sequence == itemCompSeq && line.erpBackflushing) || bomInstance.getComponentBackflush(itemCompSeq)){
                                 oMdl.setProperty(item.getBindingContextPath()+"/erpBackflushing",true);
                                 oMdl.setProperty(item.getBindingContextPath()+"/buttonVisible",false);
                             }else{

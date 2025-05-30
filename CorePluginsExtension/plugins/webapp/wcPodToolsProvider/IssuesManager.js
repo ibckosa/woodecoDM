@@ -10,7 +10,7 @@ sap.ui.define([
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.IssuesManager", {
         constructor: function(oController, oPlant, oWorkCenter, oResource, oOrderNumber, oSfc, oOperationActivity, oQuantity){
             this._checkConstrutorPamateres(oController, oPlant, oWorkCenter, oResource, oOrderNumber, oSfc, oOperationActivity, oQuantity);
- 
+            this._createdIssues = [];
             this._componentsIssue = [];
             this._sfcComponents = [];
             this._sfcPlannedComponents = [];
@@ -41,6 +41,12 @@ sap.ui.define([
         executeIssues: async function(){
             for(const componentIssue of this._componentsIssue){
                 await componentIssue.executeIssue();
+                let createdIssues = componentIssue.getCreatedIssues();
+                for(const issue of createdIssues){
+                    this._createdIssues.push(issue);
+                }
+
+                //this._createdIssues.concat(componentIssue.getCreatedIssues());
             }
         },
         _readOrder: function(){
@@ -57,9 +63,17 @@ sap.ui.define([
             let oBomComponents = oBom.getComponents();
 
             for(const sfcComponent of oSfcComponents){
+                let backFlushValue = "";
                 let oBomComponent = oBomComponents.find(bomComponent => { return bomComponent.sequence === sfcComponent.componentSequence });
+                if(oBomComponent&&oBomComponent.customValues){
+                    let customValueBackflush = oBomComponent.customValues.find(value=>{return value.attribute==="BACKFLUSH"});
+                    if(customValueBackflush){
+                        backFlushValue = customValueBackflush.value;
+                    }
+                }
                 
-                if(oBomComponent&&oBomComponent.backflushEnabled === false){
+                
+                if(oBomComponent&&oBomComponent.backflushEnabled === false&&backFlushValue!=="X"){
                     let oIssueQuan;
                     if(oBomComponent.unitOfMeasure === 'ST'){
                         oIssueQuan = Math.ceil(sfcComponent.requiredQuantity * ( this._oQuantity / oSfc.getQuantity() ));
@@ -94,6 +108,9 @@ sap.ui.define([
             for(const componentIssue of this._componentsIssue){
                 componentIssue.changeSfc(oSfcNumber);
             }
+        },
+        getCreatedIssues: function(){
+            return this._createdIssues;
         }
 
 

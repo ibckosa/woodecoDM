@@ -70,6 +70,9 @@ sap.ui.define([
             let oLines = this._oDetails.customValues.filter(customValue=>{ return customValue.attribute.startsWith("ITEM") &&
                                                                                    customValue.attribute !== "ITEM_1"  });
 
+            
+            
+
             let oReceipts = await this._getOrderReceipts();
             for(const line of oLines){
                 if(!line.value||line.value===""){continue;}
@@ -77,6 +80,7 @@ sap.ui.define([
                 oItemNumber = oItemNumber.replace("ITEM_", "");
                 let oLineAttributes = this.getOrderLineCustomValues(oItemNumber);
                 let oMoStructure = this._getMultiOrdersStructure();
+                let palleteTolerancePlus = "", palleteToleranceMinus = "";
                 for(const attribute of oLineAttributes){
                     switch(attribute.field_name){
                         case "LA":
@@ -99,10 +103,24 @@ sap.ui.define([
                             break;
                         case "ZZVERP":
                             oMoStructure.packagingCode = attribute.field_value;
+                            let oPartOfPackingCode = attribute.field_value.substring(7,10);
+                            if(!isNaN(oPartOfPackingCode)){
+                                oMoStructure.quantityPerPallet = Number(oPartOfPackingCode); 
+                            }
                             break;
                         case "AUFPS":
                             oMoStructure.itemNumberErp = attribute.field_value;
                             break;
+                        case "ZZVERP_TOL-":
+                            palleteToleranceMinus = attribute.field_value;
+                            break;
+                        case "ZZVERP_TOL+":
+                            palleteTolerancePlus = attribute.field_value;
+                            break;
+                        case "PEG_KWMENG":
+                            oMoStructure.salesOrderItemQuantity = parseInt(attribute.field_value);
+                            break;
+
                     }
                 }
                 oMoStructure.itemNumber = oItemNumber;
@@ -118,6 +136,21 @@ sap.ui.define([
                 }
 
                 oMoStructure.leftQuantity = oMoStructure.quantity - oMoStructure.deliveredQuantity;
+
+                if(oMoStructure.quantityPerPallet ===0 || oMoStructure.quantityPerPallet >= oMoStructure.leftQuantity){
+                    oMoStructure.quantityPerPallet = oMoStructure.leftQuantity;
+                    oMoStructure.quantityPerPalletMax = 99999999;
+                    oMoStructure.quantityPerPalletMin = 1;
+                }else{
+                    oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPallet;
+                    if(palleteTolerancePlus){
+                        oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMax + this._converTolerance(palleteTolerancePlus)*palleteTolerancePlus;
+                    }
+
+                    if(palleteToleranceMinus){
+                        oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPalletMin - this._converTolerance(palleteToleranceMinus)*palleteToleranceMinus; 
+                    }
+                }
                 if(oMoStructure.materialNumber){
                    let oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oPlant, oMoStructure.materialNumber);
                    oMoStructure.decors = await oMaterial.getGraphics();
@@ -145,6 +178,10 @@ sap.ui.define([
                 salesOrderItem: "",
                 salesText: "",
                 packagingCode: "",
+                quantityPerPallet: 0,
+                quantityPerPalletMax: 0,
+                quantityPerPalletMin: 0,
+                salesOrderItemQuantity: 0,
                 length: 0,
                 thickness: 0,
                 width: 0,
@@ -321,6 +358,18 @@ sap.ui.define([
         },
         getBomType: function(){
             return this._oDetails.bom.type;
+        },
+        _converTolerance: function(toleranceText){
+            let returnTolerance = 0;
+            try{
+                toleranceText = toleranceText.replaceAll("%","");
+                let toleranceNumber = Number(toleranceText);
+                returnTolerance = toleranceNumber / 100;
+            }catch(oError){
+
+            }
+
+            return returnTolerance;
         }
 
 

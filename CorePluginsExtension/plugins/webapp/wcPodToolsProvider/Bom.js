@@ -30,6 +30,26 @@ sap.ui.define([
         },
         getComponents: function(){
             return this._oDetails.components;
+        },
+        getComponentBackflush: function(componentSequence){
+            let result = false;
+            try{
+               let bomComponent = this._oDetails.components.find( component => {return component.sequence === componentSequence;});
+               if(bomComponent){
+                if(bomComponent.customValues){
+                    let customValueBackflush = bomComponent.customValues.find( customValue=>{ return customValue.attribute==="BACKFLUSH"});
+                    if(customValueBackflush&&customValueBackflush.value==="X"){
+                        result = true;
+                    }
+
+                    if(bomComponent.backflushEnabled){
+                        result = true;
+                    }
+                }
+               }
+            }catch(oError){}
+
+            return result;
         }
     });
 });

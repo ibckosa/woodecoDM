@@ -24,7 +24,7 @@ sap.ui.define([
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {
-                        reject(oError);
+                        resolve();
                     }   
                 );
 

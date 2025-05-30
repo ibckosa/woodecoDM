@@ -53,7 +53,7 @@ sap.ui.define([
             let _oPrintingEndpoint = this._getPrintingEndPoint();
 
             this._fillMissingParameters();
-            this._generalChecks();
+            await this._generalChecks();
             let oStorageLocation = await this._getStorageLocation();
             let oCurrentStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
             this._oReceiptParameters.stepId = oCurrentStep.stepId;
@@ -69,7 +69,8 @@ sap.ui.define([
                     await this._executeEwmReceipt();
                 }else{
                     await this._executeMmReceipt();
-                }                        
+                }
+                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z');                        
                 await this._printLabel(_oPrintingEndpoint);
             }
 
@@ -83,7 +84,7 @@ sap.ui.define([
             }
             return oSfcStep;
         },
-        _generalChecks: function(){
+        _generalChecks: async function(){
             if(this._oSfc.getStatusCode() !== "403"){
                 this._oErrorHandler.throwError("errorSfcNotInWork");
             }
@@ -99,6 +100,11 @@ sap.ui.define([
                 if(!orderInput||!orderInputDate){
                     this._oErrorHandler.throwError("error.multiOrders.OAOrderNotAssigned");
                 }
+            }
+
+            if(this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber > this._oReceiptParameters.quantityPerPalletMax || 
+               this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber < this._oReceiptParameters.quantityPerPalletMin){
+                await this._checkConfirmTolerance();
             }
         },
         _getStorageLocation: async function(){
@@ -303,6 +309,125 @@ sap.ui.define([
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oController, oPrintingDetails);
             await oSfcReceiptPrint.print();
-        }
+        },
+
+        _checkConfirmTolerance: async function(){
+            return await new Promise((resolve,reject)=>{
+                this._resolveConfirmTolerance = resolve;
+                this._rejectConfirmTolerance = reject;
+                if (!this.oToleranceDialog) {
+                    this.oToleranceDialog = new Dialog({
+                        type: mobileLibrary.DialogType.Message,
+                        title: this._oTextHandler.getText("label.q1.confirmTitle"),
+                        content: new sap.m.Text({ text: this._oTextHandler.getText("labels.q1.palleteTolerance") }),
+                        beginButton: new sap.m.Button({
+                            type: mobileLibrary.ButtonType.Emphasized,
+                            text: this._oTextHandler.getText("answerYes"),
+                            press: async function () {
+                                    this.oToleranceDialog.close();
+                                    this._resolveConfirmTolerance();
+                            }.bind(this)
+                        }),
+                        endButton: new sap.m.Button({
+                            text: this._oTextHandler.getText("answerNo"),
+                            press: function () {
+                                this.oToleranceDialog.close();
+                                this._rejectConfirmTolerance({ message: "",
+                                                                displayType: "NO_DISPLAY" })
+                                this._oErrorHandler.throwErrorNoDisplay("");
+                            }.bind(this)
+                        })
+                    });
+                }
+
+               this.oToleranceDialog.open();
+            });
+        },
+        _saveDataCollection: async function(postingDate){
+            let parameterValues = [];
+
+            let guid = crypto.randomUUID();
+            debugger;
+
+            parameterValues.push({ comment: guid,
+                                   name: "Q1/Q3",
+                                   value: "Q1" });
+
+            parameterValues.push({ comment: guid,
+                                   name: "QUANTITY",
+                                   value: `${this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber}` });
+
+            parameterValues.push({ comment: guid,
+                                   name: "UOM",
+                                   value: this._oReceiptParameters.unitOfMeasure });
+
+            parameterValues.push({ comment: guid,
+                                   name: "MATERIAL",
+                                   value: this._oReceiptParameters.material });
+
+            parameterValues.push({ comment: guid,
+                                   name: "ITEM_NO",
+                                   value: `${this._oReceiptParameters.itemNumberErp}` });
+                                   
+
+            if(this._oReceiptParameters.handlingUnit){
+                parameterValues.push({ comment: guid,
+                    name: "HU",
+                    value: this._oReceiptParameters.handlingUnit });
+            }else{
+                parameterValues.push({ comment: guid,
+                    name: "HU",
+                    value: "" });
+            }
+
+                                   
+            parameterValues.push({ comment: guid,
+                                   name: "Q3_CODE",
+                                   value: "" });
+
+            parameterValues.push({ comment: guid,
+                                   name: "SALES_ORDER",
+                                   value: this._oReceiptParameters.salesOrder });
+
+            parameterValues.push({ comment: guid,
+                                   name: "SALES_ORDER_ITEM",
+                                   value: this._oReceiptParameters.salesOrderItem });
+
+            parameterValues.push({ comment: guid,
+                                   name: "USER",
+                                   value: this._oController.getUserId() });
+
+            parameterValues.push({ comment: guid,
+                                   name: "CANCELLED",
+                                   value: false });
+            
+
+
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            let oRequestParameters = {
+                plant: this._oReceiptParameters.plant,
+                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+                         version: "A" },
+                operation: { operation: this._oReceiptParameters.operationActivity,
+                              version: "ERP001" },
+                parameterValues: parameterValues,
+                stepId: this._oReceiptParameters.stepId,
+                workCenter: this._oReceiptParameters.workCenter,
+                resource: this._oReceiptParameters.resource,
+                sfcs: [ this._oReceiptParameters.sfc ]
+            };
+
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+                    oResponseData => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {                        
+                        resolve();
+                    }
+                );
+            });
+        },
+
     });
 });

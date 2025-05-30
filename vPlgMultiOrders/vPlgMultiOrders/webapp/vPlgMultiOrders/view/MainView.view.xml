@@ -21,6 +21,7 @@
                             <Column><Text text="Szerokość"/></Column>
                             <Column><Text text="Zlecenie sprzedaży"/></Column>
                             <Column><Text text="Pozycja"/></Column>
+                            <Column><Text text="Ilość zamówienia"/></Column>
                         </columns>
                         <items>
                             <ColumnListItem type="Active" press="onOrderSelect">
@@ -29,6 +30,7 @@
                                     <Text text="{multiOrdersModel>width}"/>
                                     <Text text="{multiOrdersModel>salesOrder}"/>
                                     <Text text="{multiOrdersModel>salesOrderItem}"/>
+                                    <Text text="{multiOrdersModel>salesOrderItemQuantity}"/>
                                 </cells>
                             </ColumnListItem>
                         </items>
@@ -155,7 +157,7 @@
                                         <Label text="{i18n>inputPackageQuan}" id="inputPackageQuanLabel" labelFor="inputPackageQuan" class="sapUiSmallMarginEnd fontText"/>
                                         <Input id="inputPackageQuan" value="1" liveChange="onReceiptInputLiveChange" class="inputFont sapUiSmallMarginEnd " width="5rem"/>
                                         <Label id="inputReceiptQuantityLabel" text="{i18n>inputQuantityLabelPallet}" labelFor="inputReceiptQuantity" class="sapUiSmallMarginEnd fontText"/>
-                                        <Input id="inputReceiptQuantity" value="1" liveChange="onReceiptInputLiveChange" class="inputFont" width="7rem"/>
+                                        <Input id="inputReceiptQuantity" value="{viewModel>/selectedOrder/quantityPerPallet}" liveChange="onReceiptInputLiveChange" class="inputFont" width="7rem"/>
                                         <Label text="{/uom}"  id = "labelUom" class="sapUiSmallMarginBegin fontText"/>
                                 </HBox>
                                 <HBox justifyContent="Center" alignItems="Center" width="100%">

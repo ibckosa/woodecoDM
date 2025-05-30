@@ -85,7 +85,7 @@ sap.ui.define([
         },
 
         _issueSingleOper: async function(){
-            this._checkSfcQuantityInWork();
+            this._checksIssueSigleOper();
             let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
             let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
                                                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
@@ -110,7 +110,8 @@ sap.ui.define([
             if(this._oReceiptParameters.automaticIssues){
                 await oIssuesManager.executeIssues();
             }
-            
+
+            await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);            
         },
 
         _issueMultiNotLastOper: async function(){
@@ -136,6 +137,8 @@ sap.ui.define([
             if(this._oReceiptParameters.automaticIssues){
                 await oIssuesManager.executeIssues();
             }
+
+            await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);    
 
         },
 
@@ -178,6 +181,8 @@ sap.ui.define([
             if(this._oReceiptParameters.automaticIssues){
                 await oIssuesManager.executeIssues();
             }
+
+            await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);    
         },
 
         _getSfcStep: function(){
@@ -581,6 +586,7 @@ sap.ui.define([
                 }
                
                 await this._printLabel(_oPrintingEndpoint);
+                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);   
             }
         },
         _issueMultiNotLastOperMutliPalletes: async function(){
@@ -653,6 +659,110 @@ sap.ui.define([
                     }
                 );
             });
-        }
+        },
+        _checksIssueSigleOper: function(){
+            if(this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber > this._oReceiptParameters.sfcQuantity){
+                this._oErrorHandler.throwErrorPopup("error.q1.notEnoughSfcQuan");
+            }
+            this._checkSfcQuantityInWork();
+        },
+        _saveDataCollection: async function(postingDate, issueManager){
+            let parameterValues = [];
+
+            let guid = crypto.randomUUID();
+            debugger;
+
+            parameterValues.push({ comment: guid,
+                                   name: "Q1/Q3",
+                                   value: "Q1" });
+
+            parameterValues.push({ comment: guid,
+                                   name: "QUANTITY",
+                                   value: `${this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber}` });
+
+            parameterValues.push({ comment: guid,
+                                   name: "UOM",
+                                   value: this._oReceiptParameters.unitOfMeasure });
+
+            parameterValues.push({ comment: guid,
+                                   name: "MATERIAL",
+                                   value: this._oReceiptParameters.material });
+
+            parameterValues.push({ comment: guid,
+                                   name: "ITEM_NO",
+                                   value: "0001" });
+                                   
+
+            if(this._oReceiptParameters.handlingUnit){
+                parameterValues.push({ comment: guid,
+                    name: "HU",
+                    value: this._oReceiptParameters.handlingUnit });
+            }else{
+                parameterValues.push({ comment: guid,
+                    name: "HU",
+                    value: "" });
+            }
+
+                                   
+            parameterValues.push({ comment: guid,
+                                   name: "Q3_CODE",
+                                   value: "" });
+
+            parameterValues.push({ comment: guid,
+                                   name: "SALES_ORDER",
+                                   value: "" });
+
+            parameterValues.push({ comment: guid,
+                                   name: "SALES_ORDER_ITEM",
+                                   value: "" });
+
+            parameterValues.push({ comment: guid,
+                                   name: "USER",
+                                   value: this._oController.getUserId() });
+
+            parameterValues.push({ comment: guid,
+                                   name: "CANCELLED",
+                                   value: false });
+
+            let issuesCreated = issueManager.getCreatedIssues();
+            for(const issue of issuesCreated){
+                let issueAsString = Object.entries(issue)
+                                        .map(([key, value]) => `${key}:${value}`)
+                                        .join('||');
+
+                parameterValues.push({ comment: guid,
+                                       name: `CONSUMPTION`,
+                                       value: issueAsString });
+            }
+
+            
+
+
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            let oRequestParameters = {
+                plant: this._oReceiptParameters.plant,
+                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+                         version: "A" },
+                operation: { operation: this._oReceiptParameters.operationActivity,
+                              version: "ERP001" },
+                parameterValues: parameterValues,
+                stepId: this._oReceiptParameters.stepId,
+                workCenter: this._oReceiptParameters.workCenter,
+                resource: this._oReceiptParameters.resource,
+                sfcs: [ this._oReceiptParameters.sfc ]
+            };
+
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+                    oResponseData => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {                        
+                        resolve();
+                    }
+                );
+            });
+        },
+        
     });
 });

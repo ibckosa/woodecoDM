@@ -8,6 +8,7 @@ sap.ui.define([
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.ComponentIssue", {
         constructor: function(oIssueData){
             this._oIssueData = oIssueData;
+            this._createdIssues = [];
             this._executeControllerChecks();
             //controller
             //sfc
@@ -65,7 +66,20 @@ sap.ui.define([
                 }else if(pallete.consumptionStarted === false){
                     await oPallete.palleteReservationAndConsumption(pallete, this._oIssueData.plant, this._oIssueData.orderNumber, this._oIssueData.sequence, false, true);
                 }
-                await this._issue(pallete, oQuanToIssueFromPallete);
+                let oIssueResponse = await this._issue(pallete, oQuanToIssueFromPallete);
+                debugger;
+                this._createdIssues.push({  
+                    txnId: oIssueResponse.txnId,
+                    stepId: oIssueResponse.stepId,
+                    order: this._oIssueData.orderNumber,
+                    operation: this._oIssueData.operation,
+                    quantity: oQuanToIssueFromPallete,
+                    uom: pallete.uom,
+                    handlingUnit: pallete.handlingUnit,
+                    storageLocation: pallete.storageLocation,
+                    material: this._oIssueData.material,
+                    sfc: this._oIssueData.sfc
+                });
 
                 if(this._oIssueData.quantity<=0){
                     break;
@@ -145,6 +159,9 @@ sap.ui.define([
         },
         changeSfc: function(oSfcNumber){
             this._oIssueData.sfc = oSfcNumber;
+        },
+        getCreatedIssues: function(){
+            return this._createdIssues;
         }
     });
 });

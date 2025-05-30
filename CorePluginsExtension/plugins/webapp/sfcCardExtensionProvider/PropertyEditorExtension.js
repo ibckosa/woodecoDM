@@ -52,7 +52,10 @@ sap.ui.define([
                 this.addFieldConfiguration("FNUF", oPropertyFormContainer, oPropertyData);
                 this.addFieldConfiguration("FHPR", oPropertyFormContainer, oPropertyData);
                 this.addFieldConfiguration("FXKO", oPropertyFormContainer, oPropertyData);
-                this.addFieldConfiguration("FDSA", oPropertyFormContainer, oPropertyData);            
+                this.addFieldConfiguration("FDSA", oPropertyFormContainer, oPropertyData);       
+                this.addFieldConfiguration("FPAK", oPropertyFormContainer, oPropertyData);   
+                this.addFieldConfiguration("FRSA", oPropertyFormContainer, oPropertyData);   
+                
                 this.addSmartEditConfiguration(oPropertyFormContainer, oPropertyData);
 
             }
@@ -125,6 +128,14 @@ sap.ui.define([
                 oPropertyData.fieldsFRPR = "";
             }
 
+            if (typeof oPropertyData.fieldsFPAK === "undefined") {
+                oPropertyData.fieldsFPAK = "";
+            }
+
+            if (typeof oPropertyData.fieldsFRSA === "undefined") {
+                oPropertyData.fieldsFRSA = "";
+            }
+
             if (typeof oPropertyData.smartEditUrl === "undefined") {
                 oPropertyData.smartEditUrl = "";
             }
@@ -182,6 +193,14 @@ sap.ui.define([
             if (typeof oPropertyData.fieldsFDSA === "undefined") {
                 oPropertyData.fieldsFDSA = "";
             }
+            if (typeof oPropertyData.fieldsFPAK === "undefined") {
+                oPropertyData.fieldsFPAK = "";
+            }
+
+            if (typeof oPropertyData.fieldsFRSA === "undefined") {
+                oPropertyData.fieldsFRSA = "";
+            }
+
 
             if (typeof oPropertyData.smartEditUrl === "undefined") {
                 oPropertyData.smartEditUrl = "";
