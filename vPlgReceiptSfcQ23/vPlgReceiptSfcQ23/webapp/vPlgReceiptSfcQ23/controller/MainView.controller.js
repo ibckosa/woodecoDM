@@ -12,8 +12,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
     "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader",
     "ibc/dm/plugins/wcPodToolsProvider/Sfc",
-    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader, Sfc, TextHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
+], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader, Sfc, TextHandler, OrderRepository) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView", {
@@ -238,6 +239,7 @@ sap.ui.define([
         onWasteButton: async function(oEvent){
             try{
                 let aSelection = this.getPodSelectionModel().getSelections()[0];
+                this._oOrder = await OrderRepository.readOrder(this, this.getPodController().getUserPlant(), aSelection.getShopOrder().getShopOrder());
                 let oSfcFirst = aSelection.getSfc().getSfc();
                 let oSelectedItem = oEvent.getSource().getBindingContext().getObject();
                 let oSfcDetails = await this._getSfcDetails();
@@ -265,6 +267,8 @@ sap.ui.define([
                 if(oExecuteIssue){
                     await oIssuesManager.executeIssues();
                 }
+
+                await this._saveDataCollection(oScrapQuantity, oSfcDetails, oSelectedItem.oeeCode, oIssuesManager);
                 this._showMessageSuccess("success.ProccessFinished");
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
                     this.getPodSelectionModel().setInputValue(oSfcFirst);
@@ -310,6 +314,7 @@ sap.ui.define([
                         oReturn.sfcQuantity = parseInt(aSelection.getSfcData().getQuantity());
                         oReturn.resource =  aSelection.getSfcData().getWorkCenter();
                         oReturn.workCenter =  aSelection.getSfcData().getWorkCenter();
+                        oReturn.step = oStep;
                         oReturn.sfcQuantityInWork = oStep.quantityInWork;
                         oReturn.multiOperation = oSteps.length > 1;
                         oReturn.lastOperation = oStep === oLastStep;
@@ -477,11 +482,11 @@ sap.ui.define([
                 if (!this.oApproveDialog) {
                     this.oApproveDialog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
-                        title: this._oTextHandler.getText("dialogTitleLabel"),
+                        title: this._oTextHandler.getText("labels.q23.commentTitleDialog"),
                         content: new TextArea({ width: "30rem", rows: 12, id: "commentTextArea" }),
                         beginButton: new Button({
                             type: mobileLibrary.ButtonType.Emphasized,
-                            text: this._oTextHandler.getText("dialogAcceptButtonLabel"),
+                            text: this._oTextHandler.getText("labels.q23.dialogAcceptButton"),
                             press: async function () {
                                 let oReturn = "";
                                 debugger;
@@ -529,7 +534,75 @@ sap.ui.define([
                 );
 
             });
-        }
+        },
+        _saveDataCollection: async function(quantity, sfcDetails, code, issueManager){
+            let parameterValues = [];
+
+            
+            let guid = crypto.randomUUID();
+            let date = new Date();
+            debugger;
+            parameterValues.push({ name: "GUID",
+                                   value: guid });
+            parameterValues.push({ name: "DATE_CREATED",
+                                   comment: guid,
+                                   value: date.toJSON() });
+            parameterValues.push({ name: "Q1/Q3",
+                                   value: "Q3" });
+
+            parameterValues.push({ name: "QUANTITY",
+                                   value: `${quantity}` });
+
+            parameterValues.push({ name: "UOM",
+                                   value: this._oOrder.getInternalUom() });
+
+            parameterValues.push({ name: "MATERIAL",
+                                   value: this._oOrder.getHeaderMaterial() });                                   
+                                   
+            parameterValues.push({ name: "Q3_CODE",
+                                   value: code });
+
+            parameterValues.push({ name: "USER",
+                                   value: this.getUserId() });
+
+            parameterValues.push({ name: "CANCELLED",
+                                   value: false });
+
+            let issuesCreated = issueManager.getCreatedIssues();
+            for(const issue of issuesCreated){
+                let issueAsString = Object.entries(issue)
+                                        .map(([key, value]) => `${key}:${value}`)
+                                        .join('||');
+
+                parameterValues.push({ name: `CONSUMPTION`,
+                                       value: issueAsString });
+            }
+
+
+            let sUrl = this.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            let oRequestParameters = {
+                plant: sfcDetails.plant,
+                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+                         version: "A" },
+                operation: { operation: sfcDetails.step.operation.operation,
+                              version: sfcDetails.step.operation.version },
+                parameterValues: parameterValues,
+                workCenter: sfcDetails.workCenter,
+                resource: sfcDetails.resource,
+                sfcs: [ sfcDetails.sfc ]
+            };
+
+            return await new Promise((resolve,reject)=>{
+                this.ajaxPostRequest(sUrl, oRequestParameters,
+                    oResponseData => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {                        
+                        resolve();
+                    }
+                );
+            });
+        }  
 
 	});
 });

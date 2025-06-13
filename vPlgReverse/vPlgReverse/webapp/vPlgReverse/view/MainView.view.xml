@@ -16,7 +16,8 @@
                 backgroundDesign="Transparent"
                 class="sapUiSmallContentPadding">  
             <content> 
-                <Table id="stornoTable" items="{stornoModel>/items}" inset="false">
+                <Table id="stornoTable"   items="{ path: 'stornoModel>/items',
+                                                   factory: '.createRow' }" inset="false">
                 <columns>
                     <Column>
                         <Text text="Data/godzina" />
@@ -41,20 +42,10 @@
                         <Text text="Użytkownik" />
                     </Column>
                     <Column>
-                        <Text text="Korekta" />
+                        <Text text="" />
                     </Column>
                 </columns>
-                <items>
-                    <ColumnListItem>
-                        <cells>
-                            <Text text="{stornoModel>dateTime}" />
-                            <Text text="{stornoModel>confText}" />
-                            <Text text="{stornoModel>issueText}" />
-                            <Text text="{stornoModel>user}" />
-                            <Button text="Korekta"/>
-                        </cells>
-                    </ColumnListItem>
-                </items>
+
                 </Table>
             </content>
 	    </Panel>		

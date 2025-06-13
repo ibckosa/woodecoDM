@@ -31,6 +31,7 @@ sap.ui.define([
             //isCommentRequired
             //nonconformanceCode
             //resourceReasonCode
+            //oeeCode
             //uom
 
         },
@@ -51,34 +52,21 @@ sap.ui.define([
             }
 
             await this._executeSfcScrap();
+
+            await this._saveDataCollection();
+
+
             this._oController.showSuccessMessage(this._oTextHandler.getText("success.q23.ProccessFinished"), true, true);
             this._oController.getPodSelectionModel().setInputValue(this._oParameters.sfc);
             this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
             this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-            // if(this._oParameters.leftQuantity>this._oParameters.quantity){
-            //     this._oController.getPodSelectionModel().setInputValue(this._oParameters.sfc);
-            //     this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
-            //     this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-            // }else{
-            //     this._oController.getPodSelectionModel().setInputValue("");
-            //     this._oController.getPodSelectionModel().clearSelections();
-            //     this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-            //     this._oController.onClosePress();
-            //     this._oController.navigateToMainPage();
-            // }
         },
         
 
         _executeCheksMO: function(){
-            // if(this._oParameters.quantity>this._oParameters.leftQuantity){
-            //     this._oErrorHandler.throwError("error.q23.sfcNotEnoughQuantity");
-            // }
-
             if(this._oParameters.quantity>this._oParameters.quantityInWork){
                 this._oErrorHandler.throwError("error.q23.sfcNotInWork");
             }
-
-
         },
 
         _getComment: async function (isCommentRequired = false) {
@@ -116,17 +104,8 @@ sap.ui.define([
                 this.oApproveDialog.open();
             });
         },
-        _executeSfcScrap: async function(oScrapQuantity, oSfcDetails, oResourceReasonCode){
+        _executeSfcScrap: async function(){
             var sUrl = this._oController.getPublicApiRestDataSourceUri() + "quantityConfirmation/v1/confirm";
-            // var oRequestParameters = {
-            //     plant: oSfcDetails.plant,
-            //     operation: oSfcDetails.operation,
-            //     quantity: oScrapQuantity,
-            //     resource: oSfcDetails.resource,
-            //     sfcs: [ oSfcDetails.sfc ],
-            //     reasonCodeKey: oResourceReasonCode   
-            // };
-
             var oRequestParameters = {
                 plant: this._oParameters.plant,
                 shopOrder: this._oParameters.order,
@@ -137,7 +116,6 @@ sap.ui.define([
                 workCenter: this._oParameters.workCenter,
                 reasonCodeKey: this._oParameters.resourceReasonCode
             }
-
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPostRequest(sUrl, oRequestParameters,
                     oResponseData => {
@@ -197,6 +175,75 @@ sap.ui.define([
                         }
                     );
                 });
+        },
+        _saveDataCollection: async function(){
+            let parameterValues = [];
+
+            let guid = crypto.randomUUID();
+            let date = new Date();
+            debugger;
+            parameterValues.push({ name: "GUID",
+                                   value: guid });
+
+            parameterValues.push({ name: "DATE_CREATED",
+                                   comment: guid,
+                                   value: date.toJSON() });
+
+            parameterValues.push({ name: "Q1/Q3",
+                                   value: "Q3" });
+
+            parameterValues.push({ name: "QUANTITY",
+                                   value: `${this._oParameters.quantity}` });
+
+            parameterValues.push({ name: "UOM",
+                                   value: this._oOrder.getInternalUom() });
+
+            parameterValues.push({ name: "MATERIAL",
+                                   value: this._oParameters.material });                                   
+                                   
+            parameterValues.push({ name: "Q3_CODE",
+                                   value: this._oParameters.oeeCode });
+
+            parameterValues.push({ name: "USER",
+                                   value: this._oController.getUserId() });
+
+            parameterValues.push({ name: "CANCELLED",
+                                   value: false });
+
+            parameterValues.push({ name: "SALES_ORDER",
+                                   value: this._oParameters.salesOrder });
+
+            parameterValues.push({ name: "SALES_ORDER_ITEM",
+                                   value: this._oParameters.salesOrderItem });
+
+            parameterValues.push({ name: "ITEM_NO",
+                                   value: `${this._oParameters.itemNumberErp}` });
+
+
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            let oRequestParameters = {
+                plant: this._oParameters.plant,
+                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+                         version: "A" },
+                operation: { operation: this._oParameters.operationActivity,
+                              version: "ERP001" },
+                parameterValues: parameterValues,
+                //stepId: this._oReceiptParameters.stepId,
+                workCenter: this._oParameters.workCenter,
+                resource: this._oParameters.resource,
+                sfcs: [ this._oParameters.sfc ]
+            };
+
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+                    oResponseData => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {                        
+                        resolve();
+                    }
+                );
+            });
         }
 
     });

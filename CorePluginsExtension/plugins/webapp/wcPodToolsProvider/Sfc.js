@@ -72,6 +72,30 @@ sap.ui.define([
 
             return oReturn;
         },
+        getIsMultiOperation: function(){
+            return this._oDetails.steps.length > 1;
+        },
+        checkIsLastOperation(operation){
+            let lastOperation = this._oDetails.steps[this._oDetails.steps.length - 1];
+            return lastOperation.operation.operation === operation;
+        },
+        invalidate: async function(){
+            var sUrl = this._oController.getPublicApiRestDataSourceUri() + `sfc/v1/sfcs/invalidate?plant=${this._oPlant}&sfc=${this._oSfcNumber}`;
+            var oRequestParameters = { };
+
+            debugger;
+    
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPatchRequest(sUrl, oRequestParameters,
+                    (oResponseData) => {
+                        resolve(oResponseData);
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        reject(oError);
+                    }   
+                );
+            });
+        }
     
     });
 

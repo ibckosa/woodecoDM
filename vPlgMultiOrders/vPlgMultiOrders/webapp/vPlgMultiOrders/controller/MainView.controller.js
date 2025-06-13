@@ -182,6 +182,8 @@ sap.ui.define([
                     material: selectedOrder.selectedOrder.materialNumber,
                     materialVersion: aSelectionFirstRow.getSfcData().getMaterialVersion(),
                     quantity: parseInt(this.byId("inputReceiptQuantity").getValue()),
+                    maxQuantity: selectedOrder.selectedOrder.maxQuantity,
+                    maxLeftQuantity: selectedOrder.selectedOrder.maxLeftQuantity,
                     unitOfMeasure: "",		
                     sfc: aSelectionFirstRow.getSfc().getSfc(),
                     storageLocation: "",
@@ -197,7 +199,7 @@ sap.ui.define([
                     salesOrderItem: selectedOrder.selectedOrder.salesOrderItem,
                     itemNumber: selectedOrder.selectedOrder.itemNumber,
                     itemNumberErp: selectedOrder.selectedOrder.itemNumberErp,
-                    f: selectedOrder.selectedOrder.quantityPerPalletMax,
+                    quantityPerPalletMax: selectedOrder.selectedOrder.quantityPerPalletMax,
                     quantityPerPalletMin: selectedOrder.selectedOrder.quantityPerPalletMin };
                 
                 ///uruchamianie nowego kodu
@@ -235,7 +237,13 @@ sap.ui.define([
                                         operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
                                         isCommentRequired: selectedCode.dataType ==="NC_DATA_COMMENT_REQUIERED",
                                         nonconformanceCode: selectedCode.code,
-                                        resourceReasonCode: selectedCode.resourceReasonCode };
+                                        resourceReasonCode: selectedCode.resourceReasonCode,
+                                        oeeCode: selectedCode.oeeCode,
+                                        salesOrder: selectedOrder.selectedOrder.salesOrder,
+                                        salesOrderItem: selectedOrder.selectedOrder.salesOrderItem,
+                                        itemNumber: selectedOrder.selectedOrder.itemNumber,
+                                        itemNumberErp: selectedOrder.selectedOrder.itemNumberErp,
+                                        material: selectedOrder.selectedOrder.materialNumber  };
 
 
                 let oSfcQ23 = new SfcQ23(this, q23Parameters);

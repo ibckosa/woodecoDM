@@ -11,10 +11,9 @@ sap.ui.define([
     "sap/m/Dialog",
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
-    "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository"
-], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository
-    ,
-) {
+    "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator"
+], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceipt", {
         constructor: function(oController, oReceiptParameters){
@@ -100,6 +99,10 @@ sap.ui.define([
                 if(!orderInput||!orderInputDate){
                     this._oErrorHandler.throwError("error.multiOrders.OAOrderNotAssigned");
                 }
+            }
+
+            if(this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber * this._oReceiptParameters.palletesNumber > this._oReceiptParameters.maxLeftQuantity ){
+                this._oErrorHandler.throwErrorPopup("error.q1.exceedMaxQuantity", this._oReceiptParameters.maxQuantity, this._oOrder.getInternalUom());
             }
 
             if(this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber > this._oReceiptParameters.quantityPerPalletMax || 
@@ -319,7 +322,7 @@ sap.ui.define([
                     this.oToleranceDialog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
                         title: this._oTextHandler.getText("label.q1.confirmTitle"),
-                        content: new sap.m.Text({ text: this._oTextHandler.getText("labels.q1.palleteTolerance") }),
+                        content: new sap.m.Text({ text: this._oTextHandler.getText("labels.q1.palleteTolerance",this._oReceiptParameters.quantityPerPalletMin, this._oReceiptParameters.quantityPerPalletMax) }),
                         beginButton: new sap.m.Button({
                             type: mobileLibrary.ButtonType.Emphasized,
                             text: this._oTextHandler.getText("answerYes"),
@@ -347,58 +350,65 @@ sap.ui.define([
             let parameterValues = [];
 
             let guid = crypto.randomUUID();
+            let date = new Date();
             debugger;
 
-            parameterValues.push({ comment: guid,
-                                   name: "Q1/Q3",
+            parameterValues.push({ name: "GUID",
+                                   comment: guid,
+                                   value: guid });
+
+            parameterValues.push({ name: "DATE_CREATED",
+                                   comment: guid,
+                                   value: date.toJSON() });
+
+            parameterValues.push({ name: "Q1/Q3",
+                                   comment: guid,
                                    value: "Q1" });
 
-            parameterValues.push({ comment: guid,
-                                   name: "QUANTITY",
+            parameterValues.push({ name: "QUANTITY",
+                                   comment: guid,
                                    value: `${this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber}` });
 
-            parameterValues.push({ comment: guid,
-                                   name: "UOM",
+            parameterValues.push({ name: "UOM",
+                                   comment: guid,
                                    value: this._oReceiptParameters.unitOfMeasure });
 
-            parameterValues.push({ comment: guid,
-                                   name: "MATERIAL",
+            parameterValues.push({ name: "MATERIAL",
+                                   comment: guid,
                                    value: this._oReceiptParameters.material });
 
-            parameterValues.push({ comment: guid,
-                                   name: "ITEM_NO",
+            parameterValues.push({ name: "ITEM_NO",
+                                   comment: guid,
                                    value: `${this._oReceiptParameters.itemNumberErp}` });
                                    
 
             if(this._oReceiptParameters.handlingUnit){
-                parameterValues.push({ comment: guid,
+                parameterValues.push({
                     name: "HU",
+                    comment: guid,
                     value: this._oReceiptParameters.handlingUnit });
             }else{
-                parameterValues.push({ comment: guid,
+                parameterValues.push({ 
                     name: "HU",
+                    comment: guid,
                     value: "" });
             }
 
                                    
-            parameterValues.push({ comment: guid,
-                                   name: "Q3_CODE",
-                                   value: "" });
-
-            parameterValues.push({ comment: guid,
-                                   name: "SALES_ORDER",
+            parameterValues.push({ name: "SALES_ORDER",
+                                   comment: guid,
                                    value: this._oReceiptParameters.salesOrder });
 
-            parameterValues.push({ comment: guid,
-                                   name: "SALES_ORDER_ITEM",
+            parameterValues.push({ name: "SALES_ORDER_ITEM",
+                                   comment: guid,
                                    value: this._oReceiptParameters.salesOrderItem });
 
-            parameterValues.push({ comment: guid,
-                                   name: "USER",
+            parameterValues.push({ name: "USER",
+                                   comment: guid,
                                    value: this._oController.getUserId() });
 
-            parameterValues.push({ comment: guid,
-                                   name: "CANCELLED",
+            parameterValues.push({ name: "CANCELLED",
+                                   comment: guid,
                                    value: false });
             
 

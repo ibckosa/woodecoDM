@@ -41,15 +41,29 @@ sap.ui.define([
             this._oPrintingInterface.HU = this._oPrintDetails.HU;
             this._oPrintingInterface.plant = this._oPrintDetails.plant;
             this._oPrintingInterface.order = this._oPrintDetails.order;
-            this._oPrintingInterface.resource = this._oPrintDetails.resource;
+            this._oPrintingInterface.resource = this._oPrintDetails.resource.replace(/^.*?_/, '');
             this._oPrintingInterface.workCenter = this._oPrintDetails.workCenter;
             this._oPrintingInterface.sfc = this._oPrintDetails.sfc;
             this._oPrintingInterface.printer =  this._oPrintDetails.printer;
-            this._oPrintingInterface.document =  this._oPrintDetails.document;
+            this._oPrintingInterface.document =  "DM_A4";//this._oPrintDetails.document;
             this._oPrintingInterface.QUANTITY = this._oPrintDetails.quantity;
-            this._oPrintingInterface.OPERATION = this._oPrintDetails.operation;
+            this._oPrintingInterface.OPERATION = `${parseInt(this._oPrintDetails.operation)}`;
+
+            if(this._oPrintingInterface.PEG_VBELN){
+                try{
+                    this._oPrintingInterface.PEG_VBELN = `${parseInt(this._oPrintingInterface.PEG_VBELN)}`;
+                }catch(error){}
+            }
+
+            if(this._oPrintingInterface.PEG_POSNR){
+                try{
+                    this._oPrintingInterface.PEG_POSNR = `${parseInt(this._oPrintingInterface.PEG_POSNR)}`;
+                }catch(error){}
+            }
 
             this._getSalesText();
+            this._convertDescription();
+            this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
 
             let oPromises=[];
             for(let i=0; i<this._oPrintDetails.printingCopies; i++){
@@ -107,10 +121,12 @@ sap.ui.define([
                 ZERT_TXT: "",
                 PEG_SPRAS: "",
                 ZZVERP_TXT: "",
+                ZZVERP: "",
                 NORM: "",
                 PRDCLS: "",
                 ORDER: "",
                 PROD_DATE: "",
+                DESCRIPTION: "",
                 sync: true
             };
 
@@ -150,6 +166,13 @@ sap.ui.define([
                     }
                 );
             });
+        },
+
+        _convertMultipleLineText(text){
+            return text.replaceAll("$&", "\n");
+        },
+        _convertDescription: function(){
+            this._oPrintingInterface.DESCRIPTION = this._oPrintingInterface.DESCRIPTION.replaceAll("$&", "\n");
         }
     });
 

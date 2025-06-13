@@ -1,8 +1,9 @@
 sap.ui.define([
     "sap/ui/base/Object",
     "ibc/dm/plugins/wcPodToolsProvider/LinkReader",
-    "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository"
-], function (ObjectUI5, LinkReader, MaterialRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader"
+], function (ObjectUI5, LinkReader, MaterialRepository, SfcDataCollectionReader) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.Order", {
         constructor: function(oController, oPlant, oOrderNumber){
@@ -73,14 +74,15 @@ sap.ui.define([
             
             
 
-            let oReceipts = await this._getOrderReceipts();
+            // let oReceipts = await this._getOrderReceipts();
+            let dataCollections = await SfcDataCollectionReader.readCollections(this._oController, this._oPlant, this.getSfcs(), "", false, true);
             for(const line of oLines){
                 if(!line.value||line.value===""){continue;}
                 let oItemNumber = line.attribute.replace("ITEM_0", "");
                 oItemNumber = oItemNumber.replace("ITEM_", "");
                 let oLineAttributes = this.getOrderLineCustomValues(oItemNumber);
                 let oMoStructure = this._getMultiOrdersStructure();
-                let palleteTolerancePlus = "", palleteToleranceMinus = "";
+                let palleteTolerancePlus = "", palleteToleranceMinus = "", itemTolerancePlus="";
                 for(const attribute of oLineAttributes){
                     switch(attribute.field_name){
                         case "LA":
@@ -120,6 +122,9 @@ sap.ui.define([
                         case "PEG_KWMENG":
                             oMoStructure.salesOrderItemQuantity = parseInt(attribute.field_value);
                             break;
+                        case "ITEM_TOL+":
+                            itemTolerancePlus = attribute.field_value;
+                            break;
 
                     }
                 }
@@ -127,15 +132,31 @@ sap.ui.define([
                 oMoStructure.orderNumber =  this._oOrderNumber;
                 oMoStructure.files = await LinkReader.readLinksFromInstance(this, oItemNumber);
                 oMoStructure.itemPosnr = parseInt(oItemNumber) * 10;
-                let filteredReceipts = oReceipts.filter(receipt=>{ return receipt.comments&&
-                                                                          receipt.comments === `${oMoStructure.salesOrder}${oMoStructure.salesOrderItem}` &&
-                                                                          receipt.material  === oMoStructure.materialNumber });
 
-                for(const receipt of filteredReceipts){
-                    oMoStructure.deliveredQuantity = oMoStructure.deliveredQuantity + receipt.quantityInBaseUnit.value;
+
+                let filteredCollection = dataCollections.filter(collection=>{return collection["Q1/Q3"] === "Q1" &&
+                                                                                    collection.ITEM_NO === oMoStructure.itemNumberErp &&
+                                                                                    collection.QUANTITY });
+
+                for(const collection of filteredCollection){
+                        oMoStructure.deliveredQuantity = oMoStructure.deliveredQuantity + parseInt(collection.QUANTITY);
+                    
                 }
 
+                // let filteredReceipts = oReceipts.filter(receipt=>{ return receipt.comments&&
+                //                                                           receipt.comments === `${oMoStructure.salesOrder}${oMoStructure.salesOrderItem}` &&
+                //                                                           receipt.material  === oMoStructure.materialNumber });
+
+                // for(const receipt of filteredReceipts){
+                //     oMoStructure.deliveredQuantity = oMoStructure.deliveredQuantity + receipt.quantityInBaseUnit.value;
+                // }
+
                 oMoStructure.leftQuantity = oMoStructure.quantity - oMoStructure.deliveredQuantity;
+                oMoStructure.maxQuantity = oMoStructure.quantity;
+                if(itemTolerancePlus){
+                    oMoStructure.maxQuantity = oMoStructure.maxQuantity + this._converTolerance(itemTolerancePlus)*oMoStructure.maxQuantity;
+                }
+                oMoStructure.maxLeftQuantity = oMoStructure.maxQuantity - oMoStructure.deliveredQuantity;
 
                 if(oMoStructure.quantityPerPallet ===0 || oMoStructure.quantityPerPallet >= oMoStructure.leftQuantity){
                     oMoStructure.quantityPerPallet = oMoStructure.leftQuantity;
@@ -144,11 +165,11 @@ sap.ui.define([
                 }else{
                     oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPallet;
                     if(palleteTolerancePlus){
-                        oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMax + this._converTolerance(palleteTolerancePlus)*palleteTolerancePlus;
+                        oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMax + this._converTolerance(palleteTolerancePlus)*oMoStructure.quantityPerPalletMax;
                     }
 
                     if(palleteToleranceMinus){
-                        oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPalletMin - this._converTolerance(palleteToleranceMinus)*palleteToleranceMinus; 
+                        oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPalletMin - this._converTolerance(palleteToleranceMinus)*oMoStructure.quantityPerPalletMin; 
                     }
                 }
                 if(oMoStructure.materialNumber){
@@ -173,6 +194,9 @@ sap.ui.define([
                 itemPosnr: "",
                 materialNumber: "",
                 quantity: 0,
+                maxQuantity: 0,
+                leftQuantity: 0,
+                maxleftQuantity: 0,
                 deliveredQuantity: 0,
                 salesOrder: "",
                 salesOrderItem: "",
@@ -370,9 +394,58 @@ sap.ui.define([
             }
 
             return returnTolerance;
+        },
+        getPalleteMinMax: function(itemNumber=1){
+            let result = {
+                minPalleteQuantity: 1,
+                maxPalleteQuantity: 999999999
+            };
+
+            try{
+                let packingCode = this.getPackingCode(itemNumber);
+                if(packingCode){
+                    let partOfPackingCode = packingCode.substring(7,10);
+                    if(!isNaN(partOfPackingCode)){
+                        result.minPalleteQuantity = result.maxPalleteQuantity = parseInt(partOfPackingCode);
+                        let tollerancePlus = this.getTollerancePlus(itemNumber);
+                        let tolleranceMinus = this.getTolleranceMinus(itemNumber);
+                        result.maxPalleteQuantity = result.maxPalleteQuantity + result.maxPalleteQuantity * tollerancePlus;
+                        result.minPalleteQuantity = result.minPalleteQuantity - result.minPalleteQuantity * tolleranceMinus;
+                    }
+                }
+            }catch(oError){}
+
+            return result;
+        },
+        getTollerancePlus: function(itemNumber){
+            let result = 0;
+            let lineValues = this.getOrderLineCustomValues(itemNumber);
+            let tollerancePlus = lineValues.find(line=>{ return line.field_name === "ZZVERP_TOL+" });
+            if(tollerancePlus){
+                result = this._converTolerance(tollerancePlus.field_value);
+            }
+            return result; 
+
+        },
+        getTolleranceMinus: function(itemNumber){
+            let result = 0;
+            let lineValues = this.getOrderLineCustomValues(itemNumber);
+            let tolleranceMinus = lineValues.find(line=>{ return line.field_name === "ZZVERP_TOL-" });
+            if(tolleranceMinus){
+                result = this._converTolerance(tolleranceMinus.field_value);
+            }
+            return result; 
+        },
+        getMaxOrderQuantitySO: function(){
+            let orderQuantity = this._oDetails.productionQuantity;
+            let lineValues = this.getOrderLineCustomValues(1);
+            let itemTollerancePlus = lineValues.find(line=>{ return line.field_name === "ITEM_TOL+" });
+            if(itemTollerancePlus){
+                orderQuantity = orderQuantity + orderQuantity * this._converTolerance(itemTollerancePlus.field_value);
+            }
+
+            return orderQuantity;
         }
-
-
         
     });
 });

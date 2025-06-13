@@ -57,7 +57,8 @@ sap.ui.define([
                     dataType: oCodeDetails.dataType,
                     codeDescription: oCodeDetails.description,
                     quantity: 0,
-                    resourceReasonCode: oReasonCode.reasonCode
+                    resourceReasonCode: oReasonCode.reasonCode,
+                    oeeCode: oReasonCode.oeeCode
                 });
             }
         }
@@ -68,7 +69,6 @@ sap.ui.define([
         
         let oCodePromises = oCodes.map( code => this._getCodeDetails(code) );
         let oReturn = await Promise.all(oCodePromises);
-        debugger;
         return oReturn;
     };
 
@@ -154,7 +154,6 @@ sap.ui.define([
     oNcCodesReader._getResourceReasonCodeParallel = async function(oCodes, oPlant, oResource){
         let oReasonCodePromises = oCodes.map( code => this._getResourceReasonCode(code.oeeCode, this._oPlant, this._oResource) );
         let oReturn = await Promise.all(oReasonCodePromises);
-        debugger;
         return oReturn;
     };
 

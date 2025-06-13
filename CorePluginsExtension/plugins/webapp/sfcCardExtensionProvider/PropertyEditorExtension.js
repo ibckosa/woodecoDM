@@ -101,31 +101,31 @@ sap.ui.define([
             }
 
             if (typeof oPropertyData.fieldsFRSL === "undefined") {
-                oPropertyData.fieldsFRPR = "";
+                oPropertyData.fieldsFRSL = "";
             }
 
             if (typeof oPropertyData.fieldsFIMP === "undefined") {
-                oPropertyData.fieldsFRPR = "";
+                oPropertyData.fieldsFIMP = "";
             }
 
             if (typeof oPropertyData.fieldsFDPR === "undefined") {
-                oPropertyData.fieldsFRPR = "";
+                oPropertyData.fieldsFDPR = "";
             }
 
             if (typeof oPropertyData.fieldsFNUF === "undefined") {
-                oPropertyData.fieldsFRPR = "";
+                oPropertyData.fieldsFNUF = "";
             }
 
             if (typeof oPropertyData.fieldsFHPR === "undefined") {
-                oPropertyData.fieldsFRPR = "";
+                oPropertyData.fieldsFHPR = "";
             }
 
             if (typeof oPropertyData.fieldsFXKO === "undefined") {
-                oPropertyData.fieldsFRPR = "";
+                oPropertyData.fieldsFXKO = "";
             }
 
             if (typeof oPropertyData.fieldsFDSA === "undefined") {
-                oPropertyData.fieldsFRPR = "";
+                oPropertyData.fieldsFDSA = "";
             }
 
             if (typeof oPropertyData.fieldsFPAK === "undefined") {

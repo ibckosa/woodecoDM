@@ -88,7 +88,7 @@ sap.ui.define([
                 CHARGE: oBatchNumber,
                 MATNR: oLine.palleteDetails.material,
                 MATTYP: "PACKAGES",
-                MENGE: oLine.quantity,
+                MENGE: parseInt(oLine.quantity),
                 MENGE_EINH: oLine.uom,
                 END_LIEF: "N",
                 VVDAT: oSapDateTime.sapDate,
@@ -134,7 +134,7 @@ sap.ui.define([
                 CHARGE: oGeneratedHu,
                 MATNR: oLine.palleteDetails.material,
                 MATTYP: "PACKAGES",
-                MENGE: oQuantity,
+                MENGE: parseInt(oQuantity),
                 MENGE_EINH: oLine.uom,
                 END_LIEF: "N",
                 VVDAT: oSapDateTime.sapDate,
@@ -267,7 +267,7 @@ sap.ui.define([
                 "calculatedData": null,
                 "customFieldData":  null
             };
-
+            
             let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPostRequest(sUrl, oRequestParameters,
@@ -314,18 +314,19 @@ sap.ui.define([
                 "calculatedData": null,
                 "customFieldData":  null
             };
-
-            let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
-            return await new Promise((resolve,reject)=>{
-                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-                    (oResponseData) => {
-                        resolve(oResponseData);
-                    },
-                    (oError, sHttpErrorMessage) => {
-                        reject(oError);
-                    }   
-                );
-            });
+            let issueResponse = await this._additionalIssueCallApi(oRequestParameters);
+            await this._saveDataCollection(oLine, oQuantity, oSfc, oOperation, issueResponse);
+            // let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
+            // return await new Promise((resolve,reject)=>{
+            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+            //         (oResponseData) => {
+            //             resolve(oResponseData);
+            //         },
+            //         (oError, sHttpErrorMessage) => {
+            //             reject(oError);
+            //         }   
+            //     );
+            // });
         },
         _getIssueDt(){
             let today = new Date();
@@ -386,6 +387,80 @@ sap.ui.define([
 
             });
         },
+        _saveDataCollection: async function(oLine, oQuantity, oSfc, oOperation, issueResponse){
+            let parameterValues = [];
+
+            let guid = crypto.randomUUID();
+            let date = new Date();
+            debugger;
+            parameterValues.push({ name: "GUID",
+                                   comment: guid,
+                                   value: guid });
+
+            parameterValues.push({ name: "DATE_CREATED",
+                                   comment: guid,
+                                   value: date.toJSON() });
+
+            parameterValues.push({ name: "Q1/Q3",
+                                   comment: guid,
+                                   value: "AI" });
+
+            parameterValues.push({ name: "CANCELLED",
+                                   comment: guid,
+                                   value: false });
+
+            parameterValues.push({ name: "USER",
+                                   comment: guid,
+                                   value: this._oController.getUserId() });
+
+            let consumptionValue = `txnId:${issueResponse.txnId}||stepId:${issueResponse.stepid}||order:${oLine.orderNumber}||operation:${oOperation}||quantity:${oQuantity}||uom:${oLine.uom}`;
+            consumptionValue = consumptionValue + `||handlingUnit:${oLine.handlingUnit}||storageLocation:${oLine.storageLocation}||material:${oLine.materialId}||sfc:${oSfc}`;
+            parameterValues.push( {
+                name: `CONSUMPTION`,
+                comment: guid,
+                value: consumptionValue
+            });
+            
+
+
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            let oRequestParameters = {
+                plant: oLine.plant,
+                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+                         version: "A" },
+                operation: { operation: oOperation,
+                              version: "ERP001" },
+                parameterValues: parameterValues,
+                stepId: issueResponse.stepid,
+                workCenter: oLine.workCenter,
+                resource: oLine.resource,
+                sfcs: [ oSfc ]
+            };
+
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+                    oResponseData => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {                        
+                        resolve();
+                    }
+                );
+            });
+        },
+        _additionalIssueCallApi: async function(oRequestParameters){
+            let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+                    (oResponseData) => {
+                        resolve(oResponseData);
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        reject(oError);
+                    }   
+                );
+            });
+        }
     });
 
     return Pallete;

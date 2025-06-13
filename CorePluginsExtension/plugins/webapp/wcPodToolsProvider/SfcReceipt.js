@@ -11,10 +11,9 @@ sap.ui.define([
     "sap/m/Dialog",
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
-    "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository"
-], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository
-    ,
-) {
+    "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator"
+], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceipt", {
         constructor: function(oController, oReceiptParameters){
@@ -60,7 +59,7 @@ sap.ui.define([
                 oLastOperation = true;
             }
 
-            this._generalChecks(oSingleOperationSfc, oLastOperation);
+            await this._generalChecks(oSingleOperationSfc, oLastOperation);
             this._oReceiptParameters.sfc = this._oSfc.getSfcNumber();
             if(oSingleOperationSfc){
                 await this._issueSingleOper();
@@ -157,6 +156,8 @@ sap.ui.define([
                 await this._executeSfcMerge();
             }else if(oSfcStep.quantityInWork < this._oReceiptParameters.quantity){
                 await Sfc.startSfcs(this._oController, this._oReceiptParameters.plant, [this._oSfc.getSfcNumber()], this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource );
+                oSfcStep.quantityInWork = oSfcAvailQuan;
+                oSfcStep.quantityInQueue = 0;
             }
             
 
@@ -192,13 +193,26 @@ sap.ui.define([
             }
             return oSfcStep;
         },
-        _generalChecks: function(isSingleOperation, isLastOperation){
+        _generalChecks: async function(isSingleOperation, isLastOperation){
             if(this._oSfc.getStatusCode() !== "403" && ( isSingleOperation || !isLastOperation )){
                 this._oErrorHandler.throwError("errorSfcNotInWork");
             }
 
             if(this._oReceiptParameters.printer===""){
                 this._oErrorHandler.throwError("error.printing.noPrinter");
+            }
+
+            let orderProgress = OrderReceiptsFromProgressIndicator.getOrderProgress(this._oReceiptParameters.order);
+            let orderMaxQuantity = this._oOrder.getMaxOrderQuantitySO();
+
+            if(orderMaxQuantity< ( orderProgress.quantityDone + this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber * this._oReceiptParameters.packageNumber )){
+                this._oErrorHandler.throwErrorPopup("error.q1.exceedMaxQuantity", orderMaxQuantity, this._oReceiptParameters.unitOfMeasure);
+            }
+
+            let palleteQuanRange = this._oOrder.getPalleteMinMax(1);
+            let quantityToReceipt =  this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber;
+            if(quantityToReceipt < palleteQuanRange.minPalleteQuantity || quantityToReceipt > palleteQuanRange.maxPalleteQuantity){
+                await this._checkConfirmTolerance(palleteQuanRange);
             }
         },
         _getStorageLocation: async function(){
@@ -670,58 +684,59 @@ sap.ui.define([
             let parameterValues = [];
 
             let guid = crypto.randomUUID();
+            let date = new Date();
+            //let date = date.toJSON();
             debugger;
+            parameterValues.push({ name: "GUID",
+                                   comment: guid,
+                                   value: guid });
 
-            parameterValues.push({ comment: guid,
-                                   name: "Q1/Q3",
+            parameterValues.push({ name: "DATE_CREATED",
+                                   comment: guid,
+                                   value: date.toJSON() });
+
+            parameterValues.push({ name: "Q1/Q3",
+                                   comment: guid,
                                    value: "Q1" });
 
-            parameterValues.push({ comment: guid,
-                                   name: "QUANTITY",
+            parameterValues.push({ name: "QUANTITY",
+                                   comment: guid,
                                    value: `${this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber}` });
 
-            parameterValues.push({ comment: guid,
-                                   name: "UOM",
-                                   value: this._oReceiptParameters.unitOfMeasure });
+            parameterValues.push({ name: "UOM",
+                                   comment: guid,
+                                   value: this._oOrder.getInternalUom() }); //value: this._oReceiptParameters.unitOfMeasure
 
-            parameterValues.push({ comment: guid,
-                                   name: "MATERIAL",
+            parameterValues.push({ name: "MATERIAL",
+                                   comment: guid,
                                    value: this._oReceiptParameters.material });
 
-            parameterValues.push({ comment: guid,
-                                   name: "ITEM_NO",
+            parameterValues.push({ name: "ITEM_NO",
+                                   comment: guid,
                                    value: "0001" });
                                    
 
             if(this._oReceiptParameters.handlingUnit){
-                parameterValues.push({ comment: guid,
-                    name: "HU",
+                parameterValues.push({ name: "HU",
+                    comment: guid,
                     value: this._oReceiptParameters.handlingUnit });
             }else{
-                parameterValues.push({ comment: guid,
-                    name: "HU",
+                parameterValues.push({ name: "HU",
+                    comment: guid,
                     value: "" });
             }
 
                                    
-            parameterValues.push({ comment: guid,
-                                   name: "Q3_CODE",
+            parameterValues.push({ name: "Q3_CODE",
+                                   comment: guid,
                                    value: "" });
 
-            parameterValues.push({ comment: guid,
-                                   name: "SALES_ORDER",
-                                   value: "" });
-
-            parameterValues.push({ comment: guid,
-                                   name: "SALES_ORDER_ITEM",
-                                   value: "" });
-
-            parameterValues.push({ comment: guid,
-                                   name: "USER",
+            parameterValues.push({ name: "USER",
+                                   comment: guid,
                                    value: this._oController.getUserId() });
 
-            parameterValues.push({ comment: guid,
-                                   name: "CANCELLED",
+            parameterValues.push({ name: "CANCELLED",
+                                   comment: guid,
                                    value: false });
 
             let issuesCreated = issueManager.getCreatedIssues();
@@ -730,8 +745,8 @@ sap.ui.define([
                                         .map(([key, value]) => `${key}:${value}`)
                                         .join('||');
 
-                parameterValues.push({ comment: guid,
-                                       name: `CONSUMPTION`,
+                parameterValues.push({ name: `CONSUMPTION`,
+                                       comment: guid,
                                        value: issueAsString });
             }
 
@@ -763,6 +778,38 @@ sap.ui.define([
                 );
             });
         },
+        _checkConfirmTolerance: async function(palleteQuanRange){
+            return await new Promise((resolve,reject)=>{
+                this._resolveConfirmTolerance = resolve;
+                this._rejectConfirmTolerance = reject;
+                if (!this.oToleranceDialog) {
+                    this.oToleranceDialog = new Dialog({
+                        type: mobileLibrary.DialogType.Message,
+                        title: this._oTextHandler.getText("label.q1.confirmTitle"),
+                        content: new sap.m.Text({ text: this._oTextHandler.getText("labels.q1.palleteTolerance",palleteQuanRange.minPalleteQuantity, palleteQuanRange.maxPalleteQuantity) }),
+                        beginButton: new sap.m.Button({
+                            type: mobileLibrary.ButtonType.Emphasized,
+                            text: this._oTextHandler.getText("answerYes"),
+                            press: async function () {
+                                    this.oToleranceDialog.close();
+                                    this._resolveConfirmTolerance();
+                            }.bind(this)
+                        }),
+                        endButton: new sap.m.Button({
+                            text: this._oTextHandler.getText("answerNo"),
+                            press: function () {
+                                this.oToleranceDialog.close();
+                                this._rejectConfirmTolerance({ message: "",
+                                                                displayType: "NO_DISPLAY" })
+                                this._oErrorHandler.throwErrorNoDisplay("");
+                            }.bind(this)
+                        })
+                    });
+                }
+
+               this.oToleranceDialog.open();
+            });
+        }
         
     });
 });

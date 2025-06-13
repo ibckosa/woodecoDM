@@ -6,8 +6,10 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SmartEditGraphicRepository",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository"
-], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, JSONModel, SmartEditGraphicRepository, MaterialRepository, OrderRepository, SfcRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader",
+    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator"
+], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, JSONModel, SmartEditGraphicRepository, MaterialRepository, OrderRepository, SfcRepository, SfcDataCollectionReader, OrderReceiptsFromProgressIndicator) {
     "use strict";
 
     return PluginControllerExtension.extend("ibc.dm.plugins.sfcCardExtensionProvider.PluginEventExtension", {
@@ -176,18 +178,25 @@ sap.ui.define([
                 let oSfc = await SfcRepository.getInstance(oController, oPlant, oSfcNumber);
                 let oSteps  = oSfc.getSteps();
                 let oFirstStep = oSteps[0];
-                let oSfcsInstances = await this._getSfcsInstances(oController, oPlant, oSfcs);
+                // let oSfcsInstances = await this._getSfcsInstances(oController, oPlant, oSfcs);
                 let oTotalOrderQuan = 0;
                 let oDoneOrderQuan = 0;
 
-                for(const sfcInstance of oSfcsInstances){
-                    oTotalOrderQuan = oTotalOrderQuan + sfcInstance.getTotalQuan(oFirstSelection.getSfcData().getOperation());
-                    oDoneOrderQuan = oDoneOrderQuan + sfcInstance.getDoneQuanOfOperation(oFirstSelection.getSfcData().getOperation());
+                let dataCollections = await SfcDataCollectionReader.readCollections(oController, oPlant, oSfcs, oFirstSelection.getSfcData().getOperation(), false, true);
+                oTotalOrderQuan = oOrderData.productionQuantity;
+                // for(const sfcInstance of oSfcsInstances){
+                //     oTotalOrderQuan = oTotalOrderQuan + sfcInstance.getTotalQuan(oFirstSelection.getSfcData().getOperation());
+                //     //oDoneOrderQuan = oDoneOrderQuan + sfcInstance.getDoneQuanOfOperation(oFirstSelection.getSfcData().getOperation());
+                // }
+                // if(oFirstStep.operation.operation === oFirstSelection.getSfcData().getOperation()){
+                //     oTotalOrderQuan = oOrderData.productionQuantity;
+                // }
+                for(const dataCollection of dataCollections){
+                    if(dataCollection.QUANTITY&&dataCollection["Q1/Q3"] === "Q1"){
+                        oDoneOrderQuan = oDoneOrderQuan + parseInt(dataCollection.QUANTITY);
+                    }
                 }
-                if(oFirstStep.operation.operation === oFirstSelection.getSfcData().getOperation()){
-                    oTotalOrderQuan = oOrderData.productionQuantity;
-                }
-                debugger;
+                OrderReceiptsFromProgressIndicator.setOrderProgress(oOrder, oDoneOrderQuan);
 
                 
                 oSfcCardCustom.decors = await oMaterialInstance.getGraphics();

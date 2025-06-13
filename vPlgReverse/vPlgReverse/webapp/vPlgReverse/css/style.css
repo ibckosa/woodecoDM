@@ -2,3 +2,8 @@
 .boldText {
     font-weight: bold;
 }
+
+
+.stornedRow .sapMText {
+    color: red !important;
+}
