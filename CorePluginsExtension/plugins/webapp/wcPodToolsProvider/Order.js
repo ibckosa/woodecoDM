@@ -82,7 +82,7 @@ sap.ui.define([
                 oItemNumber = oItemNumber.replace("ITEM_", "");
                 let oLineAttributes = this.getOrderLineCustomValues(oItemNumber);
                 let oMoStructure = this._getMultiOrdersStructure();
-                let palleteTolerancePlus = "", palleteToleranceMinus = "", itemTolerancePlus="";
+                let palleteTolerancePlus = "", palleteToleranceMinus = "", itemTolerancePlus="", itemToleranceMinus="";
                 for(const attribute of oLineAttributes){
                     switch(attribute.field_name){
                         case "LA":
@@ -125,6 +125,9 @@ sap.ui.define([
                         case "ITEM_TOL+":
                             itemTolerancePlus = attribute.field_value;
                             break;
+                        case "ITEM_TOL-":
+                            itemToleranceMinus = attribute.field_value;
+                            break;
 
                     }
                 }
@@ -152,9 +155,15 @@ sap.ui.define([
                 // }
 
                 oMoStructure.leftQuantity = oMoStructure.quantity - oMoStructure.deliveredQuantity;
-                oMoStructure.maxQuantity = oMoStructure.quantity;
+                if(oMoStructure.leftQuantity < 0){
+                    oMoStructure.leftQuantity = 0;
+                }
+                oMoStructure.maxQuantity = oMoStructure.minQuantity = oMoStructure.quantity;
                 if(itemTolerancePlus){
                     oMoStructure.maxQuantity = oMoStructure.maxQuantity + this._converTolerance(itemTolerancePlus)*oMoStructure.maxQuantity;
+                }
+                if(itemToleranceMinus){
+                    oMoStructure.minQuantity = oMoStructure.minQuantity - this._converTolerance(itemToleranceMinus)*oMoStructure.minQuantity;
                 }
                 oMoStructure.maxLeftQuantity = oMoStructure.maxQuantity - oMoStructure.deliveredQuantity;
 
@@ -165,11 +174,11 @@ sap.ui.define([
                 }else{
                     oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPallet;
                     if(palleteTolerancePlus){
-                        oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMax + this._converTolerance(palleteTolerancePlus)*oMoStructure.quantityPerPalletMax;
+                        oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMax + this._converTolerance(palleteTolerancePlus);
                     }
 
                     if(palleteToleranceMinus){
-                        oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPalletMin - this._converTolerance(palleteToleranceMinus)*oMoStructure.quantityPerPalletMin; 
+                        oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPalletMin - this._converTolerance(palleteToleranceMinus); 
                     }
                 }
                 if(oMoStructure.materialNumber){
@@ -195,6 +204,7 @@ sap.ui.define([
                 materialNumber: "",
                 quantity: 0,
                 maxQuantity: 0,
+                minQuantity: 0,
                 leftQuantity: 0,
                 maxleftQuantity: 0,
                 deliveredQuantity: 0,
@@ -409,8 +419,8 @@ sap.ui.define([
                         result.minPalleteQuantity = result.maxPalleteQuantity = parseInt(partOfPackingCode);
                         let tollerancePlus = this.getTollerancePlus(itemNumber);
                         let tolleranceMinus = this.getTolleranceMinus(itemNumber);
-                        result.maxPalleteQuantity = result.maxPalleteQuantity + result.maxPalleteQuantity * tollerancePlus;
-                        result.minPalleteQuantity = result.minPalleteQuantity - result.minPalleteQuantity * tolleranceMinus;
+                        result.maxPalleteQuantity = result.maxPalleteQuantity + tollerancePlus;
+                        result.minPalleteQuantity = result.minPalleteQuantity - tolleranceMinus;
                     }
                 }
             }catch(oError){}
@@ -445,6 +455,34 @@ sap.ui.define([
             }
 
             return orderQuantity;
+        },
+        getMinOrderQuantitySO: function(){
+            let orderQuantity = this._oDetails.productionQuantity;
+            let lineValues = this.getOrderLineCustomValues(1);
+            let itemTolleranceMinus = lineValues.find(line=>{ return line.field_name === "ITEM_TOL-" });
+            if(itemTolleranceMinus){
+                orderQuantity = orderQuantity - orderQuantity * this._converTolerance(itemTolleranceMinus.field_value);
+            }
+
+            return orderQuantity;
+        },
+        completeOrder: async function(){
+            var sUrl = this._oController.getPublicApiRestDataSourceUri() + `order/v1/orders/complete?plant=${this._oPlant}&order=${this._oOrderNumber}`;
+            var oRequestParameters = {  };
+    
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => { 
+                        reject(oError);
+                    }
+                );
+            });
+        },
+        getOrderNumber: function(){
+            return this._oDetails.order;
         }
         
     });

@@ -306,7 +306,7 @@ sap.ui.define([
             oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber;
             oPrintingDetails.printer = this._oReceiptParameters.printer;
             oPrintingDetails.operation = this._oReceiptParameters.stepId;
-            oPrintingDetails.document = 'WOODECO1';
+            oPrintingDetails.document = 'DM_A4';
             oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber;
             oPrintingDetails.printingCopies = this._oReceiptParameters.printingCopies;
             
@@ -328,6 +328,7 @@ sap.ui.define([
                             text: this._oTextHandler.getText("answerYes"),
                             press: async function () {
                                     this.oToleranceDialog.close();
+                                    this.oToleranceDialog.destroy();
                                     this._resolveConfirmTolerance();
                             }.bind(this)
                         }),
@@ -335,6 +336,7 @@ sap.ui.define([
                             text: this._oTextHandler.getText("answerNo"),
                             press: function () {
                                 this.oToleranceDialog.close();
+                                this.oToleranceDialog.destroy();
                                 this._rejectConfirmTolerance({ message: "",
                                                                 displayType: "NO_DISPLAY" })
                                 this._oErrorHandler.throwErrorNoDisplay("");

@@ -527,7 +527,7 @@ sap.ui.define([
             oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber;
             oPrintingDetails.printer = this._oReceiptParameters.printer;
             oPrintingDetails.operation = this._oReceiptParameters.stepId;
-            oPrintingDetails.document = 'WOODECO1';
+            oPrintingDetails.document = 'DM_INFO';
             oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber;
             oPrintingDetails.printingCopies = this._oReceiptParameters.printingCopies;
             

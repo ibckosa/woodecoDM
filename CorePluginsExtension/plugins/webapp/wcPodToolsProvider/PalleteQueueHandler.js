@@ -513,7 +513,7 @@ sap.ui.define([
             oPrintingDetails.quantity = oItem.quantity;
             oPrintingDetails.printer = oPrinter;
             oPrintingDetails.operation = "";
-            oPrintingDetails.document = 'WOODECO1';
+            oPrintingDetails.document = 'DM_INFO';
             oPrintingDetails.printingCopies = 1;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oPluginViewController, oPrintingDetails);

@@ -115,7 +115,7 @@ sap.ui.define([
                 
                 let sfcStepQuan = collection.SFC_STEP.quantityDone + collection.SFC_STEP.quantityScrapped + collection.SFC_STEP.quantityInQueue + collection.SFC_STEP.quantityInWork;
                 return collection.SFC_STEP.operation.operation === this._operation && 
-               ( sfcStepQuan  === parseInt(collection.QUANTITY) || collection["Q1/Q3"] === "AI" ) });
+               ( sfcStepQuan  === parseInt(collection.QUANTITY) || collection["Q1/Q3"] !== "Q1" ) });
 
             for(const collection of sfcCollectionData){
                 collection.confText = "";

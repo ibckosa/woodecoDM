@@ -45,7 +45,7 @@ sap.ui.define([
             this._oPrintingInterface.workCenter = this._oPrintDetails.workCenter;
             this._oPrintingInterface.sfc = this._oPrintDetails.sfc;
             this._oPrintingInterface.printer =  this._oPrintDetails.printer;
-            this._oPrintingInterface.document =  "DM_A4";//this._oPrintDetails.document;
+            this._oPrintingInterface.document = this._getDocument(); //this._oPrintDetails.document;
             this._oPrintingInterface.QUANTITY = this._oPrintDetails.quantity;
             this._oPrintingInterface.OPERATION = `${parseInt(this._oPrintDetails.operation)}`;
 
@@ -173,6 +173,18 @@ sap.ui.define([
         },
         _convertDescription: function(){
             this._oPrintingInterface.DESCRIPTION = this._oPrintingInterface.DESCRIPTION.replaceAll("$&", "\n");
+        },
+        _getDocument: function(){
+            let result = 'DM_A4';
+            let infoLabel = this._oPrintDetails.orderLineCustomValues.find(line => { return line.attribute === "INFO_LBL" });
+            if(infoLabel){
+                if(infoLabel.value === "A4_INFO_LABEL"){
+                    result = "DM_INFO";
+                }else if(infoLabel.value === "A6_LABEL"){
+                    result = "DM_A6";
+                }
+            }
+            return result;
         }
     });
 

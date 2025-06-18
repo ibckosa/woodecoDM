@@ -1,0 +1,15 @@
+{
+	"components": [
+		{
+			"id": "ePlgCompleteOrder",
+			"type": "EXECUTION_PLUGIN",
+			"allowMultipleInstances": false,
+			"name": "ibc.dm.ePlgCompleteOrder.ePlgCompleteOrder",
+			"propertyEditor": "ibc.dm.ePlgCompleteOrder.ePlgCompleteOrder.builder.PropertyEditor",
+			"i18n": "ibc.dm.ePlgCompleteOrder.ePlgCompleteOrder.i18n.i18n",
+            "productionProcessEnabled": true,
+            "productionProcessTitle": "Execution plugin",
+			"supportedPodTypes": ["WORK_CENTER","OPERATION", "ORDER", "OTHER", "MONITOR"]
+		}   
+	]
+}

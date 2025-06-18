@@ -1,0 +1,25 @@
+{
+	"_version": "1.12.0",
+	"sap.app": {
+		"id": "ibc.dm.ePlgCompleteOrder.ePlgCompleteOrder",
+		"type": "component",
+		"i18n": "i18n/i18n.properties",
+		"applicationVersion": {
+			"version": "1.0.0"
+		},
+		"title": "{{appTitle}}",
+		"description": "{{appDescription}}",
+		"embeddedBy": "../"
+	},
+
+	"sap.ui5": {
+		"models": {
+			"i18n": {
+				"type": "sap.ui.model.resource.ResourceModel",
+				"settings": {
+					"bundleName": "ibc.dm.ePlgCompleteOrder.ePlgCompleteOrder.i18n.i18n"
+				}
+			}
+		}
+	}
+}
