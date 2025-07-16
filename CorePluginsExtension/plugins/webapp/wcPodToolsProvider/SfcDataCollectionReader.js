@@ -7,7 +7,7 @@ sap.ui.define([
     });
 
 
-    dataCollectionReader.readCollections = async function(controller, plant, sfcs, operation="", getStornedCollections=true, getAllCollections=false){
+    dataCollectionReader.readCollections = async function(controller, plant, sfcs, operation="", getStornedCollections=true, getAllCollections=false, routing, routingVersion){
         let result = [];
         // this._controller = controller;
         // this._sfcs = sfcs;
@@ -16,7 +16,7 @@ sap.ui.define([
         // this._getStornedCollections = getStornedCollections;
         // this._getAllCollections = getAllCollections;
 
-        let dataCollectionsFromApi = await this._getCollectionsFromApi(controller, plant, sfcs, operation, getAllCollections);
+        let dataCollectionsFromApi = await this._getCollectionsFromApi(controller, plant, sfcs, operation, getAllCollections, routing, routingVersion);
 
         for(let collectionFromApi of dataCollectionsFromApi){
             if(!collectionFromApi.data){
@@ -75,12 +75,12 @@ sap.ui.define([
         return result;
     };
 
-    dataCollectionReader._getCollectionsFromApi = async function(controller, plant, sfcs, operation, getAllCollections){
+    dataCollectionReader._getCollectionsFromApi = async function(controller, plant, sfcs, operation, getAllCollections, routing, routingVersion){
         let calledPromises = [];
         let calledAdditionalPromises = [];
         
 
-        let sfcsInstances = await this._getSfcsInstances(controller, plant, sfcs);
+        let sfcsInstances = await this._getSfcsInstances(controller, plant, sfcs, routing, routingVersion);
         for(const sfcInstance of sfcsInstances){
             let lastStep = sfcInstance.getLastStep();
             let sfcSteps = sfcInstance.getSteps();
@@ -127,13 +127,14 @@ sap.ui.define([
         return results;
     };
 
-    dataCollectionReader._getSfcsInstances = async function(controller, plant, sfcs){
+    dataCollectionReader._getSfcsInstances = async function(controller, plant, sfcs, routing, routingVersion){
         let sfcsDetailsPromises = [];
         for(const sfc of sfcs){
-            sfcsDetailsPromises.push(SfcRepository.ReadSfcBypassBuffer(controller, plant, sfc)); 
+            sfcsDetailsPromises.push(SfcRepository.ReadSfcBypassBuffer(controller, plant, sfc, routing, routingVersion, false)); 
         }
 
         let sfcsInstances = await Promise.all(sfcsDetailsPromises);
+        sfcsInstances = sfcsInstances.filter( instance => {return instance });
         return sfcsInstances;
     };
     dataCollectionReader._getCollectionsPromiseForSfcStep = async function(sfcNumber, sfcStep, plant, controller, pageNumber=0){

@@ -8,7 +8,7 @@ sap.ui.define([
 ], function (ObjectUI5, ErrorHandler, OrderRepository, SfcRepository, mobileLibrary, TextHandler) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcMovementReverse", {
-        constructor: function(controller, plant, workCenter, resource, parameters, orderNumber, currentSfcNumber){
+        constructor: function(controller, plant, workCenter, resource, parameters, orderNumber, currentSfcNumber, routing, routingVersion){
             this._controller = controller;
             this._plant = plant;
             this._parameters = parameters;
@@ -17,6 +17,8 @@ sap.ui.define([
             this._orderNumber = orderNumber;
             this._oErrorHandler = new ErrorHandler(controller);
             this._currentSfcNumber = currentSfcNumber;
+            this._routing = routing;
+            this._routingVersion = routingVersion;
             this._oTextHandler = new TextHandler();
         },
         execute: async function(){
@@ -25,7 +27,7 @@ sap.ui.define([
             this._getDummyOrder();
             this._getStornoEndpoint();
             this._Order = await OrderRepository.readOrder(this._controller, this._plant, this._orderNumber);
-            this._sfc = await SfcRepository.getInstance(this._controller, this._plant, this._parameters.SFC_NUMBER);
+            this._sfc = await SfcRepository.ReadSfcBypassBuffer(this._controller, this._plant, this._parameters.SFC_NUMBER, this._routing, this._routingVersion);
 
             await this._checkConfirmAction();
             switch(this._parameters["Q1/Q3"]){

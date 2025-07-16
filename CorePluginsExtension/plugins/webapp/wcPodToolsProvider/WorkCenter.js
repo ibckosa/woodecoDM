@@ -28,6 +28,19 @@ sap.ui.define([
         },
         getPsa: function(){
             return this._oDetails.productionSupplyArea;
+        },
+        getResources: function(){
+            let result = [];
+
+            try{
+                for(member of this._oDetails.members){
+                    if(member.resource){
+                        result.push(member.resource.resource);
+                    }
+                }
+            }catch(error){}
+
+            return result;
         }
     });
 });

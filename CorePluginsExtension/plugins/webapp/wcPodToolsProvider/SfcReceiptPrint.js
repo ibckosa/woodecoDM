@@ -24,6 +24,10 @@ sap.ui.define([
             const year = today.getFullYear();
             const prodDate = `${day}.${month}.${year}`;
 
+            if(this._oPrintDetails.printingCopies<1){
+                return;
+            }
+
             this._oPrintDetails.materialCustomValues.forEach(customValue => {
                 if (this._oPrintingInterface.hasOwnProperty(customValue.attribute)) {
                     this._oPrintingInterface[customValue.attribute] = customValue.value;
@@ -46,8 +50,12 @@ sap.ui.define([
             this._oPrintingInterface.sfc = this._oPrintDetails.sfc;
             this._oPrintingInterface.printer =  this._oPrintDetails.printer;
             this._oPrintingInterface.document = this._getDocument(); //this._oPrintDetails.document;
-            this._oPrintingInterface.QUANTITY = this._oPrintDetails.quantity;
+            this._oPrintingInterface.QUANTITY = parseInt(this._oPrintDetails.quantity);
             this._oPrintingInterface.OPERATION = `${parseInt(this._oPrintDetails.operation)}`;
+
+            if(!this._oPrintingInterface.HU){
+                this._oPrintingInterface.HU = this._oPrintingInterface.sfc;
+            }
 
             if(this._oPrintingInterface.PEG_VBELN){
                 try{
@@ -61,17 +69,19 @@ sap.ui.define([
                 }catch(error){}
             }
 
+            
             this._getSalesText();
             this._convertDescription();
             this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
 
-            let oPromises=[];
-            for(let i=0; i<this._oPrintDetails.printingCopies; i++){
+            // let oPromises=[];
+            // for(let i=0; i<this._oPrintDetails.printingCopies; i++){
                 
-                oPromises.push( this._executePrint() );
+            //     oPromises.push( this._executePrint() );
 
-            }
-            await Promise.all(oPromises);
+            // }
+            // await Promise.all(oPromises);
+            await this._executePrint()
 
             // return await new Promise((resolve,reject)=>{
             //     this._oController.ajaxPostRequest(sUrl, this._oPrintingInterface,
@@ -155,9 +165,11 @@ sap.ui.define([
 
         },
         _executePrint: async function(){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri()  + this._oPrintDetails.endpoint;
+            let sUrl = this._oController.getPublicApiRestDataSourceUri()  + "print/v1/print"; //this._oPrintDetails.endpoint;
+
+            let printingParameters = this._getPrintingParameters();
             return await new Promise((resolve,reject)=>{
-                this._oController.ajaxPostRequest(sUrl, this._oPrintingInterface,
+                this._oController.ajaxPostRequest(sUrl, printingParameters,
                     (oResponseData) => {
                         resolve();
                     },
@@ -176,14 +188,62 @@ sap.ui.define([
         },
         _getDocument: function(){
             let result = 'DM_A4';
-            let infoLabel = this._oPrintDetails.orderLineCustomValues.find(line => { return line.attribute === "INFO_LBL" });
+            let infoLabel = this._oPrintDetails.orderLineCustomValues.find(line => { return line.field_name === "INFO_LBL" });
             if(infoLabel){
-                if(infoLabel.value === "A4_INFO_LABEL"){
+                if(infoLabel.field_value === "A4_INFO_LABEL"){
                     result = "DM_INFO";
-                }else if(infoLabel.value === "A6_LABEL"){
+                }else if(infoLabel.field_value === "A6_LABEL"){
                     result = "DM_A6";
                 }
             }
+            return result;
+        },
+        _getPrintingParameters: function(){
+            let result = { 
+                "dataAcquisitionParameters": { "plant": this._oPrintingInterface.plant,
+                                                "sfc": this._oPrintingInterface.sfc,
+                                                "order": this._oPrintingInterface.order,
+                                                "workCenter" : this._oPrintingInterface.workCenter,
+                                                "resource": this._oPrintingInterface.resource,
+                                                "custom_data":{ "OBERFL_VS": this._oPrintingInterface.OBERFL_VS,
+                                                                "OBERFL_RS": this._oPrintingInterface.OBERFL_RS,
+                                                                "HU": this._oPrintingInterface.HU,
+                                                                "DI": this._oPrintingInterface.THICKNESS,
+                                                                "DEKOR_VS": this._oPrintingInterface.DEKOR_VS,
+                                                                "DEKOR_RS": this._oPrintingInterface.DEKOR_RS,
+                                                                "MATERIAL": this._oPrintingInterface.MATERIAL,
+                                                                "LA": this._oPrintingInterface.LA,
+                                                                "PEG_ZZMTO": this._oPrintingInterface.PEG_ZZMTO,
+                                                                "PEG_VBELN": this._oPrintingInterface.PEG_VBELN,
+                                                                "PEG_POSNR": this._oPrintingInterface.PEG_POSNR,
+                                                                "PEG_NAME1": this._oPrintingInterface.PEG_NAME1,
+                                                                "PEG_BSTNK": this._oPrintingInterface.PEG_BSTNK,
+                                                                "PEG_KDMAT": this._oPrintingInterface.PEG_KDMAT,
+                                                                "ZERT_TXT": this._oPrintingInterface.ZERT_TXT,
+                                                                "PEG_SPRAS": this._oPrintingInterface.PEG_SPRAS,
+                                                                "ZZVERP_TXT": this._oPrintingInterface.ZZVERP_TXT,
+                                                                "NORM": this._oPrintingInterface.NORM,
+                                                                "PRDCLS": this._oPrintingInterface.PRDCLS,
+                                                                "PROD_DATE": this._oPrintingInterface.PROD_DATE,
+                                                                "plant": this._oPrintingInterface.plant,
+                                                                "sfc": this._oPrintingInterface.sfc,
+                                                                "order": this._oPrintingInterface.order,
+                                                                "workCenter" : this._oPrintingInterface.workCenter,
+                                                                "resource": this._oPrintingInterface.resource,
+                                                                "QUANTITY": this._oPrintingInterface.QUANTITY,
+                                                                "EAN11": this._oPrintingInterface.EAN11,
+                                                                "SALES_TEXT": this._oPrintingInterface.SALES_TEXT,
+                                                                "BR": this._oPrintingInterface.BR,
+                                                                "OPERATION": this._oPrintingInterface.OPERATION,
+                                                                "DESCRIPTION": this._oPrintingInterface.DESCRIPTION,
+                                                                "ZZVERP": this._oPrintingInterface.ZZVERP }  },
+                "document": this._oPrintingInterface.document,
+                "formatParameters": { "fileName": "TEST_PRINT2" },
+                "printer": this._oPrintingInterface.printer,
+                "sync": true,
+                "transportParameters": { "numberOfCopies": this._oPrintDetails.printingCopies,
+                                          "profile": "Defaults"  }
+            };
             return result;
         }
     });

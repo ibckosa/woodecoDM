@@ -121,16 +121,20 @@ sap.ui.define([
                 this._oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
                 this._oWorkCenter = oPodSelectionModel.workCenter;
                 this._oResource = oPodSelectionModel.resource.resource;
+                this._oResourceInstance = await ResourceRepository.getResourceInstance(this, this._oPlant, this._oResource);
                 this._oOrder = await OrderRepository.readOrderByPassBuffer(this, this._oPlant, this._oOrderNumber);
-                let oPositions = await this._oOrder.getOrderPositions();
+                this._routing = oFirstSelection.getSfcData().getRouting(),
+                this._routingVersion = oFirstSelection.getSfcData().getRoutingVersion() 
+                let oPositions = await this._oOrder.getOrderPositions(this._routing, this._routingVersion);
                 let oCodesTab = await NcCodesReader.readCodes(this, this._oPlant, this._oWorkCenter, this._oResource);
                 const oModel = new JSONModel({ positions: oPositions, codes: oCodesTab });
                 this.getView().setModel(oModel, "multiOrdersModel");
                 if( ( !this._oOrderNumberPrevious || this._oOrderNumberPrevious !== this._oOrderNumber ) && oPositions.length > 0){
                     let oFirstPosition = oPositions[0];
+                    let selectedPosition = this._selectPositionAfterLoad(oPositions);
                     let oViewModel = this.getView().getModel("viewModel");
-                    oViewModel.setProperty("/selectedOrder", oFirstPosition);
-                    this._setSelectedFirstPosition();
+                    oViewModel.setProperty("/selectedOrder", selectedPosition.selectedRow);
+                    this._setSelectedFirstPosition(selectedPosition.index);
                     this._oOrderNumberPrevious = this._oOrderNumber;
                 }else if(this._oOrderNumberPrevious && this._oOrderNumberPrevious === this._oOrderNumber   && oPositions.length > 0){
                     this._refreshSelectedOrder(oPositions);
@@ -200,14 +204,22 @@ sap.ui.define([
                     itemNumber: selectedOrder.selectedOrder.itemNumber,
                     itemNumberErp: selectedOrder.selectedOrder.itemNumberErp,
                     quantityPerPalletMax: selectedOrder.selectedOrder.quantityPerPalletMax,
-                    quantityPerPalletMin: selectedOrder.selectedOrder.quantityPerPalletMin };
+                    quantityPerPalletMin: selectedOrder.selectedOrder.quantityPerPalletMin,
+                    routing: aSelectionFirstRow.getSfcData().getRouting(),
+                    routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion() };
                 
                 ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcMOReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeReceipt();
-                    this._reloadQ1Plugin = true;
                     this.getView().setBusy(false);
-                    setTimeout( async ()=> { await this._loadData();},1500);
+                    setTimeout( async ()=> { 
+                        if(this._oResourceInstance.getMOSelectionMode().toUpperCase()==="AUTOMATIC"){
+                            this._oOrderNumberPrevious = "";
+                        }
+                        await this._loadData();
+
+
+                    },1500);
             }catch(oError){
                 this.getView().setBusy(false);
                 this._oErrorHandler.handleError(oError);
@@ -243,7 +255,9 @@ sap.ui.define([
                                         salesOrderItem: selectedOrder.selectedOrder.salesOrderItem,
                                         itemNumber: selectedOrder.selectedOrder.itemNumber,
                                         itemNumberErp: selectedOrder.selectedOrder.itemNumberErp,
-                                        material: selectedOrder.selectedOrder.materialNumber  };
+                                        material: selectedOrder.selectedOrder.materialNumber,
+                                        routing: aSelectionFirstRow.getSfcData().getRouting(),
+                                        routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion()  };
 
 
                 let oSfcQ23 = new SfcQ23(this, q23Parameters);
@@ -421,6 +435,11 @@ sap.ui.define([
                 let oResource = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), oResourceNumber);
                 let oFunctionalLocation = oResource.getQ1Scheme();
 
+
+                if(!this._resourceNumber || this._resourceNumber !== oResourceNumber){
+                    this._setPrintQuantity(oResource.getQ1LabelCopies());
+                    this._resourceNumber === oResourceNumber;
+                }
                 if(oFunctionalLocation==="1"){
                     this.byId("inputPackageQuan").setVisible(true);
                     this.byId("inputPackageQuanLabel").setVisible(true);
@@ -461,12 +480,12 @@ sap.ui.define([
             }catch(oError){
             }
         },
-        _setSelectedFirstPosition: function(){
+        _setSelectedFirstPosition: function(index){
             try{
                 let positionItems = this.getView().byId("ordersTable").getItems();
                 for(let i=0;i<positionItems.length;i++){
                     let item = positionItems[i];
-                    if(i===0){
+                    if(i===index){
                         item.addStyleClass("selectedRowBackground");
                         this._oPreviousSelectedItem = item;
                     }else{
@@ -638,6 +657,23 @@ sap.ui.define([
             }catch(oError){
 
             }
+        },
+        _selectPositionAfterLoad: function(positions){
+            debugger;
+            let selectionMode = this._oResourceInstance.getMOSelectionMode();
+
+            const result = positions.reduce((acc, row, index) => {
+                if ( acc.selectedRow.plannedReceipts <= acc.selectedRow.executedReceipts && row.plannedReceipts > row.executedReceipts && selectionMode.toUpperCase() === "AUTOMATIC" ) {
+                  return { selectedRow: row, index: index };
+                }
+                return acc;
+              }, { selectedRow: positions[0], index: 0 });
+
+
+            return result;
+        },
+        _setPrintQuantity: function(printQuantity){
+            this.byId("rbg1").setSelectedIndex(printQuantity);
         }
 
 	});

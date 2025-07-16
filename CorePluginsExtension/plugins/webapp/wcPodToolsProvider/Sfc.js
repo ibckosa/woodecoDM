@@ -1,12 +1,15 @@
 sap.ui.define([
-    "sap/ui/base/Object"
-], function (ObjectUI5) {
+    "sap/ui/base/Object",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+], function (ObjectUI5, TextHandler) {
     "use strict";
     let oSfc = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.Sfc", {
-        constructor: function(oController, oPlant, oSfcNumber){
+        constructor: function(oController, oPlant, oSfcNumber, routing, routingVersion){
             this._oController = oController;
             this._oPlant = oPlant;
             this._oSfcNumber = oSfcNumber;
+            this._routing = routing;
+            this._routingVersion = routingVersion;
         },
         readData: async function(){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "sfc/v1/sfcdetail";
@@ -17,6 +20,12 @@ sap.ui.define([
                 this._oController.ajaxGetRequest(sUrl, oParameters,
                     (oResponseData) => {
                         this._oDetails = oResponseData;
+                        if(this._routing && this._routingVersion){
+                            let routingExist = this._oDetails.steps.find(step=>{return step.stepRouting.routing === this._routing && step.stepRouting.version === this._routingVersion;});
+                            if(routingExist){
+                                this._oDetails.steps = this._oDetails.steps.filter(step=>{return step.stepRouting.routing === this._routing && step.stepRouting.version === this._routingVersion;});
+                            }
+                        }
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {
@@ -52,6 +61,14 @@ sap.ui.define([
         },
         getSfcNumber(){
             return this._oDetails.sfc;
+        },
+        getQuantityInQueue: function(oOperation){
+            let oStep = this.getStepByOperation(oOperation);
+            return oStep.quantityInQueue;
+        },
+        getQuantityInWork: function(oOperation){
+            let oStep = this.getStepByOperation(oOperation);
+            return oStep.quantityInWork;
         },
         getTotalQuan: function(oOperation){
             let oReturn = 0;
@@ -95,20 +112,67 @@ sap.ui.define([
                     }   
                 );
             });
+        },
+        complete: async function(operationActivity, resource, quantity){
+            var url = this._oController.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/complete";
+            var paramteres = { plant: this._oPlant,
+                               sfcs: [this._oSfcNumber],
+                               operation: operationActivity,
+                               resource: resource };
+            if(quantity){
+                paramteres.quantity = quantity;
+            }
+            return await new Promise((resolve,reject)=>{
+                url = this._oController.ajaxPostRequest(url, paramteres,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    (oError) => { 
+                        reject(oError);
+                    }
+                );
+            });
+        },
+        checkUncollectedParameters: async function(operationActivity, resource){
+            var sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/uncollectedParameters";
+            var oRequestParameters = {
+                plant: this._oPlant,
+                sfc: this._oSfcNumber,
+                operation: operationActivity,
+                resource: resource };
+
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxGetRequest(sUrl, oRequestParameters,
+                    oResponseData => {
+                        if(oResponseData.uncollectedParams.length>0){
+                            let textHandler = new TextHandler();
+                            reject({ message: textHandler.getText("error.completeOrder.uncollectedParameters"),
+                                     displayType: "POPUP" });
+                        }
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        reject(oError);
+                    }
+                );
+            });
         }
     
     });
 
-    oSfc.splitSfc = async function(oController, oPlant, oSfc, oQuan){
+    oSfc.splitSfc = async function(oController, oPlant, oSfc, oQuan, allowOverproduction=false){
         var sUrl = oController.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/split";
         var oRequestParameters = { plant: oPlant,
                                    sfc: oSfc,
-                                   newSfcs: [{quantity: oQuan}] };
+                                   newSfcs: [{quantity: oQuan}],
+                                   allowOverproduction: allowOverproduction };
 
         return await new Promise((resolve,reject)=>{
             oController.ajaxPostRequest(sUrl, oRequestParameters,
                 (oResponseData) => {resolve(oResponseData.newSfcs[0]);},
-                (oError, sHttpErrorMessage) => { reject(oError); }
+                (oError) => { 
+                    reject(oError); 
+                }
             );
         });
     };

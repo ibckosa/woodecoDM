@@ -61,15 +61,15 @@ sap.ui.define([
             this.unsubscribe("WorklistSelectEvent", this.onWorkListSelectEvent, this);
         },
 
-        onBeforeRendering: function () {   
-            this.loadModel();
+        onBeforeRendering: async function () {   
+            await this.loadModel();
         },
 
         onAfterRendering: function () {
         },
 
-        onPodSelectionChangeEvent: function (sChannelId, sEventId, oData) {
-            this.loadModel();
+        onPodSelectionChangeEvent: async function (sChannelId, sEventId, oData) {
+            await this.loadModel();
         },
 
         onOperationChangeEvent: function (sChannelId, sEventId, oData) {
@@ -81,7 +81,6 @@ sap.ui.define([
         },
 
         loadModel: async function () {
-            
             try{
 
                 var oPodSelectionModel = this.getPodSelectionModel();
@@ -220,9 +219,10 @@ sap.ui.define([
                     printingCopies: parseInt(this.byId("rbg1").getSelectedButton().getText()),
                     packageNumber: parseInt(this.byId("inputPackageQuan").getValue()),
                     printer: oResource.getPrinterId(),
-                    automaticIssues: oResource.getConsumptionMode(true)==="AUTOMATIC" };
+                    automaticIssues: oResource.getConsumptionMode(true)==="AUTOMATIC",
+                    routing: aSelectionFirstRow.getSfcData().getRouting(),
+                    routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion() };
                 
-                oReceiptParameters.printer 
                 ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeIssue();
@@ -344,9 +344,6 @@ sap.ui.define([
             
             if(oOrderDetails.oResponse.putawayStorageLocation === undefined){
                 this._oErrorHandler.throwError("");
-                // oReturn.isError = true;
-                // oReturn.oErrorMessage = this._getText("noStorageLocationError");
-                // return oReturn; 
             }
 
             oReturn.storageLocation = oOrderDetails.oResponse.putawayStorageLocation;
@@ -477,8 +474,6 @@ sap.ui.define([
 
                     },
                     (oError, sHttpErrorMessage) => {
-                        // oReturn.isError = true;
-                        // oReturn.returnMessage = this._getText("messageReceiptError");
                         reject(oError);
                     }
                 );
@@ -551,17 +546,6 @@ sap.ui.define([
                         resolve(oReturn);
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
-                        // debugger;
-                        // oReturn.isError = true;
-                        // if(oError.message!==undefined){
-                        //     oReturn.returnMessage = oError.message;
-                        // }else if(oError.error.message!==undefined){
-                        //     oReturn.returnMessage = oError.error.message;
-                        // }                        
-                        // else{
-                        //     oReturn.returnMessage = this._getText("messageConfirmationError");
-                        // }
-                        
                         reject(oError);
                     }.bind(this)
                 );
@@ -585,18 +569,7 @@ sap.ui.define([
                         oReturn.returnMessage = this._getText("messageConfirmationSuccess");
                         resolve(oReturn);
                     }.bind(this),
-                    function (oError, sHttpErrorMessage) {
-                        // debugger;
-                        // oReturn.isError = true;
-                        // if(oError.message!==undefined){
-                        //     oReturn.returnMessage = oError.message;
-                        // }else if(oError.error.message!==undefined){
-                        //     oReturn.returnMessage = oError.error.message;
-                        // }                        
-                        // else{
-                        //     oReturn.returnMessage = this._getText("messageConfirmationError");
-                        // }
-                        
+                    function (oError, sHttpErrorMessage) {                        
                         reject(oError);
                     }.bind(this)
                 );
@@ -625,17 +598,7 @@ sap.ui.define([
                         resolve(oReturn);
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
-                        debugger;
-                        // oReturn.isError = true;
-                        // if(oError.message!==undefined){
-                        //     oReturn.returnMessage = oError.message;
-                        // }else if(oError.error.message!==undefined){
-                        //     oReturn.returnMessage = oError.error.message;
-                        // }                        
-                        // else{
-                        //     oReturn.returnMessage = this._getText("messageConfirmationError");
-                        // }
-                        
+                        debugger;                        
                         reject(oError);
                     }.bind(this)
                 );
@@ -662,13 +625,6 @@ sap.ui.define([
                         resolve(oReturn);
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
-                        // debugger;
-                        // oReturn.isError = true;
-                        // if(oError.message!==undefined){
-                        //     oReturn.returnMessage = oError.message;
-                        // }else if(oError.error.message!==undefined){
-                        //     oReturn.returnMessage = oError.error.message;
-                        // }
                         reject(oError);
                     }.bind(this)
                 );
@@ -691,13 +647,6 @@ sap.ui.define([
                         resolve(oReturn);
                     }.bind(this),
                     function (oError, sHttpErrorMessage) {
-                        // debugger;
-                        // oReturn.isError = true;
-                        // if(oError.message!==undefined){
-                        //     oReturn.returnMessage = oError.message;
-                        // }else if(oError.error.message!==undefined){
-                        //     oReturn.returnMessage = oError.error.message;
-                        // }
                         reject(oError);
                     }.bind(this)
                 );
@@ -745,9 +694,15 @@ sap.ui.define([
                 let oPodSelectionModel = this.getPodSelectionModel();
                 let oWorkCenter = oPodSelectionModel.workCenter;
                 let oResourceNumber = oPodSelectionModel.resource.resource;
+
+
                 debugger;
                 let oResource = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), oResourceNumber);
                 let oFunctionalLocation = oResource.getQ1Scheme();
+                if(!this._resourceNumber||this._resourceNumber!==oResourceNumber){
+                    this._setPrintQuantity(oResource.getQ1LabelCopies());
+                    this._resourceNumber === oResourceNumber;
+                }
 
                 if(oFunctionalLocation==="1"){
                     this.byId("inputPackageQuan").setVisible(false);
@@ -763,8 +718,13 @@ sap.ui.define([
 
                     this.byId("inputPalleteQuanLabel").setVisible(true);
                     this.byId("inputPalleteQuan").setVisible(true);
-                    //wszystko
                     this.byId("inputReceiptQuantityLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityLabelRolls"));
+                }else if(oFunctionalLocation==="3"){
+                    this.byId("inputPackageQuan").setVisible(true);
+                    this.byId("inputPackageQuanLabel").setVisible(true);
+
+                    this.byId("inputPalleteQuanLabel").setVisible(false);
+                    this.byId("inputPalleteQuan").setVisible(false);
                 }else{
                     let oModelData = this.getView().getModel().getData();
                     this.byId("inputPackageQuan").setVisible(false);
@@ -783,6 +743,9 @@ sap.ui.define([
             }catch(oError){
                 debugger;
             }
+        },
+        _setPrintQuantity: function(printQuantity){
+            this.byId("rbg1").setSelectedIndex(printQuantity);
         }
     });
     return oPluginViewController;

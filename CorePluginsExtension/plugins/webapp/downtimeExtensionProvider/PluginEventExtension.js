@@ -24,10 +24,11 @@ sap.ui.define([
         },
 
         getOverrideExecution: function(sOverrideMember) {
+            return null;
             if (oOverrideExecution.hasOwnProperty(sOverrideMember)) {
                 return oOverrideExecution[sOverrideMember];
             }
-            return null;
+            
         },
 
         getExtensionName: function() {
@@ -35,6 +36,7 @@ sap.ui.define([
         },
 
         onGetReasonCodeDialogFragment: function(sId, sFragment, oContext) {
+            return;
             // use the default id, but override the fragment and controller
             return Fragment.load({
                 id: sId,
@@ -44,6 +46,7 @@ sap.ui.define([
         },
 
         onReasonCodeDialogOpen: function(oDialog) {
+            return;
             if (!this.mExtensionData) {
                 this.mExtensionData = new sap.ui.model.json.JSONModel();
                 oDialog.setModel(this.mExtensionData, "extensionData");
@@ -55,12 +58,14 @@ sap.ui.define([
         },
 
         onReasonCodeDialogDataUpdate: function(oDataModel) {
+            return;
             this.mData = oDataModel;
             let aReasonCodes = oDataModel.getProperty("/timeElementReasonCodeTree");
             this.mExtensionData.setData(aReasonCodes);
         },
 
         onReasonCodeDialogSave: function(oReasonCode) {
+            return;
             let oPromise = this.getController().getReasonCodeDialogPromise();
             oPromise.resolve({
                 description: oReasonCode.description,
@@ -72,6 +77,7 @@ sap.ui.define([
         },
 
         onReasonCodeDialogReset: function() {
+            return;
             this.mExtensionData.setData([]);
             this.mBreadcrumbs.setData([ oTopLevelBreadcrumb ]);
         },
@@ -81,6 +87,7 @@ sap.ui.define([
         /* -------------------------------- */
 
         onSelectBreadcrumb: function(oEvent) {
+            return;
             let oListItem = oEvent.getParameter("listItem");
             oListItem.setSelected(false);
             let oContext = oListItem.getBindingContext("breadcrumbs");
@@ -101,6 +108,7 @@ sap.ui.define([
         },
 
         onSelectReasonCode: function(oEvent) {
+            return;
             let oListItem = oEvent.getParameter("listItem");
             oListItem.setSelected(false);
             let oContext = oListItem.getBindingContext("extensionData");

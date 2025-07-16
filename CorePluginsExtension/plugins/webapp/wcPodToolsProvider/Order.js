@@ -2,14 +2,16 @@ sap.ui.define([
     "sap/ui/base/Object",
     "ibc/dm/plugins/wcPodToolsProvider/LinkReader",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader"
-], function (ObjectUI5, LinkReader, MaterialRepository, SfcDataCollectionReader) {
+    "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
+], function (ObjectUI5, LinkReader, MaterialRepository, SfcDataCollectionReader, ErrorHandler) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.Order", {
         constructor: function(oController, oPlant, oOrderNumber){
             this._oController = oController;
             this._oPlant = oPlant;
             this._oOrderNumber = oOrderNumber;
+            this._errorHandler = new ErrorHandler(this._oController);
         },
         readData: async function(){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "/order/v1/orders";
@@ -66,7 +68,7 @@ sap.ui.define([
         getHeaderCustomValues: function(){
             return this._oDetails.customValues.filter(customValue => { return  !customValue.attribute.startsWith("ITEM") });
         },
-        getOrderPositions: async function(){
+        getOrderPositions: async function(routing, routingVersion){
             let oReturn = [];
             let oLines = this._oDetails.customValues.filter(customValue=>{ return customValue.attribute.startsWith("ITEM") &&
                                                                                    customValue.attribute !== "ITEM_1"  });
@@ -75,7 +77,7 @@ sap.ui.define([
             
 
             // let oReceipts = await this._getOrderReceipts();
-            let dataCollections = await SfcDataCollectionReader.readCollections(this._oController, this._oPlant, this.getSfcs(), "", false, true);
+            let dataCollections = await SfcDataCollectionReader.readCollections(this._oController, this._oPlant, this.getSfcs(), "", true, true, routing, routingVersion);
             for(const line of oLines){
                 if(!line.value||line.value===""){continue;}
                 let oItemNumber = line.attribute.replace("ITEM_0", "");
@@ -142,8 +144,10 @@ sap.ui.define([
                                                                                     collection.QUANTITY });
 
                 for(const collection of filteredCollection){
+                    oMoStructure.executedReceipts = oMoStructure.executedReceipts + 1;
+                    if(collection.CANCELLED === "false"){
                         oMoStructure.deliveredQuantity = oMoStructure.deliveredQuantity + parseInt(collection.QUANTITY);
-                    
+                    }        
                 }
 
                 // let filteredReceipts = oReceipts.filter(receipt=>{ return receipt.comments&&
@@ -160,25 +164,28 @@ sap.ui.define([
                 }
                 oMoStructure.maxQuantity = oMoStructure.minQuantity = oMoStructure.quantity;
                 if(itemTolerancePlus){
-                    oMoStructure.maxQuantity = oMoStructure.maxQuantity + this._converTolerance(itemTolerancePlus)*oMoStructure.maxQuantity;
+                    oMoStructure.maxQuantity = Math.ceil(oMoStructure.maxQuantity + this._converTolerance(itemTolerancePlus)*oMoStructure.maxQuantity);
                 }
                 if(itemToleranceMinus){
-                    oMoStructure.minQuantity = oMoStructure.minQuantity - this._converTolerance(itemToleranceMinus)*oMoStructure.minQuantity;
+                    oMoStructure.minQuantity = Math.ceil(oMoStructure.minQuantity - this._converTolerance(itemToleranceMinus)*oMoStructure.minQuantity);
                 }
                 oMoStructure.maxLeftQuantity = oMoStructure.maxQuantity - oMoStructure.deliveredQuantity;
 
-                if(oMoStructure.quantityPerPallet ===0 || oMoStructure.quantityPerPallet >= oMoStructure.leftQuantity){
+                if(oMoStructure.quantityPerPallet>0){
+                    oMoStructure.plannedReceipts = Math.ceil(oMoStructure.quantity / oMoStructure.quantityPerPallet);
+                }
+                if(oMoStructure.quantityPerPallet === 0 || oMoStructure.quantityPerPallet >= oMoStructure.leftQuantity){
                     oMoStructure.quantityPerPallet = oMoStructure.leftQuantity;
                     oMoStructure.quantityPerPalletMax = 99999999;
                     oMoStructure.quantityPerPalletMin = 1;
                 }else{
                     oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPallet;
                     if(palleteTolerancePlus){
-                        oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMax + this._converTolerance(palleteTolerancePlus);
+                        oMoStructure.quantityPerPalletMax = oMoStructure.quantityPerPalletMax + this._converTolerance(palleteTolerancePlus)*100;
                     }
 
                     if(palleteToleranceMinus){
-                        oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPalletMin - this._converTolerance(palleteToleranceMinus); 
+                        oMoStructure.quantityPerPalletMin = oMoStructure.quantityPerPalletMin - this._converTolerance(palleteToleranceMinus)*100; 
                     }
                 }
                 if(oMoStructure.materialNumber){
@@ -187,6 +194,7 @@ sap.ui.define([
                    oMoStructure.thickness = oMaterial.getThickness();
                    oMoStructure.salesText = oMaterial.getSalesText("PL");
                 }
+                
                 oReturn.push(oMoStructure);
             }
             return oReturn;
@@ -215,6 +223,8 @@ sap.ui.define([
                 quantityPerPallet: 0,
                 quantityPerPalletMax: 0,
                 quantityPerPalletMin: 0,
+                plannedReceipts: 0,
+                executedReceipts: 0,
                 salesOrderItemQuantity: 0,
                 length: 0,
                 thickness: 0,
@@ -432,7 +442,7 @@ sap.ui.define([
             let lineValues = this.getOrderLineCustomValues(itemNumber);
             let tollerancePlus = lineValues.find(line=>{ return line.field_name === "ZZVERP_TOL+" });
             if(tollerancePlus){
-                result = this._converTolerance(tollerancePlus.field_value);
+                result = this._converTolerance(tollerancePlus.field_value) * 100;
             }
             return result; 
 
@@ -442,7 +452,7 @@ sap.ui.define([
             let lineValues = this.getOrderLineCustomValues(itemNumber);
             let tolleranceMinus = lineValues.find(line=>{ return line.field_name === "ZZVERP_TOL-" });
             if(tolleranceMinus){
-                result = this._converTolerance(tolleranceMinus.field_value);
+                result = this._converTolerance(tolleranceMinus.field_value) * 100;
             }
             return result; 
         },
@@ -483,7 +493,30 @@ sap.ui.define([
         },
         getOrderNumber: function(){
             return this._oDetails.order;
+        },
+        getScrapingMaterial: function(itemNumber){
+            let lineValues = this.getOrderLineCustomValues(itemNumber);
+            let scrapingMaterial = lineValues.find(line=>{ return line.field_name === "SCRAP_INTERIM" });
+
+            if(!scrapingMaterial){
+                this._errorHandler.throwErrorPopup("error.q23.noScrapingMaterial");
+            }else{
+
+                return parseInt(scrapingMaterial.field_value); 
+            }           
+        },
+        getPackagingMaterial: function(itemNumber){
+            let lineValues = this.getOrderLineCustomValues(itemNumber);
+            let packagingMaterial = lineValues.find(line=>{ return line.field_name === "SCRAP_PACKAGING" });
+
+            if(!packagingMaterial){
+                this._errorHandler.throwErrorPopup("error.q23.noPackagingMaterial");
+            }else{
+
+                return parseInt(packagingMaterial.field_value); 
+            }           
         }
+
         
     });
 });

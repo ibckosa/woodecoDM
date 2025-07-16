@@ -104,12 +104,15 @@ sap.ui.define([
             this._oResource = oPodSelectionModel.resource.resource;
             this._oSfc = oFirstSelection.getSfc().getSfc();
             this._operation = oFirstSelection.getSfcData().getOperation();
+            this._routing = oFirstSelection.getSfcData().getRouting();
+            this._routingVersion = oFirstSelection.getSfcData().getRoutingVersion();
+
         },
         _loadDataSO: async function(){
             let oReturn = [];
             let oSfcs = this._oOrder.getSfcs();
             debugger;
-            let sfcCollectionData = await SfcDataCollectionReader.readCollections(this, this._oPlant, oSfcs);
+            let sfcCollectionData = await SfcDataCollectionReader.readCollections(this, this._oPlant, oSfcs, this._operation, true, false, this._routing, this._routingVersion );
 
             sfcCollectionData = sfcCollectionData.filter(collection => { 
                 
@@ -245,7 +248,8 @@ sap.ui.define([
             //     }
             // }
             debugger;
-            let sfcCollectionData = await SfcDataCollectionReader.readCollections(this, this._oPlant, [this._oSfc]);
+            let oSfcs = this._oOrder.getSfcs();
+            let sfcCollectionData = await SfcDataCollectionReader.readCollections(this, this._oPlant, oSfcs, this._operation, true, false, this._routing, this._routingVersion);
 
             for(const collection of sfcCollectionData){
                 collection.confText = "";
@@ -383,7 +387,7 @@ sap.ui.define([
             try{
                 debugger;
                 const selectedItem = event.getSource().getParent().getBindingContext("stornoModel").getObject();
-                let sfcMovementReverse = new SfcMovementReverse(this, this._oPlant, this._oWorkCenter, this._oResource, selectedItem, this._oOrderNumber, this._oSfc);
+                let sfcMovementReverse = new SfcMovementReverse(this, this._oPlant, this._oWorkCenter, this._oResource, selectedItem, this._oOrderNumber, this._oSfc, this._routing, this._routingVersion);
                 await sfcMovementReverse.execute();
                 await this._loadData();
             }catch(error){

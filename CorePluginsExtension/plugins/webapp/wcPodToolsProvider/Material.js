@@ -1,8 +1,9 @@
 sap.ui.define([
     "sap/ui/base/Object",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
-    "ibc/dm/plugins/wcPodToolsProvider/SmartEditGraphicRepository"
-], function (Object, TextHandler, SmartEditGraphicRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/SmartEditGraphicRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
+], function (Object, TextHandler, SmartEditGraphicRepository, ErrorHandler) {
     "use strict";
     const decorFrontName =  "";
     return Object.extend("ibc.dm.plugins.wcPodToolsProvider.Material", {
@@ -38,6 +39,7 @@ sap.ui.define([
             this._oMaterialNumber = oMaterialNumber;
             this._oPlant = oPlant;
             this._oTextHandler = new TextHandler();
+            this._errorHandler = new ErrorHandler(this._oController);
         },
         readData: async function(){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "material/v1/materials";
@@ -171,6 +173,28 @@ sap.ui.define([
             }catch(oError){}
 
             return oReturn;
+        },
+        getScrapingMaterial(){
+           // this._oPlant = oPlant;
+            let fieldName = '';
+
+            switch(this._oPlant){
+                case '4100':
+                    fieldName = 'SCRAP_INTERIM_GR';
+                    break;
+                case '4200':
+                    fieldName = 'SCRAP_INTERIM_GR1';
+                    break;
+                case '4300':
+                    fieldName = 'SCRAP_INTERIM_WI';
+                    break;
+            }
+
+            let scrapMaterial = this._oDetails.customValues.find(customValue => { return customValue.attribute === fieldName });
+            if(!scrapMaterial){
+                this._errorHandler.throwErrorPopup("error.q23.noScrapingMaterial");
+            }
+            return toString(parseInt(scrapMaterial.value));
         }
     });
 });

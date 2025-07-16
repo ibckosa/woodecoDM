@@ -12,8 +12,9 @@ sap.ui.define([
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator"
-], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator) {
+    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
+    "ibc/dm/plugins/wcPodToolsProvider/CompleteOrder"
+], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator, CompleteOrder) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceipt", {
         constructor: function(oController, oReceiptParameters){
@@ -41,7 +42,7 @@ sap.ui.define([
             let oSingleOperationSfc = true;
             let oLastOperation = false;
             let oMultiNumberPalletes = (this._oReceiptParameters.palletesNumber > 1 || this._oReceiptParameters.packageNumber > 1);
-            this._oSfc = await SfcRepository.readSfcApi(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc);
+            this._oSfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc, this._oReceiptParameters.routing, this._oReceiptParameters.routingVersion);
             this._oOrder = await OrderRepository.readOrder(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.order);
             this._oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.material);
             this._fillMissingParameters();
@@ -78,7 +79,7 @@ sap.ui.define([
             
             
             this._reloadQ1Plugin = true;
-            this._refreshPod();
+            this._refreshPod(oSingleOperationSfc, oLastOperation);
 
             
         },
@@ -94,7 +95,7 @@ sap.ui.define([
             let oStorageLocation = await this._getStorageLocation();
             if(oStorageLocation.isEWMManagedStorageLocation){
                 if(this._oReceiptParameters.quantity < oSfcStep.quantityInWork){
-                    await this._splitSfc(oIssuesManager);
+                    await this._splitSfc(oIssuesManager, true);
                 }
             }else{
                 await this._checkRequiredParams();
@@ -125,7 +126,7 @@ sap.ui.define([
             let oStorageLocation = await this._getStorageLocation();
             if(oStorageLocation.isEWMManagedStorageLocation){
                 if(this._oReceiptParameters.quantity < oSfcStep.quantityInWork){
-                    await this._splitSfc(oIssuesManager);
+                    await this._splitSfc(oIssuesManager, true);
                 }
             }else{
                 await this._checkRequiredParams();
@@ -238,16 +239,17 @@ sap.ui.define([
 
             });
         },
-        _splitSfc: async function(oIssuesManager){
-            let oNewSfc = await this._execeuteSplitSfc();
+        _splitSfc: async function(oIssuesManager, allowOverProduction = false){
+            let oNewSfc = await this._execeuteSplitSfc(allowOverProduction);
             this._oReceiptParameters.sfc = oNewSfc;
             oIssuesManager.changeSfcNumber(this._oReceiptParameters.sfc);
         },
-        _execeuteSplitSfc: async function(){
+        _execeuteSplitSfc: async function(allowOverProduction){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/split";
             let oRequestParameters = {
                 plant: this._oReceiptParameters.plant,
                 sfc: this._oReceiptParameters.sfc,
+                allowOverproduction: allowOverProduction,
                 newSfcs: [{quantity: this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber }] };
 
             return await new Promise((resolve,reject)=>{
@@ -401,9 +403,25 @@ sap.ui.define([
         _executeMmReceipt: async function(){
             ///not implementation needed
         },
-        _refreshPod: function(){
+        _refreshPod: function(isSingleOperation, isLastOperation){
             let oPodSelectionModel = this._oController.getPodSelectionModel();
             if(parseInt(this._oReceiptParameters.quantity * this._oReceiptParameters.palletesNumber) >= parseInt(this._oReceiptParameters.sfcQuantity)){
+                if(!isSingleOperation && isLastOperation){
+                    let completeOrder = new CompleteOrder(this._oController,
+                        {
+                            workCenter: this._oReceiptParameters.workCenter,
+                            resource: this._oReceiptParameters.resource,
+                            plant: this._oReceiptParameters.plant,
+                            order: this._oReceiptParameters.order,
+                            operation: this._oReceiptParameters.operationActivity,
+                            sfc: this._oReceiptParameters.sfc,
+                            routing: this._oReceiptParameters.routing,
+                            routingVersion: this._oReceiptParameters.routingVersion
+                        }
+                    )
+                    completeOrder.execute();
+                }
+
                 oPodSelectionModel.setInputValue("");
                 oPodSelectionModel.clearSelections();
 
@@ -429,6 +447,7 @@ sap.ui.define([
             let oSfcsAvailToMerge = oSfcsOrder.filter( sfc=>{ return ( sfc.steps[0].resource === null || sfc.steps[0].resource === this._oReceiptParameters.resource ) && sfc.sfc !== this._oSfc.getSfcNumber() });
 
             for( const sfcMerge of oSfcsAvailToMerge){
+                sfcMerge.steps = sfcMerge.steps.filter(step=>{return step.stepRouting.routing === this._oReceiptParameters.routing && step.stepRouting.version === this._oReceiptParameters.routingVersion;});
                 let oSfcMergeStep = sfcMerge.steps.find( sfcMergeStep => { return sfcMergeStep.operation.operation === this._oReceiptParameters.operationActivity; } );
                 if(!oSfcMergeStep){continue;}
                 let oSfcMergeQuan = oSfcMergeStep.quantityInWork + oSfcMergeStep.quantityInQueue;
@@ -551,7 +570,7 @@ sap.ui.define([
             
             if(oQuantity>oSfcAvailQuan){
                 await this._executeSfcMerge(false);
-            }else{
+            }else if(oQuantity>oSfcStep.quantityInWork){
                 await Sfc.startSfcs(this._oController, this._oReceiptParameters.plant, [this._oSfc.getSfcNumber()], this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource );
             }
 

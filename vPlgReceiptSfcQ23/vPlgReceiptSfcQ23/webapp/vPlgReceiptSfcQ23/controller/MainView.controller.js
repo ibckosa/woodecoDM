@@ -255,7 +255,7 @@ sap.ui.define([
                     await oIssuesManager.prepareIssues();
                 }
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
-                    let oNewSfc = await this._executeSfcSplit(oScrapQuantity,oSfcDetails);
+                    let oNewSfc = await this._executeSfcSplit(oScrapQuantity, oSfcDetails, (!oSfcDetails.multiOperation || !oSfcDetails.lastOperation));
                     oSfcDetails.sfc = oNewSfc;
                     oIssuesManager.changeSfcNumber(oNewSfc);
                 }
@@ -291,8 +291,9 @@ sap.ui.define([
             let aSelection = this.getPodSelectionModel().getSelections()[0];
             let oSfcNumber = aSelection.getSfc().getSfc();
             let oShopOrder = aSelection.getShopOrder().getShopOrder();
-            let oSfc = await SfcRepository.getInstance(this, this.getPodController().getUserPlant(), oSfcNumber);
-            await oSfc.readData();
+            let routing = aSelection.getSfcData().getRouting();
+            let routingVersion = aSelection.getSfcData().getRoutingVersion();
+            let oSfc = await SfcRepository.ReadSfcBypassBuffer(this, this.getPodController().getUserPlant(), oSfcNumber, routing, routingVersion );
             let oStep = oSfc.getStepByOperation(aSelection.getSfcData().getOperation());
             let oSteps = oSfc.getSteps();
             let oLastStep = oSfc.getLastStep();
@@ -418,11 +419,12 @@ sap.ui.define([
                     );
                 });
         },
-        _executeSfcSplit: async function(oScrapQuantity, oSfcDetails){
+        _executeSfcSplit: async function(oScrapQuantity, oSfcDetails, allowOverProduction){
             var sUrl = this.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/split";
             var oRequestParameters = {
                 plant: oSfcDetails.plant,
                 sfc: oSfcDetails.sfc,
+                allowOverproduction: allowOverProduction,
                 newSfcs: [{quantity: oScrapQuantity}] };
 
                 return await new Promise((resolve,reject)=>{
@@ -446,6 +448,10 @@ sap.ui.define([
                     {
                        key: "COMMENTS",
                        value: oComment
+                    },
+                    {
+                        key: "ITEM_NUMBER",
+                        value: "1"
                     }
                  ],
                 plant: oSfcDetails.plant,

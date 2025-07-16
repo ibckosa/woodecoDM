@@ -30,7 +30,7 @@ sap.ui.define([
 
 
         prepareIssue: async function(){
-            await this._oIssueData.palleteQueuesManager.readPalleteQueue(this._oIssueData.plant, this._oIssueData.workCenter, this._oIssueData.resource, this._oIssueData.material);
+            await this._oIssueData.palleteQueuesManager.readPalleteQueue(this._oIssueData.plant, this._oIssueData.workCenter, this._oIssueData.resource, this._oIssueData.material, this._oIssueData.storageLocation);
             this._oPalletes = await this._oIssueData.palleteQueuesManager.getPalletesForIssue( this._oIssueData.plant, 
                                                                                               this._oIssueData.workCenter, 
                                                                                               this._oIssueData.resource, 
@@ -106,7 +106,7 @@ sap.ui.define([
                 "quantity": {
                     "value": oQuantity,
                     "unitOfMeasure": {
-                        "uom": oLine.uom,//As the API does not support UoM yet
+                        "uom": oLine.uom,
                         "internalUom": oLine.uom,
                         "shortText": null,
                         "longText": null,

@@ -64,6 +64,15 @@ sap.ui.define([
             }catch(oError){}
             return oReturn;
         },
+        getMOSelectionMode(){
+            let result = "";
+
+            try{
+                let moSelectionMode = this._oDetails.customValues.find(customValue => { return customValue.attribute === "MO_SELECTION_MODE"});
+                result = moSelectionMode.value;
+            }catch(error){}
+            return result;
+        },
         getPrinterId(errorWhenEmpty = false){
             let oReturn = "";
 
@@ -85,6 +94,29 @@ sap.ui.define([
                 this._oErrorHandler.throwErrorPopup("error.resource.noConsumptionMode");
             }
             return oReturn.toUpperCase();
+        },
+        getParametersHu(){
+            let result = false;
+
+            try{
+                let parametersHu = this._oDetails.customValues.find(customValue => { return customValue.attribute === "PARAMETERS_HU"});
+                result = parametersHu.value === 'X';
+            }catch(oError){}
+
+            return result;
+        },
+        getQ1LabelCopies: function(){
+            let result = 0;
+            try{
+                let q1LabelCopies = this._oDetails.customValues.find(customValue => { return customValue.attribute === "Q1_LABEL_COPIES"});
+                result = parseInt(q1LabelCopies.value);
+                if(result>4){
+                    result = 4;
+                }
+            }catch(oError){}
+
+            return result;
         }
+
     });
 });

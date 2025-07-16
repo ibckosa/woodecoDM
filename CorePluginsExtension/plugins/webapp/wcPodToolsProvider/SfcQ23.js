@@ -6,8 +6,10 @@ sap.ui.define([
     "sap/m/Dialog",
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository"
-], function (ObjectUI5, ErrorHandler, AjaxUtil, TextHandler, Dialog, mobileLibrary, ResourceRepository, OrderRepository
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/Sfc"
+], function (ObjectUI5, ErrorHandler, AjaxUtil, TextHandler, Dialog, mobileLibrary, ResourceRepository, OrderRepository, SfcRepository, Sfc
 ) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcQ23", {
@@ -33,6 +35,8 @@ sap.ui.define([
             //resourceReasonCode
             //oeeCode
             //uom
+            //routing
+            //routingVersion
 
         },
 
@@ -42,17 +46,21 @@ sap.ui.define([
         executeMO: async function(){
             this._oResource = await ResourceRepository.getResourceInstance(this._oController, this._oParameters.plant, this._oParameters.resource);
             this._oOrder = await OrderRepository.readOrder(this._oController, this._oParameters.plant, this._oParameters.order);
+            this._sfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oParameters.plant, this._oParameters.sfc, this._oParameters.routing, this._oParameters.routingVersion);
 
             this._executeCheksMO();
+            
             let oComment = await this._getComment(this._oParameters.isCommentRequired);
+
+            this._oParameters.sfc = await Sfc.splitSfc(this._oController, this._oParameters.plant, this._oParameters.sfc , this._oParameters.quantity, true);
             let oNonconformanceId =  await this._logNonconformance(oComment);
 
             if(this._oResource.getNcCodeType() === "Q3"){
                 await this._closeNonconformance(oNonconformanceId);
             }
 
+            
             await this._executeSfcScrap();
-
             await this._saveDataCollection();
 
 
@@ -64,7 +72,7 @@ sap.ui.define([
         
 
         _executeCheksMO: function(){
-            if(this._oParameters.quantity>this._oParameters.quantityInWork){
+            if(this._oParameters.quantity>this._sfc.getQuantityInWork(this._oParameters.operationActivity)){
                 this._oErrorHandler.throwError("error.q23.sfcNotInWork");
             }
         },
@@ -105,17 +113,26 @@ sap.ui.define([
             });
         },
         _executeSfcScrap: async function(){
-            var sUrl = this._oController.getPublicApiRestDataSourceUri() + "quantityConfirmation/v1/confirm";
+            var sUrl = this._oController.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/scrap";
+            // var oRequestParameters = {
+            //     plant: this._oParameters.plant,
+            //     shopOrder: this._oParameters.order,
+            //     sfc: this._oParameters.sfc,
+            //     operationActivity: this._oParameters.operationActivity,
+            //     scrapQuantity: this._oParameters.quantity,
+            //     scrapQuantityUnit: this._oOrder.getInternalUom(),
+            //     workCenter: this._oParameters.workCenter,
+            //     reasonCodeKey: this._oParameters.resourceReasonCode
+            // }
             var oRequestParameters = {
                 plant: this._oParameters.plant,
-                shopOrder: this._oParameters.order,
-                sfc: this._oParameters.sfc,
-                operationActivity: this._oParameters.operationActivity,
-                scrapQuantity: this._oParameters.quantity,
-                scrapQuantityUnit: this._oOrder.getInternalUom(),
-                workCenter: this._oParameters.workCenter,
+                operation: this._oParameters.operationActivity,
+                quantity: this._oParameters.quantity,
+                resource: this._oParameters.resource,
+                sfcs: [ this._oParameters.sfc ],
                 reasonCodeKey: this._oParameters.resourceReasonCode
-            }
+            };
+
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPostRequest(sUrl, oRequestParameters,
                     oResponseData => {
@@ -153,7 +170,11 @@ sap.ui.define([
                     {
                        key: "COMMENTS",
                        value: oComment
-                    }
+                    },
+                    {
+                        key: "ITEM_NUMBER",
+                        value: this._oParameters.itemNumber
+                     }
                  ],
                 plant: this._oParameters.plant,
                 workCenter: this._oParameters.workCenter,

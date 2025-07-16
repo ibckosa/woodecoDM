@@ -168,7 +168,6 @@ sap.ui.define([
         
                 var oMdl = oTable.getModel();
                 var oMdlData = oTable.getModel().getData();
-                debugger;
                 
                 var iItemsLength = oTable.getItems().length;
 
@@ -281,8 +280,7 @@ sap.ui.define([
                         var oCell = item.getCells();
                         try{
                             
-                            debugger;
-                        }catch(oErr){debugger;}
+                        }catch(oErr){}
 
                         if(oBomComponent&&oBomComponent.componentType.toUpperCase() !== "NORMAL"){
                             item.setVisible(false);
@@ -305,6 +303,7 @@ sap.ui.define([
                                         );
                                         cell.getContent()[1].setText(that._oTextHandler.getText("labels.component.buttonConsume"));
                                         cell.getContent()[1].attachPress(that._onPaletteQueuePress.bind(that));
+                                        cell.getContent()[0].setVisible(false);
                                     }
                                 } catch (error) {
                                         
@@ -355,11 +354,9 @@ sap.ui.define([
                         resolve(oShopOrder.bomComponents);
                     }else{
                         oModel.setProperty("/shopOrder",{shopOrder: oParameters.shopOrder, bomComponents: [], itemsLength: iItemsLength });
-                        debugger;
                         oPodController.ajaxGetRequest("../sapdmdmepod/dme/demand-ms/shopOrders", oParameters,
                             function (oResponseData) {
                                 var sUrlTemp =  "../sapdmdmepod/dme/demand-ms/shopOrders/" + oResponseData._embedded.shopOrders[0].id + "/bomComponents?pageSize=20&page=";
-                                debugger;
                                 var oRequest = new Promise((resolve,reject)=>{
                                     var iCurrentPage = 0;
                                     var aBomComponents = [];
@@ -399,7 +396,6 @@ sap.ui.define([
                                     } catch (error) {
                                             
                                     }
-                                    debugger;
                                     resolve(bomComponents);
                                 });
                             }
@@ -415,8 +411,8 @@ sap.ui.define([
         }            
         },
         _onPaletteQueuePress: function(oEvent){
-            debugger;
             let oLine = oEvent.getSource().getBindingContext().getObject();
+            debugger;
             try{
                 let oPodSelectionModel = this.getController().getPodSelectionModel();
                 let oSelection = oPodSelectionModel.getSelections()[0];

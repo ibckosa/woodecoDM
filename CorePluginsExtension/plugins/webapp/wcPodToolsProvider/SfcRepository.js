@@ -9,15 +9,17 @@ sap.ui.define([
     });
     oSfcRepository._oSfcs = [];
 
-    oSfcRepository.getInstance =  async function(oController, oPlant, oSfcNumber ){
+    oSfcRepository.getInstance =  async function(oController, oPlant, oSfcNumber, routing, routingVersion){
         let oSfc;
         
-        let oSfcRepo = oSfcRepository._oSfcs.find(sfc=>{ return sfc.plant === oPlant && sfc.sfcNumber === oSfcNumber  });
+        let oSfcRepo = oSfcRepository._oSfcs.find(sfc=>{ return sfc.plant === oPlant && sfc.sfcNumber === oSfcNumber && routing === routing &&  routingVersion === routingVersion });
         if(!oSfcRepo){
-            oSfc = await this.readSfcApi(oController, oPlant, oSfcNumber);
+            oSfc = await this.readSfcApi(oController, oPlant, oSfcNumber, routing, routingVersion);
             oSfcRepository._oSfcs.push({
              plant: oPlant,
              sfcNumber: oSfcNumber,
+             routing: routing,
+             routingVersion: routingVersion,
              instance: oSfc
             });
         }else{
@@ -27,14 +29,22 @@ sap.ui.define([
         return oSfc;
     };
 
-    oSfcRepository.readSfcApi = async function(oController, oPlant, oSfcNumber){
-        let oSfc = new Sfc(oController, oPlant, oSfcNumber);
+    oSfcRepository.readSfcApi = async function(oController, oPlant, oSfcNumber, routing, routingVersion){
+        let oSfc = new Sfc(oController, oPlant, oSfcNumber, routing, routingVersion);
         await oSfc.readData();
         return oSfc;
     };
 
-    oSfcRepository.ReadSfcBypassBuffer = async function(oController, oPlant, oSfcNumber ){
-        return await this.readSfcApi(oController, oPlant, oSfcNumber);
+    oSfcRepository.ReadSfcBypassBuffer = async function(oController, oPlant, oSfcNumber, routing, routingVersion, raiseErrorNotFound){
+        if(raiseErrorNotFound){
+            return await this.readSfcApi(oController, oPlant, oSfcNumber, routing, routingVersion);
+        }else{
+            try{
+                let sfcInstance = await this.readSfcApi(oController, oPlant, oSfcNumber, routing, routingVersion);
+                return sfcInstance;
+            }catch(error){}
+        }
+        
     };
 
     oSfcRepository.readSfcForOrderApi = async function(oController, oPlant, oOrderNumber, oWorkCenterNumber){
@@ -54,6 +64,15 @@ sap.ui.define([
                 }   
             );
         });
+    };
+    oSfcRepository.getSfcsInstances = async function(controller, plant, sfcs, routing, routingVersion){
+        let sfcsDetailsPromises = [];
+        for(const sfc of sfcs){
+            sfcsDetailsPromises.push(this.ReadSfcBypassBuffer(controller, plant, sfc, routing, routingVersion)); 
+        }
+
+        let sfcsInstances = await Promise.all(sfcsDetailsPromises);
+        return sfcsInstances;
     };
 
 

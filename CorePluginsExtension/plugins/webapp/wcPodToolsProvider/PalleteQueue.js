@@ -13,7 +13,7 @@ sap.ui.define([
             this._oResourceNumber = oResourceNumber;
             this._oWorkCenter = oWorkCenter;
         },
-        setReadForOrderPosition: function(oOrder,oSequence,oMaterial,oStorageLocation){
+        setReadForOrderPosition: function(oOrder, oSequence, oMaterial, oStorageLocation){
             this._isReadForOrderPosition = true;
 
             this._oAdditionalData = { order : oOrder,
@@ -23,13 +23,13 @@ sap.ui.define([
             };
 
         },
-        setReadForQueueManager: function(oMaterial){
+        setReadForQueueManager: function(oMaterial, storageLocation){
             this._isReadForQueueManager = true;
 
             this._oAdditionalData = { order : "",
                                       sequence: "",
                                       material: oMaterial,
-                                      storageMaterial: ""
+                                      storageMaterial: storageLocation
             };
 
         },
@@ -79,6 +79,7 @@ sap.ui.define([
 
             if(this._isReadForOrderPosition === true || this._isReadForQueueManager === true ){
                 oParameters.material = this._oAdditionalData.material;
+                oParameters.storageLocation = this._oAdditionalData.storageMaterial;
             }
 
             return oParameters;

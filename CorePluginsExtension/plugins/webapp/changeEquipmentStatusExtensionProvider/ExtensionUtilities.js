@@ -229,6 +229,7 @@ sap.ui.define([
             // debugger;
         },
         _onItemsLoad: function(oEvent){
+            
             try{
                 debugger;
                 let oList = oEvent.getSource();
@@ -241,39 +242,39 @@ sap.ui.define([
                 // oFilters.push(new sap.ui.model.Filter("status", sap.ui.model.FilterOperator.EQ, "301"));
                 // oBinding.filter(oFilters);
                 // oBinding.refresh();
-                let oStatusFormatter = StatusFormatter;
-                try{
-                    StatusFormatter.aResourceStatusKeys = [
-                        "ENABLED",
-                        "DISABLED",
-                        "PRODUCTIVE",
-                        "SCHEDULED_DOWN",
-                        "UNSCHEDULED_DOWN",
-                        "UNKNOWN",
-                        "Przezbrojenie"
-                    ];
-                }catch(oError){
+                // let oStatusFormatter = StatusFormatter;
+                // try{
+                //     StatusFormatter.aResourceStatusKeys = [
+                //         "ENABLED",
+                //         "DISABLED",
+                //         "PRODUCTIVE",
+                //         "SCHEDULED_DOWN",
+                //         "UNSCHEDULED_DOWN",
+                //         "UNKNOWN",
+                //         "Przezbrojenie"
+                //     ];
+                // }catch(oError){
 
-                }
+                // }
                 let oModel = oList.getModel();
                 let oModelData = oModel.getData();
                 oModelData = oModelData.filter(data=>{ return data.status === "4" || data.status === "5" || data.status === "301" });
-                let oStatus4 = { ...oModelData.find( data => { return data.status === "4" } ) };
-                if(oStatus4){
-                    oStatus4.statusDescription = "Przezbrojenie";
-                    oStatus4.status = "99";
-                    oModelData.push(oStatus4);
-                }
+                // let oStatus4 = { ...oModelData.find( data => { return data.status === "4" } ) };
+                // if(oStatus4){
+                //     oStatus4.statusDescription = "Przezbrojenie";
+                //     oStatus4.status = "99";
+                //     oModelData.push(oStatus4);
+                // }
                 oModel.setData(oModelData);
 
 
                 this._oPluginEventExt.getController().statusList = this._oPluginEventExt.getController().statusList.filter( status => {return status.status === "4" || status.status === "5" || status.status === "301" } );
                 let oStatusList4 =  { ...this._oPluginEventExt.getController().statusList.find( status => {return status.status === "4" } ) };
-                if(oStatusList4){
-                    oStatusList4.statusDescription = "Przezbrojenie";
-                    oStatusList4.status = "99";
-                    this._oPluginEventExt.getController().statusList.push(oStatusList4);
-                }
+                // if(oStatusList4){
+                //     oStatusList4.statusDescription = "Przezbrojenie";
+                //     oStatusList4.status = "99";
+                //     this._oPluginEventExt.getController().statusList.push(oStatusList4);
+                // }
 
                 this._oPluginEventExt.getController().oResourceStatus = {
                     0: "UNKNOWN",
@@ -281,8 +282,10 @@ sap.ui.define([
                     301: "ENABLED",
                     302: "DISABLED",
                     4: "SCHEDULED_DOWN",
-                    5: "UNSCHEDULED_DOWN",
-                    99: "Przezbrojenie" }
+                    5: "UNSCHEDULED_DOWN"//,
+                    //99: "Przezbrojenie" 
+                
+                }
 
                 // oModel.setData(oModelData);
             }catch(oError){

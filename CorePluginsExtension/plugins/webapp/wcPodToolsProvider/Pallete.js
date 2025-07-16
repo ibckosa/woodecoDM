@@ -88,7 +88,7 @@ sap.ui.define([
                 CHARGE: oBatchNumber,
                 MATNR: oLine.palleteDetails.material,
                 MATTYP: "PACKAGES",
-                MENGE: parseInt(oLine.quantity),
+                MENGE: parseFloat(oLine.quantity),
                 MENGE_EINH: oLine.uom,
                 END_LIEF: "N",
                 VVDAT: oSapDateTime.sapDate,
@@ -132,9 +132,9 @@ sap.ui.define([
                 LGORT: oLine.storageLocation,
                 HU: oGeneratedHu,
                 CHARGE: oGeneratedHu,
-                MATNR: oLine.palleteDetails.material,
+                MATNR: oLine.packingMaterial,
                 MATTYP: "PACKAGES",
-                MENGE: parseInt(oQuantity),
+                MENGE: parseFloat(oQuantity),
                 MENGE_EINH: oLine.uom,
                 END_LIEF: "N",
                 VVDAT: oSapDateTime.sapDate,
@@ -247,7 +247,7 @@ sap.ui.define([
                 "inventory": oLine.inventoryId, //inventory id
                 "isBomComponent": false, //true or false
                 "quantity": {
-                    "value": oQuantityToReduce,
+                    "value": parseFloat(oQuantityToReduce),
                     "unitOfMeasure": {
                         "uom": oLine.uom,//As the API does not support UoM yet
                         "internalUom": oLine.uom,
@@ -311,8 +311,8 @@ sap.ui.define([
                 "userId": this._oController.getUserId(),
                 "dateTime": this._getIssueDt(),
                 "comments": "ADDITIONAL_ISSUE",
-                "calculatedData": null,
-                "customFieldData":  null
+                "calculatedData": null, 
+                "customFieldData":  JSON.stringify([{"id": "STORAGE_LOCATION", "value": String(oLine.storageLocation) }])
             };
             let issueResponse = await this._additionalIssueCallApi(oRequestParameters);
             await this._saveDataCollection(oLine, oQuantity, oSfc, oOperation, issueResponse);

@@ -39,6 +39,8 @@ sap.ui.define([
             //     sales_item: "",
             //     sales_item_position ""
             //     itemNumberErp
+            //     routing
+            //     routingVersion
             
             //     plant: plant
             //     automaticIssues: false/true
@@ -47,7 +49,7 @@ sap.ui.define([
         executeReceipt: async function(){
 
             this._oOrder = await OrderRepository.readOrderByPassBuffer(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.order);
-            this._oSfc = await SfcRepository.readSfcApi(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc);
+            this._oSfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc, this._oReceiptParameters.routing, this._oReceiptParameters.routingVersion  );
             this._oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.material);
             let _oPrintingEndpoint = this._getPrintingEndPoint();
 
@@ -62,8 +64,13 @@ sap.ui.define([
                 await this._checkConfirmMm();
             }
 
+            let sourceSfc = this._oReceiptParameters.sfc;
+
             for(let i=0; i<this._oReceiptParameters.palletesNumber;i++){
-                await this._executeQuantityConfirmation();
+                this._oReceiptParameters.sfc = await Sfc.splitSfc(this._oController, this._oReceiptParameters.plant, sourceSfc , this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber, true);
+                let sfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc, this._oReceiptParameters.routing, this._oReceiptParameters.routingVersion );
+                await sfc.complete(this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource);
+                //await this._executeQuantityConfirmation();
                 if(oStorageLocation.isEWMManagedStorageLocation === true){
                     await this._executeEwmReceipt();
                 }else{
@@ -76,13 +83,6 @@ sap.ui.define([
             this._refreshPod();
         },
 
-        _getSfcStep: function(){
-            let oSfcStep = this._oSfc.steps.find( step => { return step.operation.operation === this._oReceiptParameters.operationActivity }); 
-            if(oSfcStep){
-                //throw error
-            }
-            return oSfcStep;
-        },
         _generalChecks: async function(){
             if(this._oSfc.getStatusCode() !== "403"){
                 this._oErrorHandler.throwError("errorSfcNotInWork");
@@ -257,18 +257,21 @@ sap.ui.define([
             ///not implementation needed
         },
         _refreshPod: function(){
-            let oPodSelectionModel = this._oController.getPodSelectionModel();
-            if(parseInt(this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber * this._oReceiptParameters.palletesNumber) >= parseInt(this._oReceiptParameters.sfcQuantity)){
-                oPodSelectionModel.setInputValue("");
-                oPodSelectionModel.clearSelections();
+            // let oPodSelectionModel = this._oController.getPodSelectionModel();
+            // if(parseInt(this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber * this._oReceiptParameters.palletesNumber) >= parseInt(this._oReceiptParameters.sfcQuantity)){
+            //     oPodSelectionModel.setInputValue("");
+            //     oPodSelectionModel.clearSelections();
 
-                this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-                this._oController.onClosePress();
-                this._oController.navigateToMainPage();
-            }else{    
-                this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
-                this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-            }
+            //     this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+            //     this._oController.onClosePress();
+            //     this._oController.navigateToMainPage();
+            // }else{    
+            //     this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
+            //     this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+            // }
+
+            this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
+            this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
         },
         _checkSfcQuantityInWork: function(){
             let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);

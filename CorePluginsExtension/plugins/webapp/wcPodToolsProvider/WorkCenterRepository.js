@@ -10,7 +10,7 @@ sap.ui.define([
     });
     oWorkCenterRepository._oWorkCenters = [];
 
-    oWorkCenterRepository.getInstance =  async function(oController, oPlant, oWorkCenterNumber ){
+    oWorkCenterRepository.getInstance =  async function(oController, oPlant, oWorkCenterNumber ){f
         let oWorkCenter;
         
         let oWorkCenterRepo = this._oWorkCenters.find(workCenter=>{ return workCenter.plant === oPlant && workCenter.workCenterNumber === oWorkCenterNumber  });
@@ -34,8 +34,8 @@ sap.ui.define([
         return oWorkCenter;
     };
 
-    oWorkCenterRepository.ReadWcBypassBuffer() = async function(oController, oPlant, readWorkCenterApi ){
-        return await this.readWorkCenterApi(oController, oPlant, readWorkCenterApi);
+    oWorkCenterRepository.ReadWcBypassBuffer = async function(oController, oPlant, oWorkCenterNumber ){
+        return await this.readWorkCenterApi(oController, oPlant, oWorkCenterNumber);
     }
 
     return oWorkCenterRepository;

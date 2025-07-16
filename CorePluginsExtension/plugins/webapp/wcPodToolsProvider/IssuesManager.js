@@ -30,8 +30,6 @@ sap.ui.define([
         },
 
         prepareIssues: async function(){
-            await this._readOrder();
-            await this._readSfc();
             await this._readIssueComponents();
 
             for(const componentIssue of this._componentsIssue){
@@ -49,15 +47,9 @@ sap.ui.define([
                 //this._createdIssues.concat(componentIssue.getCreatedIssues());
             }
         },
-        _readOrder: function(){
-
-        },
-        _readSfc: function(){
-
-        },
         _readIssueComponents: async function(){
             let oSfcComponents = await SfcComponentsReader.readComponents(this._oController, this._oSfc, this._oOperationActivity );
-            let oSfc = await SfcRepository.getInstance(this._oController, this._oPlant, this._oSfc);
+            let oSfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oPlant, this._oSfc);
             let oBom = await BomRepository.getInstance(this._oController, this._oPlant, oSfc.getBom().bom, oSfc.getBom().type);
             await oSfc.readData();
             let oBomComponents = oBom.getComponents();

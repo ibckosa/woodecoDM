@@ -10,7 +10,7 @@ sap.ui.define([
             this._oErrorHandler = new ErrorHandler(oController);
             this._oQueue = [];
         },
-        readPalleteQueue: async function(oPlant, oWorkCenter, oResource, oMaterial){
+        readPalleteQueue: async function(oPlant, oWorkCenter, oResource, oMaterial, storageLocation){
 
             let oQueue = this._oQueue.find( queue => {return queue.plant === oPlant &&
                                                              queue.workCenter === oWorkCenter &&
@@ -18,7 +18,7 @@ sap.ui.define([
                                                              queue.material === oMaterial });
             if(!oQueue){
                 let oPalleteQueue = new PalleteQueue(this._oController, oPlant, oResource, oWorkCenter);
-                oPalleteQueue.setReadForQueueManager(oMaterial);
+                oPalleteQueue.setReadForQueueManager(oMaterial, storageLocation);
     
                 this._oQueue.push({
                     plant: oPlant,

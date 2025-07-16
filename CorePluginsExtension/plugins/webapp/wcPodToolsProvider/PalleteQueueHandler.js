@@ -58,7 +58,7 @@ sap.ui.define([
                 this._rejectLogDialog = reject;
                 
                 if (!this._oDialogLog) {
-                    let oVBox = new VBox({ alignItems: "Center", height: "50rem", width: "112rem" });
+                    let oVBox = new VBox({ alignItems: "Center", height: "45rem", width: "100rem" });
                     let oTableLog = this._getTableLog();
                     let oActionButtons = this._getActionButtons();
                     oVBox.addItem(oTableLog);
@@ -123,7 +123,7 @@ sap.ui.define([
         },
 
         _getTableLog: function () {
-            let oPanel = new Panel({ height: "45rem", width: "112rem" });
+            let oPanel = new Panel({ height: "38rem", width: "100rem" });
             let oColumns = this._getColumns();
 
 
@@ -230,7 +230,7 @@ sap.ui.define([
 
             let oPalleteQueue = new PalleteQueue(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource, this._oHandlerData.workCenter);
             if(this._oMode === "COMPONENT"){
-                oPalleteQueue.setReadForOrderPosition(this._oHandlerData.order,this._oHandlerData.sequence,this._oHandlerData.material,this._oHandlerData.storageLocation);
+                oPalleteQueue.setReadForOrderPosition(this._oHandlerData.order, this._oHandlerData.sequence,this._oHandlerData.material, this._oHandlerData.storageLocation);
             }
 
             let oLogData = { items: [] };
@@ -306,6 +306,9 @@ sap.ui.define([
                 let oDummyOrderSfc = this._getDummyOrderSfc();
                 let oZweiEndpoint = this._getZweiEndpoint();
                 let oItem = this._getSelectedItem();
+                let oMaterial = await MaterialRepository.getMaterialInstance(this._oPluginViewController, oItem.plant, oItem.materialId);
+                oItem.scrapingMaterial = oMaterial.getScrapingMaterial();
+
                 let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
                 let oPrinter = await this._getPrinter();
                 let oPallete  = new Palette(this._oPluginViewController);
@@ -498,14 +501,21 @@ sap.ui.define([
         },
         _executeLabelPrint: async function(oItem, oEndpoint, oPrinter){
             let oPrintingDetails = {};
-            let oMaterial = await MaterialRepository.getMaterialInstance(this._oPluginViewController, oItem.plant, oItem.materialId);
+            
+            if(oItem.scrapingMaterial){
+                oPrintingDetails.material = oItem.scrapingMaterial;
+            }else{
+                oPrintingDetails.material = oItem.materialId;
+            }
+
+            let oMaterial = await MaterialRepository.getMaterialInstance(this._oPluginViewController, oItem.plant, oPrintingDetails.material);
             oPrintingDetails.endpoint = oEndpoint;
             oPrintingDetails.plant  = oItem.plant;
             oPrintingDetails.order = undefined;
             oPrintingDetails.workCenter = oItem.workCenter;
             oPrintingDetails.resource = oItem.resource;
             oPrintingDetails.sfc = undefined;
-            oPrintingDetails.material = oItem.materialId;
+            
             oPrintingDetails.HU = oItem.handlingUnit;
             oPrintingDetails.orderLineCustomValues = [];
             oPrintingDetails.orderCustomValues = [];

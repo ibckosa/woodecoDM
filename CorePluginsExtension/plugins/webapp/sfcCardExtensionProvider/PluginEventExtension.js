@@ -182,8 +182,9 @@ sap.ui.define([
                 let oTotalOrderQuan = 0;
                 let oDoneOrderQuan = 0;
 
-                let dataCollections = await SfcDataCollectionReader.readCollections(oController, oPlant, oSfcs, oFirstSelection.getSfcData().getOperation(), false, true);
+                let dataCollections = await SfcDataCollectionReader.readCollections(oController, oPlant, oSfcs, oFirstSelection.getSfcData().getOperation(), false, true, oFirstSelection.getSfcData().getRouting(), oFirstSelection.getSfcData().getRoutingVersion());
                 oTotalOrderQuan = oOrderData.productionQuantity;
+                
                 // for(const sfcInstance of oSfcsInstances){
                 //     oTotalOrderQuan = oTotalOrderQuan + sfcInstance.getTotalQuan(oFirstSelection.getSfcData().getOperation());
                 //     //oDoneOrderQuan = oDoneOrderQuan + sfcInstance.getDoneQuanOfOperation(oFirstSelection.getSfcData().getOperation());
