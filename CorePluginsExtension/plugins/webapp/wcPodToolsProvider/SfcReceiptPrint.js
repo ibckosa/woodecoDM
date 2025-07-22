@@ -246,7 +246,9 @@ sap.ui.define([
                                                                 "BR": this._oPrintingInterface.BR,
                                                                 "OPERATION": this._oPrintingInterface.OPERATION,
                                                                 "DESCRIPTION": this._oPrintingInterface.DESCRIPTION,
-                                                                "ZZVERP": this._oPrintingInterface.ZZVERP }  },
+                                                                "ZZVERP": this._oPrintingInterface.ZZVERP,
+                                                                "GS1_BARCODE": this._getGS1Barcode()
+                                                             }  },
                 "document": this._oPrintingInterface.document,
                 "formatParameters": { "fileName": fileName },
                 "printer": this._oPrintingInterface.printer,
@@ -255,6 +257,9 @@ sap.ui.define([
                                           "profile": "Defaults"  }
             };
             return result;
+        },
+        _getGS1Barcode: function(){
+            
         }
     });
 
