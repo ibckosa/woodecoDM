@@ -121,17 +121,15 @@ sap.ui.define([
                 
             }
         },
-        _getCustomData: async function(oController, oPodSelectionModel){
-
-            
+        _getCustomData: async function(oController, oPodSelectionModel){            
             var oFirstSelection = oPodSelectionModel.getSelections()[0];
             if(!oFirstSelection){
                 return;
             }
            // let oGraphic = SmartEditGraphicRepository.getGraphic(oController, "PD3000");
-
             let  sfcCardCustomVisibility = this._getVisibilityStructure();
-
+            let oTotalOrderQuan = 0;
+            let oDoneOrderQuan = 0;
 
             try{
                 var oSfcCardCustom =  { optimizationNumber: "",
@@ -179,8 +177,7 @@ sap.ui.define([
                 let oSteps  = oSfc.getSteps();
                 let oFirstStep = oSteps[0];
                 // let oSfcsInstances = await this._getSfcsInstances(oController, oPlant, oSfcs);
-                let oTotalOrderQuan = 0;
-                let oDoneOrderQuan = 0;
+
 
                 let dataCollections = await SfcDataCollectionReader.readCollections(oController, oPlant, oSfcs, oFirstSelection.getSfcData().getOperation(), false, true, oFirstSelection.getSfcData().getRouting(), oFirstSelection.getSfcData().getRoutingVersion());
                 oTotalOrderQuan = oOrderData.productionQuantity;
@@ -197,14 +194,9 @@ sap.ui.define([
                         oDoneOrderQuan = oDoneOrderQuan + parseInt(dataCollection.QUANTITY);
                     }
                 }
-                OrderReceiptsFromProgressIndicator.setOrderProgress(oOrder, oDoneOrderQuan);
-
                 
-                oSfcCardCustom.decors = await oMaterialInstance.getGraphics();
+                oSfcCardCustom.decors = await oMaterialInstance.getCustomDataGraphics();
 
-                
-
-                
                 if(oTotalOrderQuan>0){
                     oSfcCardCustom.progressIndicatorValue =  oDoneOrderQuan + " z " + oTotalOrderQuan;
                     oSfcCardCustom.percentProgress = parseInt( oDoneOrderQuan / oTotalOrderQuan * 100 ).toString();
@@ -302,45 +294,9 @@ sap.ui.define([
                 oController.getView().setModel(oModel, "customData");
                 oController.getPodController().getView().setModel(oModel, "customData");
                 this.getCoreExtension().getPluginToolbar().setModel(oModel, "customData");
+                OrderReceiptsFromProgressIndicator.setOrderProgress(oOrder, oDoneOrderQuan, oTotalOrderQuan, oModel);
             }catch(oError){}
 
-        },
-        _getOrderData: async function(oController ,oOrder, oPlant){
-            var sUrl = oController.getPublicApiRestDataSourceUri() + "order/v1/orders";
-
-            var oParameters = { order: oOrder,
-                                plant: oPlant };
-            return await new Promise((resolve,reject)=>{
-                oController.ajaxGetRequest(sUrl, oParameters,
-                    function (oResponseData) {
-                        resolve(oResponseData);
-                    },
-                    function (oError, sHttpErrorMessage) {
-                        reject(oError);
-                    }   
-                );
-
-            });
-
-        },
-        _getMaterialData: async function(oController, OPlant, oMaterial, oMaterialVersion){
-            var sUrl = oController.getPublicApiRestDataSourceUri() + "material/v1/materials";
-
-            var oParameters = { plant: OPlant,
-                                material: oMaterial,
-                                materialVersion: oMaterialVersion
-             };
-            return await new Promise((resolve,reject)=>{
-                oController.ajaxGetRequest(sUrl, oParameters,
-                    function (oResponseData) {
-                        resolve(oResponseData);
-                    },
-                    function (oError, sHttpErrorMessage) {
-                        reject(oError);
-                    }   
-                );
-
-            });
         },
         _getFieldConfiguration: function(oController, oOrderInstance){
             let oReturn = this._getVisibilityStructure();

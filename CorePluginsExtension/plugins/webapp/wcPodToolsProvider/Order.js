@@ -502,7 +502,7 @@ sap.ui.define([
                 this._errorHandler.throwErrorPopup("error.q23.noScrapingMaterial");
             }else{
 
-                return parseInt(scrapingMaterial.field_value); 
+                return parseInt(scrapingMaterial.field_value).toString(); 
             }           
         },
         getPackagingMaterial: function(itemNumber){

@@ -51,7 +51,7 @@ sap.ui.define([
             let oSfcComponents = await SfcComponentsReader.readComponents(this._oController, this._oSfc, this._oOperationActivity );
             let oSfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oPlant, this._oSfc);
             let oBom = await BomRepository.getInstance(this._oController, this._oPlant, oSfc.getBom().bom, oSfc.getBom().type);
-            await oSfc.readData();
+            //await oSfc.readData();
             let oBomComponents = oBom.getComponents();
 
             for(const sfcComponent of oSfcComponents){

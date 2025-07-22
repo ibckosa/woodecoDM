@@ -42,11 +42,11 @@ sap.ui.define([
         onBeforeRenderingPlugin: function () {
             // subscribe on POD events
             this.subscribe("PodSelectionChangeEvent", this.onPodSelectionChangeEvent, this);
-            this.subscribe("OperationListSelectEvent", this.onOperationChangeEvent, this);
+            //this.subscribe("OperationListSelectEvent", this.onOperationChangeEvent, this);
             this.subscribe("WorklistSelectEvent", this.onWorkListSelectEvent, this);
-            var oConfig = this.getConfiguration();
+            //var oConfig = this.getConfiguration();
             // check if close icon should be displayed
-            this.configureNavigationButtons(oConfig); 
+           // this.configureNavigationButtons(oConfig); 
             //this.getView().setBusy(true);
             //debugger;
         },
@@ -57,27 +57,30 @@ sap.ui.define([
             }
             // unsubscribe from POD events on exit
             this.unsubscribe("PodSelectionChangeEvent", this.onPodSelectionChangeEvent, this);
-            this.unsubscribe("OperationListSelectEvent", this.onOperationChangeEvent, this);
+            //this.unsubscribe("OperationListSelectEvent", this.onOperationChangeEvent, this);
             this.unsubscribe("WorklistSelectEvent", this.onWorkListSelectEvent, this);
         },
 
         onBeforeRendering: async function () {   
             await this.loadModel();
+            debugger;
         },
 
         onAfterRendering: function () {
+            debugger;
         },
 
         onPodSelectionChangeEvent: async function (sChannelId, sEventId, oData) {
             await this.loadModel();
+            debugger;
         },
 
         onOperationChangeEvent: function (sChannelId, sEventId, oData) {
             //this.loadModel();
         },
 
-        onWorkListSelectEvent: function (sChannelId, sEventId, oData) {
-            //this.loadModel();
+        onWorkListSelectEvent: async function (sChannelId, sEventId, oData) {
+            //await this.loadModel();
         },
 
         loadModel: async function () {
@@ -92,7 +95,7 @@ sap.ui.define([
                 if(oFirstSelection.getSfc().getSfc() !== this._oCurrentSfc||this._reloadQ1Plugin || true){
                     this.getView().setBusyIndicatorDelay(0);
                     this.getView().setBusy(true);
-                    await this._setVisibilityOfPalleteNumber();
+                    //await this._setVisibilityOfPalleteNumber();
                     let oCustomQuan = await this._getCustomQuan( oFirstSelection );
                     await this._setInputQuantity(oFirstSelection,oCustomQuan)
                     this._oCurrentSfc = oFirstSelection.getSfc().getSfc();
@@ -151,29 +154,6 @@ sap.ui.define([
             this.getView().getModel().setProperty("/notificationMessage", sMessage);
         },
 
-        addMaterialCustomFields: function (sPlant, sMaterial) {
-            // Populate parameters with plant and material name 
-            var oParameters = {
-                plant: sPlant,
-                material: sMaterial
-            };
-            var sUrl = this.getPublicApiRestDataSourceUri() + "/material/v1/materials";
-            // Ajax GET request to read Material custom fields by using Public API 
-            this.executeAjaxGetRequest(sUrl, oParameters);           
-        },
-
-        executeAjaxGetRequest: function (sUrl, oParameters) {
-            var that = this;
-            this.ajaxGetRequest(sUrl, oParameters,
-                function (oResponseData) {
-                    that.handleResponse(oResponseData);
-                },
-                function (oError, sHttpErrorMessage) {
-                    that.handleError(oError, sHttpErrorMessage);
-                }
-            );
-        },
-
         handleResponse: function (oResponseData) {            
             if (oResponseData && oResponseData.length > 0) {
                 // set customValues data to model property "materialCustomFields"    
@@ -215,9 +195,9 @@ sap.ui.define([
                     sfcQuantity: parseInt(aSelectionFirstRow.getSfcData().getQuantity()),
                     operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
                     workCenter: oPodSelectionModel.workCenter,
-                    palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
+                    numberOfRolls: parseInt(this.byId("inputPalleteQuan").getValue()),
                     printingCopies: parseInt(this.byId("rbg1").getSelectedButton().getText()),
-                    packageNumber: parseInt(this.byId("inputPackageQuan").getValue()),
+                    numberOfPalletes: parseInt(this.byId("inputPackageQuan").getValue()),
                     printer: oResource.getPrinterId(),
                     automaticIssues: oResource.getConsumptionMode(true)==="AUTOMATIC",
                     routing: aSelectionFirstRow.getSfcData().getRouting(),
@@ -226,8 +206,10 @@ sap.ui.define([
                 ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeIssue();
-                    this._reloadQ1Plugin = true;
+                    //this._reloadQ1Plugin = true;
                     this.getView().setBusy(false);
+                    
+                    //await this.loadModel();
 
             }catch(oError){
                 this.getView().setBusy(false);
@@ -250,22 +232,6 @@ sap.ui.define([
                     oCustomquan.value = Number(oPartOfPackingCode); 
                 }
             }
-
-
-            // var sInput = oSelection.getInput();
-            // if (sInput && sInput !== "") {
-            //     var oCustomField = oSelection.getCustomFields();
-            //     var oCustomFieldValue = oCustomField["SHOP_ORDER.ITEM_01"];
-            //     if(oCustomFieldValue!=undefined){ var oCustomFieldValueSplitted = oCustomFieldValue.split("||"); }
-                
-            //     if(oCustomFieldValueSplitted != undefined && oCustomFieldValueSplitted.length>2){
-            //         var oValue = oCustomFieldValueSplitted[2].substring(7,10);
-            //         if(!isNaN(oValue)){
-            //             oCustomquan.isSetted = true;
-            //             oCustomquan.value = Number(oValue); 
-            //         }
-            //     }
-            // }
             return oCustomquan;
         },
         _setInputQuantity: async function(oSelection, oCustomQuan){
@@ -276,8 +242,8 @@ sap.ui.define([
                 sfc: oSelection.getSfc().getSfc(),
                 order: oSelection.getShopOrder().getShopOrder()   
             };
-
-            var oOrderDetails = await this._getShopOrderDetails(oParameters.plant, oParameters.order );
+            let oOrderInstance = await OrderRepository.readOrder(this, oParameters.plant, oParameters.order);
+            var oOrderDetails = oOrderInstance.getDetails();
 
             await this.ajaxGetRequest(sUrl, oParameters,
                 function (oResponseData) {
@@ -288,7 +254,7 @@ sap.ui.define([
                     
                     var oSfcQuanDelivered = 0;
 
-                    modelData.uom = oOrderDetails.oResponse.productionUnitOfMeasureObject.uom;
+                    modelData.uom = oOrderDetails.productionUnitOfMeasureObject.uom;
                     if(modelData.uom === "PC"){modelData.uom = "SZT"};
 
                     var oSfcReceipts = oResponseData.sfcs[0].items;
@@ -315,8 +281,7 @@ sap.ui.define([
                     that.getView().setBusy(false);
                 },
                 function (oError, sHttpErrorMessage) {
-                    that.handleError(oError, sHttpErrorMessage);
-                    that.getView().setBusy(false);
+                    that._oErrorHandler.throwError(oError);
                 }
             );
         },
@@ -327,372 +292,12 @@ sap.ui.define([
                 oEvent.getSource().setValue(newValue);
             }
         },
-        _checkOrderIsEwm: async function(oPlant, oOrder){
-            var oReturn = { isEwmOrder: null ,
-                            storageLocation: "",
-                            oErrorMessage: "",
-                            unitOfMeasure: "",
-                            isError: false };
-            var sUrl = this.getPublicApiRestDataSourceUri() + "/inventory/v1/storageLocations";
-            var that = this;
-            var oOrderDetails = await this._getShopOrderDetails(oPlant, oOrder);
-
-            if(oOrderDetails.isError === true){
-                oReturn.isError = true;
-                oReturn.oErrorMessage = oOrderDetails.oErrorMessage;
-                return oReturn; }
-            
-            if(oOrderDetails.oResponse.putawayStorageLocation === undefined){
-                this._oErrorHandler.throwError("");
-            }
-
-            oReturn.storageLocation = oOrderDetails.oResponse.putawayStorageLocation;
-            oReturn.unitOfMeasure = oOrderDetails.oResponse.baseUnitOfMeasureObject.uom;
-
-            var oParameters = { plant: oPlant,
-                                storageLocation: oOrderDetails.oResponse.putawayStorageLocation };
-
-
-            return await new Promise((resolve,reject)=>{
-                that.ajaxGetRequest(sUrl, oParameters,
-                    function (oResponseData) {
-                        if(oResponseData.content.length > 0)
-                        {
-                            oReturn.isEwmOrder =  oResponseData.content[0].isEWMManagedStorageLocation;
-                        }else{
-                            oReturn.isError = true;
-                        }
-                        resolve(oReturn);
-                    },
-                    function (oError, sHttpErrorMessage) {
-                        reject(oError);
-                    }   
-                );
-
-            });
-
-        },
-        _getShopOrderDetails: async function(oPlant, oOrder){ 
-            var sUrl = this.getPublicApiRestDataSourceUri() + "/order/v1/orders";
-            var that = this;
-            var oReturn = { oResponse: null ,
-                            oErrorMessage: "",
-                            isError: false };
-
-
-            var oParameters = { order: oOrder,
-                                plant: oPlant };
-            return await new Promise((resolve,reject)=>{
-                that.ajaxGetRequest(sUrl, oParameters,
-                    function (oResponseData) {
-                        oReturn.oResponse = oResponseData;
-                        resolve(oReturn);
-                    },
-                    function (oError, sHttpErrorMessage) {
-                        oReturn.isError = true;
-                        oReturn.oErrorMessage = oError.message;
-                        reject(oError);
-                    }   
-                );
-
-            });
-        },
-        
-        _getNextHuNumber: async function(oNextHuNumberParameters){
-            var oReturn = { isError: false,
-                            oErrorMessage: "",
-                            numberHu: ""
-            };
-            
-            var sUrl = this.getPublicApiRestDataSourceUri() + "/numbering/v1/identifiers";
-            var that = this;
-
-            return await new Promise((resolve,reject)=>{
-                that.ajaxPostRequest(sUrl, oNextHuNumberParameters,
-                    function (oResponseData) {
-                        if(oResponseData.identifiers.length>0){
-                            oReturn.numberHu = oResponseData.identifiers[0];
-                        }else{
-                            oReturn.isError = true;
-                            oReturn.oErrorMessage = this._getText("messageGenerateHuError");
-                        }
-                        oReturn.oResponse = oResponseData;
-                        resolve(oReturn);
-                    },
-                    function (oError, sHttpErrorMessage) {
-                        oReturn.isError = true;
-                        oReturn.oErrorMessage = oError.message;
-                        reject(oReturn);
-                    }   
-                );
-
-            });
-
-        },
-        _createHU: async function(oCreateHuResponse){},
-        _executeEwmReceipt: async function(oReceiptParameters){
-            var oReturn = { isError: false,
-                            returnMessage: "" };
-
-
-
-            
-
-            var oNextHuNumberParameters = { plant: oReceiptParameters.plant,
-                                            eventName: "PACKING_UNIT_NUMBER",
-                                            objectsToMatch: {    MATERIAL_NAME: oReceiptParameters.material,
-                                                                 MATERIAL_VERSION : oReceiptParameters.materialVersion,
-                                                                 ORDER_TYPE: "Production" } };
-            var oNextNumberResponse = await this._getNextHuNumber(oNextHuNumberParameters);
-            debugger;
-            if(oNextNumberResponse.isError===true){
-                oReturn.isError = true;
-                oReturn.returnMessage = oNextHuNumberParameters.oErrorMessage;
-                return oReturn;
-            }
-            var sUrl = this.getPackingRestDataSourceUri()  + "packingUnits";
-
-            var oParameters = { carrier: null,
-                                content: [{
-                                    id: null,
-                                    packingUnit: null,
-                                    quantity: oReceiptParameters.quantity,
-                                    sfc: {ref: "SFCBO:"+oReceiptParameters.plant+","+oReceiptParameters.sfc}
-                                }],
-                                currentLocation: null,
-                                material: {ref: "ItemBO:"+oReceiptParameters.plant+",PALETA,A"},
-                                number: oNextNumberResponse.numberHu,
-                                packingType: null,
-                                status: "CLOSED",
-                                workCenterLocation: null };
-            return await new Promise((resolve,reject)=>{
-
-                AjaxUtil.post(sUrl, oParameters,
-                    (oResponseData) => {
-                        oReturn.returnMessage = this._getText("messageReceiptSuccess");
-                        resolve(oReturn);
-
-                    },
-                    (oError, sHttpErrorMessage) => {
-                        reject(oError);
-                    }
-                );
-
-            });
-
-        },
-        _executeMmReceipt: async function(oReceiptParameters){
-            var oReturn = { isError: false,
-                            returnMessage: this._getText("messageReceiptSuccess") };
-
-            return oReturn;
-            var oParameters = {
-                lineItems: [{ material: oReceiptParameters.material,
-                              materialVersion: oReceiptParameters.materialVersion,
-                              quantity: { unitOfMeasure: { commercialUnitOfMeasure: oReceiptParameters.unitOfMeasure,
-                                                           internalUnitOfMeasure: null,
-                                                           isoUnitOfMeasure: null },
-                                        value: oReceiptParameters.quantity
-                              },
-                              requireQuantityToleranceCheck: false,
-                              sfc: oReceiptParameters.sfc,
-                              storageLocation: oReceiptParameters.storageLocation
-                }],
-                order: oReceiptParameters.order,
-                plant: oReceiptParameters.plant
-            };
-            var sUrl = this.getPublicApiRestDataSourceUri() + "/inventory/v1/inventory/erpGoodsReceipts";
-            
-            return await new Promise((resolve,reject)=>{
-                this.ajaxPostRequest(sUrl, oParameters,
-                    function (oResponseData) {
-                        if (typeof oResponseData.order !== 'undefined'){
-                            oReturn.returnMessage = this.getView().getModel("i18n").getResourceBundle().getText("messageReceiptSuccess");
-                        }else{
-                            oReturn.isError = true;
-                            oReturn.returnMessage = this.getView().getModel("i18n").getResourceBundle().getText("messageReceiptError");
-                        }
-                        resolve(oReturn);
-                    }.bind(this),
-                    function (oError, sHttpErrorMessage) {
-                        // oReturn.isError = true;
-                        // oReturn.returnMessage = oError.message;
-                        reject(oError);
-                        // this.handleError(oError, sHttpErrorMessage);
-                    }.bind(this)
-                );
-            });
-
-        },
-        _executeConfirmation: async function(oReceiptParameters){
-            var oReturn = { isError:       false,
-                            returnMessage: "" };
-            var sUrl = this.getPublicApiRestDataSourceUri() + "/quantityConfirmation/v1/confirm";
-            var oRequestParameters = {
-                plant: oReceiptParameters.plant,
-                shopOrder: oReceiptParameters.order,
-                sfc: oReceiptParameters.sfc,
-                operationActivity: oReceiptParameters.operationActivity,
-                yieldQuantity: oReceiptParameters.quantity,
-                yieldQuantityUnit: oReceiptParameters.unitOfMeasure,
-                workCenter: oReceiptParameters.workCenter
-            }
-
-            return await new Promise((resolve,reject)=>{
-                this.ajaxPostRequest(sUrl, oRequestParameters,
-                    function (oResponseData) {
-                        debugger;
-                        oReturn.returnMessage = this._getText("messageConfirmationSuccess");
-                        resolve(oReturn);
-                    }.bind(this),
-                    function (oError, sHttpErrorMessage) {
-                        reject(oError);
-                    }.bind(this)
-                );
-            });
-        },
-        _executeYieldConfirmation: async function(oReceiptParameters){
-            var oReturn = { isError:       false,
-                            returnMessage: "" };
-            var sUrl = this.getSfcExecutionDataSourceUri() + "sfc/complete";
-            var oRequestParameters = {
-                operation: oReceiptParameters.operationActivity,
-                quantity: oReceiptParameters.quantity,
-                resource: oReceiptParameters.workCenter,
-                sfcs: [ oReceiptParameters.sfc ]
-            };
-
-            return await new Promise((resolve,reject)=>{
-                this.ajaxPostRequest(sUrl, oRequestParameters,
-                    function (oResponseData) {
-                        debugger;
-                        oReturn.returnMessage = this._getText("messageConfirmationSuccess");
-                        resolve(oReturn);
-                    }.bind(this),
-                    function (oError, sHttpErrorMessage) {                        
-                        reject(oError);
-                    }.bind(this)
-                );
-            });
-
-        },
-        _getText:  function(oTextId){
-            return this.getView().getModel("i18n").getResourceBundle().getText(oTextId);
-        },
-        _splitSfc: async function(oReceiptParameters){
-            var oReturn = { isError:       false,
-                            newSfc:      "",
-                            returnMessage: "" };
-
-
-            var sUrl = this.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/split";
-            var oRequestParameters = {
-                plant: oReceiptParameters.plant,
-                sfc: oReceiptParameters.sfc,
-                newSfcs: [{quantity: oReceiptParameters.quantity}] };
-
-            return await new Promise((resolve,reject)=>{
-                this.ajaxPostRequest(sUrl, oRequestParameters,
-                    function (oResponseData) {
-                        oReturn.newSfc = oResponseData.newSfcs[0];
-                        resolve(oReturn);
-                    }.bind(this),
-                    function (oError, sHttpErrorMessage) {
-                        debugger;                        
-                        reject(oError);
-                    }.bind(this)
-                );
-            });
-
-        },
-        _checkRequiredParams: async function(oReceiptParameters){
-            var oReturn = { isError:       false,
-                            returnMessage: "" };
-            var sUrl = this.getPublicApiRestDataSourceUri() + "datacollection/v1/uncollectedParameters";
-            var oRequestParameters = {
-                plant: oReceiptParameters.plant,
-                sfc: oReceiptParameters.sfc,
-                operation: oReceiptParameters.operationActivity,
-                resource: oReceiptParameters.resource };
-
-            return await new Promise((resolve,reject)=>{
-                this.ajaxGetRequest(sUrl, oRequestParameters,
-                    function (oResponseData) {
-                        if(oResponseData.uncollectedParams.length>0){
-                            oReturn.isError = true;
-                            oReturn.returnMessage = this._getText("errorCheckRequiredParams");
-                        }
-                        resolve(oReturn);
-                    }.bind(this),
-                    function (oError, sHttpErrorMessage) {
-                        reject(oError);
-                    }.bind(this)
-                );
-            });
-        },
-        _getSfcDetails: async function(oReceiptParameters){
-            var oReturn = { isError: false,
-                returnMessage: "",
-                sfcDetails: {} };
-            var sUrl = this.getPublicApiRestDataSourceUri() + "sfc/v1/sfcdetail";
-            var oRequestParameters = {
-                plant: oReceiptParameters.plant,
-                sfc: oReceiptParameters.sfc };
-
-
-            return await new Promise((resolve,reject)=>{
-                this.ajaxGetRequest(sUrl, oRequestParameters,
-                    function (oResponseData) {
-                        oReturn.sfcDetails = oResponseData;
-                        resolve(oReturn);
-                    }.bind(this),
-                    function (oError, sHttpErrorMessage) {
-                        reject(oError);
-                    }.bind(this)
-                );
-            });
-
-
-        },
-        _checkConfirmMm: async function(oReceiptParameters){
-            
-            return await new Promise((resolve,reject)=>{
-                this._resolveConfirmMm = resolve;
-                if (!this.oApproveDialog) {
-                    this.oApproveDialog = new Dialog({
-                        type: mobileLibrary.DialogType.Message,
-                        title: this._getText("confirmTitle"),
-                        content: new Text({ text: this._getText("confirmQuestion") }),
-                        beginButton: new Button({
-                            type: mobileLibrary.ButtonType.Emphasized,
-                            text: this._getText("answerYes"),
-                            press: async function () {
-                                    let oReturn = {approve: true};
-                                    this.oApproveDialog.close();
-                                    this._resolveConfirmMm(oReturn);
-                            }.bind(this)
-                        }),
-                        endButton: new Button({
-                            text: this._getText("answerNo"),
-                            press: function () {
-                                let oReturn = {approve: false};
-                                this.oApproveDialog.close();
-                                this._resolveConfirmMm(oReturn);
-                            }.bind(this)
-                        })
-                    });
-                }
-
-               this.oApproveDialog.open();
-            });
-        },
         _setVisibilityOfPalleteNumber: async function(){
             this.byId("inputPalleteQuan").setValue("1");
         },
         _setFieldVisibility: async function(){
             try{
                 let oPodSelectionModel = this.getPodSelectionModel();
-                let oWorkCenter = oPodSelectionModel.workCenter;
                 let oResourceNumber = oPodSelectionModel.resource.resource;
 
 
@@ -719,9 +324,11 @@ sap.ui.define([
                     this.byId("inputPalleteQuanLabel").setVisible(true);
                     this.byId("inputPalleteQuan").setVisible(true);
                     this.byId("inputReceiptQuantityLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityLabelRolls"));
+                    this.byId("inputPackageQuanLabel").setText(this._oTextHandler.getText("labels.q1.inputPackageQuan"));
                 }else if(oFunctionalLocation==="3"){
                     this.byId("inputPackageQuan").setVisible(true);
                     this.byId("inputPackageQuanLabel").setVisible(true);
+                    this.byId("inputPackageQuanLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityOfPallet"));
 
                     this.byId("inputPalleteQuanLabel").setVisible(false);
                     this.byId("inputPalleteQuan").setVisible(false);

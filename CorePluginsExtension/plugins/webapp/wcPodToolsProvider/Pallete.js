@@ -1,7 +1,8 @@
 sap.ui.define([
     "sap/ui/base/Object",
-    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
-], function (ManagedObject, ErrorHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository"
+], function (ManagedObject, ErrorHandler, SfcRepository) {
     "use strict";
     let Pallete = ManagedObject.extend("ibc.dm.plugins.wcPodToolsProvider.Pallete", {
         constructor: function(oContoller){
@@ -280,8 +281,10 @@ sap.ui.define([
                 );
             });
         },
-        additionalIssue: async function(oLine, oQuantity, oSfc, oBomRef, oOperation){
+        additionalIssue: async function(oLine, oQuantity, oSfc, oBomRef, oOperation, stepId){
             this._additionalIssueChecks(oLine, oQuantity, oSfc, oBomRef, oOperation);
+            let sfc = await SfcRepository.getInstance(this._oController, oLine.plant, oSfc);
+            let step = sfc.getStepByOperation(oOperation);
             let oRequestParameters = {
                 "shopOrder": oLine.orderNumber,///numer zlecenia
                 "batchId": oSfc, ///SFC
@@ -315,7 +318,7 @@ sap.ui.define([
                 "customFieldData":  JSON.stringify([{"id": "STORAGE_LOCATION", "value": String(oLine.storageLocation) }])
             };
             let issueResponse = await this._additionalIssueCallApi(oRequestParameters);
-            await this._saveDataCollection(oLine, oQuantity, oSfc, oOperation, issueResponse);
+            await this._saveDataCollection(oLine, oQuantity, oSfc, oOperation, issueResponse, step.stepId);
             // let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
             // return await new Promise((resolve,reject)=>{
             //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
@@ -387,9 +390,8 @@ sap.ui.define([
 
             });
         },
-        _saveDataCollection: async function(oLine, oQuantity, oSfc, oOperation, issueResponse){
+        _saveDataCollection: async function(oLine, oQuantity, oSfc, oOperation, issueResponse, stepId){
             let parameterValues = [];
-
             let guid = crypto.randomUUID();
             let date = new Date();
             debugger;
@@ -413,7 +415,7 @@ sap.ui.define([
                                    comment: guid,
                                    value: this._oController.getUserId() });
 
-            let consumptionValue = `txnId:${issueResponse.txnId}||stepId:${issueResponse.stepid}||order:${oLine.orderNumber}||operation:${oOperation}||quantity:${oQuantity}||uom:${oLine.uom}`;
+            let consumptionValue = `txnId:${issueResponse.txnId}||stepId:${stepId}||order:${oLine.orderNumber}||operation:${oOperation}||quantity:${oQuantity}||uom:${oLine.uom}`;
             consumptionValue = consumptionValue + `||handlingUnit:${oLine.handlingUnit}||storageLocation:${oLine.storageLocation}||material:${oLine.materialId}||sfc:${oSfc}`;
             parameterValues.push( {
                 name: `CONSUMPTION`,

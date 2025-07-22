@@ -34,11 +34,13 @@ sap.ui.define([
                 acc[dateCreated].SFC_NUMBER = collectionFromApi.sfcNumber;
                 acc[dateCreated].SFC_STEP = collectionFromApi.sfcStep;
                 if (measureName === 'CONSUMPTION') {
-                  let consumptionConverted = this._convertConsumption(actual);
-                  if (!acc[dateCreated].CONSUMPTION) {
-                    acc[dateCreated].CONSUMPTION = [];
+                  if(actual){
+                    let consumptionConverted = this._convertConsumption(actual);
+                    if (!acc[dateCreated].CONSUMPTION) {
+                      acc[dateCreated].CONSUMPTION = [];
+                    }
+                    acc[dateCreated].CONSUMPTION.push(consumptionConverted); 
                   }
-                  acc[dateCreated].CONSUMPTION.push(consumptionConverted); 
                 } else {
                   acc[dateCreated][measureName] = actual;
                 }

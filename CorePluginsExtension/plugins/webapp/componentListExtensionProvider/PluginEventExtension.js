@@ -250,8 +250,11 @@ sap.ui.define([
                     return oColumn.getId() === "uomCol";
                   });
                 if (!bColumnExists){
-                    var oNewColumn = new Column({ header: new Text({ text: _getText("uomColumnLabel", oPodController)}), id: "uomCol" });
-                    oTable.insertColumn(oNewColumn, oTable.getColumns().length - 1 );  }
+                    let oNewColumn = new Column({ header: new Text({ text: _getText("uomColumnLabel", oPodController)}), id: "uomCol" });
+                    let oIssuedColumn = new Column({ header: new Text({ text: _getText("Issued quantity", oPodController)}), id: "issuedCol" });
+                    oTable.insertColumn(oNewColumn, oTable.getColumns().length - 1 );  
+                    oTable.insertColumn(oIssuedColumn, oTable.getColumns().length - 1 );  
+                }
                 
                 oTable.getItems().forEach(item=>{
                     try {
@@ -259,8 +262,11 @@ sap.ui.define([
                         var itemCompSeq = item.getBindingContext().getObject().componentSequence;
                         var oBomComponent = bomComponents.find((line) => line.sequence == itemCompSeq );
                         if(oTable.getColumns().length > item.getCells().length&&oBomComponent){
-                            //oMdl.setProperty(item.getBindingContextPath()+"/ComponentUom", oBomComponent.componentQuantityCommercialUom);
+                            let itemValues = item.getBindingContext().getObject();
+                            debugger;
+                            let issuedQuan = oBomComponent.componentQuantity - item.getBindingContext().getObject().remainingQuantity;
                             item.insertCell(new Text({ text: oBomComponent.componentQuantityCommercialUom }), item.getCells().length - 1);
+                            item.insertCell(new Text({ text:issuedQuan }), item.getCells().length - 1);
                         }
                         if(oBomComponent){
                             oMdl.setProperty(item.getBindingContextPath()+"/zstorageLocation", oBomComponent.storageLocation);
@@ -276,16 +282,10 @@ sap.ui.define([
                                 oMdl.setProperty(item.getBindingContextPath()+"/buttonVisible",true);
                             }
                         }
-                        
-                        var oCell = item.getCells();
-                        try{
-                            
-                        }catch(oErr){}
 
                         if(oBomComponent&&oBomComponent.componentType.toUpperCase() !== "NORMAL"){
                             item.setVisible(false);
                         }
-                        
                         
                         item.getCells().forEach(cell=>{
                             if(cell.getContent){
@@ -297,7 +297,7 @@ sap.ui.define([
                                                 "buttonVisible", 
                                                 "remainingQuantity"],
                                                 formatter: function(buttonVisible,remainingQuantity){
-                                                    return buttonVisible && remainingQuantity > 0;
+                                                    return buttonVisible;
                                                 }
                                             }
                                         );

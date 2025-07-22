@@ -69,6 +69,10 @@ sap.ui.define([
                 }catch(error){}
             }
 
+            if(this._oPrintingInterface.PEG_ZZMTO==="MTO2"){
+                this._oPrintingInterface.PEG_VBELN = this._oPrintingInterface.PEG_POSNR = this._oPrintingInterface.PEG_KDMAT = this._oPrintingInterface.PEG_NAME1 = this._oPrintingInterface.PEG_BSTNK = "";
+            }
+
             
             this._getSalesText();
             this._convertDescription();
@@ -199,6 +203,12 @@ sap.ui.define([
             return result;
         },
         _getPrintingParameters: function(){
+            let fileName = '';
+            if(this._oPrintingInterface.order){
+                fileName = `${this._oPrintingInterface.order}_${this._oPrintingInterface.HU}`;
+            }else{
+                fileName = `${this._oPrintingInterface.HU}`;
+            }
             let result = { 
                 "dataAcquisitionParameters": { "plant": this._oPrintingInterface.plant,
                                                 "sfc": this._oPrintingInterface.sfc,
@@ -238,7 +248,7 @@ sap.ui.define([
                                                                 "DESCRIPTION": this._oPrintingInterface.DESCRIPTION,
                                                                 "ZZVERP": this._oPrintingInterface.ZZVERP }  },
                 "document": this._oPrintingInterface.document,
-                "formatParameters": { "fileName": "TEST_PRINT2" },
+                "formatParameters": { "fileName": fileName },
                 "printer": this._oPrintingInterface.printer,
                 "sync": true,
                 "transportParameters": { "numberOfCopies": this._oPrintDetails.printingCopies,

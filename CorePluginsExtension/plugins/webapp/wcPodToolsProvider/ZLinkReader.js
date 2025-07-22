@@ -11,7 +11,6 @@ sap.ui.define([
 
     oLinkReader.readLinks = async function (oController, oOrderNumber, oItemNumber = "1") {
         let oReturn = [];
-        debugger;
         try{
             let oPlant = oController.getPodController().getUserPlant();
             let oOrder = await OrderRepository.readOrder(oController, oPlant, oOrderNumber);

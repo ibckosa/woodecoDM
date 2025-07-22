@@ -61,7 +61,7 @@ sap.ui.define([
         },
 
         onPodSelectionChangeEvent: async function (sChannelId, sEventId, oData) {
-            await this._loadData();
+            //await this._loadData();
         },
 
         onOperationChangeEvent: function (sChannelId, sEventId, oData) {
@@ -217,8 +217,6 @@ sap.ui.define([
                             this._oOrderNumberPrevious = "";
                         }
                         await this._loadData();
-
-
                     },1500);
             }catch(oError){
                 this.getView().setBusy(false);

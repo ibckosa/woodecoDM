@@ -6,8 +6,8 @@ modules:
    type: html5
    path: plugins
    parameters:
-      disk-quota: 512M
-      memory: 256M
+      disk-quota: 1024M
+      memory: 1024M
    properties:
         httpHeaders:
         - X-Frame-Options: deny

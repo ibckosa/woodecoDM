@@ -6,8 +6,8 @@ sap.ui.define([
     "sap/ui/layout/VerticalLayout",
     "sap/m/MessageBox",
     "sap/m/ProgressIndicator",
-    
-], function (BaseObject, Button, Label, MessageToast, VerticalLayout, MessageBox, ProgressIndicator) {
+    "ibc/dm/plugins/wcPodToolsProvider/Material"
+], function (BaseObject, Button, Label, MessageToast, VerticalLayout, MessageBox, ProgressIndicator, Material) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.sfcCardExtensionProvider.SfcCardUtility", {
         constructor: function () {
@@ -125,22 +125,6 @@ sap.ui.define([
 		},
 
         addInformationControls: function(oInformationContainer) {
-        //    let oInformationControl = new VerticalLayout();
-        //    oInformationControl.addStyleClass("sapUiNoContentPadding");
-        //    oInformationControl.addStyleClass("sapUiMediumMarginEnd");
-        //    oInformationControl.addStyleClass("sapUiSmallMarginBottom");
-        //    let oLabel = new Label({
-        //        text: "Adam Test",
-        //        tooltip: "Selected Supplier"
-        //    });
-        //    let oLabelData = new Label({
-        //        text: "Adam Test",
-        //        tooltip: "Selected Supplier"
-        //    });
-        //    oInformationControl.addContent(oLabel);
-        //    oInformationControl.addContent(oLabelData);
-        //    oInformationContainer.addItem(oInformationControl);
-        //    this.oChildControls[oInformationContainer.getId()] = oInformationControl;
             this._addInformationTextField(oInformationContainer, "optimizationNumber");
             this._addInformationTextField(oInformationContainer, "recipeNumber");
             this._addInformationTextField(oInformationContainer, "blockNumber");
@@ -251,86 +235,87 @@ sap.ui.define([
             oInformationContainer.addItem(oInformationControl);
             this.oChildControls[oInformationContainer.getId()] = oInformationControl;
         },
-        onDekorButton: function(oEvent){
+        onDekorButton: async function(oEvent){
             let oModelData = this.getController().getView().getModel("customData").getData();
-            let oGraphicToDisplay = oModelData.sfcCardCustom.decors;
+            //let oGraphicToDisplay = oModelData.sfcCardCustom.decors;
+            let oGraphicToDisplay = await Material.getGraphicLinkFromCustomData(oModelData.sfcCardCustom.decors, this.getController());
             if(oGraphicToDisplay.length < 1) return;
 
-const aImageBoxes = oGraphicToDisplay.map(oGraphic => {
-    let Swidth;
-    switch (oGraphicToDisplay.length) {
-        case 1:
-            Swidth = "50vw";
-            break;
-        case 2:
-            Swidth = "25vw";
-            break;
-        case 3:
-            Swidth = "16vw";
-            break;
-        case 4:
-            Swidth = "12vw";
-            break;
-        case 5:
-            Swidth = "18vw";
-            break;
-        case 6:
-            Swidth = "15vw";
-            break;
-        case 7:
-            Swidth = "12.75vw";
-            break;
-        case 8:
-            Swidth = "11vw";
-            break;
-        default:
-            Swidth = "20vw"; 
-    }
-    return new sap.m.VBox({
-        items: [
-            new sap.m.Image({
-                src: oGraphic.graphicUrl,
-                decorative: false,
-                alt: oGraphic.graphicName,
-                width: Swidth, 
-                height: "80vh", 
-          }),
-            new sap.m.Text({
-                text: oGraphic.graphicName,
-                textAlign: "Center"
-            })
-        ],
-        alignItems: "Center"
-    });
-});
+            const aImageBoxes = oGraphicToDisplay.map(oGraphic => {
+                let Swidth;
+                switch (oGraphicToDisplay.length) {
+                    case 1:
+                        Swidth = "50vw";
+                        break;
+                    case 2:
+                        Swidth = "25vw";
+                        break;
+                    case 3:
+                        Swidth = "16vw";
+                        break;
+                    case 4:
+                        Swidth = "12vw";
+                        break;
+                    case 5:
+                        Swidth = "18vw";
+                        break;
+                    case 6:
+                        Swidth = "15vw";
+                        break;
+                    case 7:
+                        Swidth = "12.75vw";
+                        break;
+                    case 8:
+                        Swidth = "11vw";
+                        break;
+                    default:
+                        Swidth = "20vw"; 
+                }
+                return new sap.m.VBox({
+                    items: [
+                        new sap.m.Image({
+                            src: oGraphic.graphicUrl,
+                            decorative: false,
+                            alt: oGraphic.graphicName,
+                            width: Swidth, 
+                            height: "80vh", 
+                    }),
+                        new sap.m.Text({
+                            text: oGraphic.graphicName,
+                            textAlign: "Center"
+                        })
+                    ],
+                    alignItems: "Center"
+                });
+            });
 
-// FlexBox jako kontener dla VBoxów z obrazkami i podpisami
-const oFlexBox = new sap.m.FlexBox({
-    items: aImageBoxes,
-    direction: "Row",
-    wrap: "Wrap",
-    justifyContent: "Center"
-});
+            // FlexBox jako kontener dla VBoxów z obrazkami i podpisami
+            const oFlexBox = new sap.m.FlexBox({
+                items: aImageBoxes,
+                direction: "Row",
+                wrap: "Wrap",
+                justifyContent: "Center"
+            });
 
-// Dialog (popup)
-const oDialog = new sap.m.Dialog({
-    title: "Podgląd grafik",
-    contentWidth: "50vw", // Szerokość okna dialogowego
-    contentHeight: "auto",
-    content: [oFlexBox],
-    beginButton: new sap.m.Button({
-        text: "Zamknij",
-        press: function () {
-            oDialog.close();
-        }
-    }),
-    afterClose: function () {
-        oDialog.destroy();
-    }
-});
+            // Dialog (popup)
+            const oDialog = new sap.m.Dialog({
+                title: "Podgląd grafik",
+                contentWidth: "50vw", // Szerokość okna dialogowego
+                contentHeight: "auto",
+                content: [oFlexBox],
+                beginButton: new sap.m.Button({
+                    text: "Zamknij",
+                    press: function () {
+                        oDialog.close();
+                    }
+                }),
+                afterClose: function () {
+                    oDialog.destroy();
+                }
+            });
 
-oDialog.open();
-         },
+            oDialog.open();
+                    },
 
-    });
-});
+                });
+        });

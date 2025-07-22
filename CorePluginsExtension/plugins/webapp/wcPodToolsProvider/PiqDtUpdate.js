@@ -5,14 +5,16 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "sap/dm/dme/model/AjaxUtil",
     "ibc/dm/plugins/wcPodToolsProvider/WorkCenterRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/MessageDisplay"
-], function (ObjectUI5, ErrorHandler,  OrderRepository, SfcRepository, AjaxUtil, WorkCenterRepository, MessageDisplay) {
+    "ibc/dm/plugins/wcPodToolsProvider/MessageDisplay",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+], function (ObjectUI5, ErrorHandler,  OrderRepository, SfcRepository, AjaxUtil, WorkCenterRepository, MessageDisplay, TextHandler) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.PiqDtUpdate", {
         constructor: function(controller, parameters){
             this._controller = controller;
             this._parameters = parameters;
             this._errorHandler = new ErrorHandler(this._controller);
+            this._textHandler = new TextHandler();
         },
         execute: async function(){
             let messages = []
@@ -25,40 +27,59 @@ sap.ui.define([
                 
                 let sfcDtDataCollections = await this._getDataCollections();
 
-                if(!sfcDtDataCollections||sfcDtDataCollections.length === 0){ return; }
+                if(!sfcDtDataCollections||sfcDtDataCollections.length === 0){
+                    this._throwError("error.piq.anyDtToUpdate");
+                }
 
 
                 for(const dataCollection of sfcDtDataCollections){
                     if(dataCollection.READINGS.CODE){
                         codes.push({ code: dataCollection.READINGS.CODE,
-                                    resource: dataCollection.READINGS.RESOURCE });
+                                     resource: dataCollection.READINGS.RESOURCE });
                     }
                 }
-                if(!codes||codes.length === 0){return};
+                // if(!codes||codes.length === 0){
+                //     this._throwError("error.piq.anyDtToUpdate");
+                //     return };
 
                 let oeeCodes = await this._getOeeCodes(codes);
-                if(!oeeCodes||oeeCodes.length === 0){return};
+                // if(!oeeCodes||oeeCodes.length === 0){return};
 
 
                 try{
                     for(const dataCollection of sfcDtDataCollections){
+                        messages.push({ messageType: "I",
+                                        messageValue: this._textHandler.getText(information.piq.dtUpdateAttempt) });
+
+                        if(!dataCollection.READINGS.CODE){ this._throwError("error.piq.noCodeDt"); }
+
                         let oeeCode = oeeCodes.find(code => {return code.resource === dataCollection.READINGS.RESOURCE && code.code === dataCollection.READINGS.CODE });
-                        if(oeeCode&&oeeCode.reasonCodeId!==""){
-                            let sfc = await SfcRepository.getInstance(this._controller, this._parameters.plant, dataCollection.sfcNumber);
-                            await this._updateDt(dataCollection, oeeCode&&oeeCode.reasonCodeId);
-                            await this._saveNewStartTime(dataCollection);
+
+                        if(!oeeCode){
+                            this._throwError("error.piq.noOeeCodeDt");
+                        }else if(!oeeCode.reasonCodeId || oeeCode.reasonCodeId ===""){
+                            this._throwError("error.piq.noReasonCode");
+                        }
+
+                        let sfc = await SfcRepository.getInstance(this._controller, this._parameters.plant, dataCollection.sfcNumber);
+                        await this._updateDt(dataCollection, oeeCode&&oeeCode.reasonCodeId);
+                        await this._saveNewStartTime(dataCollection);
+                        messages.push({ messageType: "S",
+                                        messageValue: this._textHandler.getTExt("success.piq.downTimeUpdated",dataCollection.sfcNumber) });
         
-                            let days = this._calculateDaysSince(dataCollection.created);
-                            if(days>=3){
-                                await sfc.invalidate();
-        
-                            }
+                        let days = this._calculateDaysSince(dataCollection.created);
+                        if(days>=3){
+                            await sfc.invalidate(); 
+                            messages.push({ messageType: "S",
+                                            messageValue: this._textHandler.getTExt("success.piq.downTimeClosed",dataCollection.sfcNumber) });
                         }
                     }
                 }catch(error){
-                    let errorMessage = this._errorHandler.getTextFromError(error);
-                    messages.push({messageType: "E",
-                                messageValue: errorMessage  });
+                    if(!error.displayType){
+                        let errorMessage = this._errorHandler.getTextFromError(error);
+                        messages.push({ messageType: "E",
+                                        messageValue: errorMessage  });
+                    }
                     
                 }
             }catch(error){
@@ -66,8 +87,11 @@ sap.ui.define([
                 messages.push({messageType: "E",
                 messageValue: errorMessage  });
             }
-            let messageDisplay = new MessageDisplay(messages);
-            await messageDisplay.displayAsPopup();
+            if(messages.length>0){
+                let messageDisplay = new MessageDisplay(messages);
+                await messageDisplay.displayAsPopup();
+            }
+
 
 
 
@@ -259,10 +283,14 @@ sap.ui.define([
         },
         _getOeeCodes: async function(codes){
             let calledPromises = [];
+            let results = [];
             for(const code of codes){
                 calledPromises.push(this._getOeeCodeApi(code));
             }
-            let results = await Promise.all(calledPromises);
+            if(calledPromises.length>0){
+                results = await Promise.all(calledPromises);
+            }
+
             return results;
 
         },

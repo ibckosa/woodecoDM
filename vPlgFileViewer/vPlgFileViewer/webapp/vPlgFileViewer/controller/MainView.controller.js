@@ -48,7 +48,6 @@ sap.ui.define([
             return null;
         },
         _loadData: async function () {
-            debugger;
             try {
             var oPodSelectionModel = this.getPodSelectionModel();
             var aSelections = oPodSelectionModel.getSelections();  
