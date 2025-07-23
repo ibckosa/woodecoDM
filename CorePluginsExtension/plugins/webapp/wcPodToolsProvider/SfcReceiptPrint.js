@@ -1,7 +1,10 @@
+const { toCanvas } = require("./bwip");
+
 sap.ui.define([
     "sap/ui/base/Object"
 ], function (ObjectUI5) {
     "use strict";
+
     let oSfc = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceiptPrint", {
         constructor: function(oController, oPrintDetails){
             this._oController = oController;
@@ -259,7 +262,39 @@ sap.ui.define([
             return result;
         },
         _getGS1Barcode: function(){
+            debugger;
+            function loadScript(url, callback) {
+                let script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = url;
+                script.onload = callback;
+                document.head.appendChild(script);
+            }
             
+
+            loadScript('bwip.js', function() {
+
+      const oCanvas = document.createElement("canvas");
+ 
+      try {
+  
+        bwipjs.toCanvas(oCanvas, {
+          bcid: "gs1datamatrix",
+          text: "(01)01234567890128(11)250716",
+          parsefnc: true,
+          scale: 6,
+          includetext: false
+        });
+        
+        const sDataUrl = oCanvas.toDataURL("image/png");
+        const sBase64 = sDataUrl.split(",")[1];
+
+        return sBase64;          
+ 
+      } catch (e) {
+        console.error("Błąd generowania kodu:", e);
+      }
+    });
         }
     });
 
