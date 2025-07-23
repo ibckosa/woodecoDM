@@ -978,8 +978,8 @@ sap.ui.define([
             }
             
             oPrintingDetails.HU = oItem.HU;
-            oPrintingDetails.orderLineCustomValues = [];
-            oPrintingDetails.orderCustomValues = oOrder.getOrderLineCustomValues(oItem.itemNumber);
+            oPrintingDetails.orderLineCustomValues = oOrder.getOrderLineCustomValues(oItem.itemNumber);
+            oPrintingDetails.orderCustomValues = oOrder.getHeaderCustomValues();
             oPrintingDetails.materialCustomValues = oMaterial.getCustomValues();
             oPrintingDetails.quantity = oItem.quantity;
             oPrintingDetails.printer = oPrinter;

@@ -115,11 +115,11 @@ sap.ui.define([
             this._oExtensionUtilities.logMessage("PluginEventExtension.onErrorRemovingComponent: oError = " + sError);
         },
 
-        createAndRefreshTable: function(oPluginConfiguration, oListConfiguration){
+        createAndRefreshTable: async function(oPluginConfiguration, oListConfiguration){
             this._oExtensionUtilities.logMessage("PluginEventExtension.createAndRefreshTable: hi");
             
             try {
-                this.getController().byId("componentList").attachEvent( "updateFinished", this.onUpdateFinished.bind(this) );
+                this.getController().byId("componentList").attachEvent( "updateFinished", await this.onUpdateFinished.bind(this) );
                 var oList = this.getController().byId("componentList");
             } catch (error) {
                 
@@ -137,10 +137,8 @@ sap.ui.define([
         updateColumnConfiguration: function(aColumnConfiguration){
             this._oExtensionUtilities.logMessage("PluginEventExtension.updateColumnConfiguration: hi");
         },
-        onUpdateFinished: function(oEvent){
-
+        onUpdateFinished: async function(oEvent){
             try {
-
             // Create a resource bundle for language specific texts
             var oResourceModel = new sap.ui.model.resource.ResourceModel({
                 bundleName : "ibc.dm.plugins.componentListExtensionProvider.i18n.i18n"
@@ -173,6 +171,7 @@ sap.ui.define([
 
 
             } catch (error) {
+                debugger;
                 bError = true;
             }
 
@@ -185,18 +184,20 @@ sap.ui.define([
                 iItemsLength != oShopOrder.itemsLength){
                     
                     if(typeof oParams != "undefined" && typeof oMdl != "undefined" && typeof oPodContr != "undefined"){
-                        oPodContr._bomReader = fnReadComponents(oParams,oMdl,oPodContr); 
+                        oPodContr._bomReader = await fnReadComponents(oParams,oMdl,oPodContr); 
+                        try {
+                            var oController = this.getController();
+                            await this._fnUpdateTableItems(oTable, oPodContr._bomReader, oPodContr, oController, this, oMdl.getProperty("/shopOrder").shopOrder);
+                            // oPodContr._bomReader.then(result=>{
+                            //     await fnUpdateTableItems(oTable,result,oPodContr, oController, this, oMdl.getProperty("/shopOrder").shopOrder);
+                            // });
+                        } catch (error) {
+                            debugger;
+                        }
                     }
                 }
 
-            try {
-                var oController = this.getController();;
-                oPodContr._bomReader.then(result=>{
-                    fnUpdateTableItems(oTable,result,oPodContr, oController, this, oMdl.getProperty("/shopOrder").shopOrder);
-                });
-            } catch (error) {
-                
-            }
+
 
 
             //
@@ -232,7 +233,7 @@ sap.ui.define([
             // AKTUALIZACJA MODELU I BINDINGU 
             //             
             async function fnUpdateTableItems(oTable,bomComponents, oPodController, oController, that, shopOrder){
-
+                let materialIssuesTab = [];
                 var bSort = false;
                 var oCompQuanFromOrder = false;
 
@@ -255,18 +256,35 @@ sap.ui.define([
                     oTable.insertColumn(oNewColumn, oTable.getColumns().length - 1 );  
                     oTable.insertColumn(oIssuedColumn, oTable.getColumns().length - 1 );  
                 }
-                
-                oTable.getItems().forEach(item=>{
+                debugger;
+                for(const item of oTable.getItems()){
                     try {
+                        let issuedQuantity = 0;
+                        let itemData = item.getBindingContext().getObject();
+                        let materialIssues = materialIssuesTab.find(tab=>{ return filter.material === itemData.component.material });
+                        if(!materialIssues){
+                            let issues = await that._getIssueForMaterial(that.getController().getPodController().getUserPlant(), itemData.component.material, itemData.component.version, shopOrder);
+ 
+                            materialIssues = { material: itemData.component.material,
+                                               issues: issues
+                            };
+
+                            materialIssuesTab.push(materialIssues);
+                        }
+                        if(materialIssues.issues){
+                            let materialIssuesForSeq = materialIssues.issues.filter( issue=>{return issue.comment === itemData.componentSequence && issue.cancellationTriggered === false});
+                            for(issue of materialIssuesForSeq){
+                                issuedQuantity = issuedQuantity + issue.quantityInBaseUnit.value;
+                            }
+                        }
+                        
+
 
                         var itemCompSeq = item.getBindingContext().getObject().componentSequence;
                         var oBomComponent = bomComponents.find((line) => line.sequence == itemCompSeq );
                         if(oTable.getColumns().length > item.getCells().length&&oBomComponent){
-                            let itemValues = item.getBindingContext().getObject();
-                            debugger;
-                            let issuedQuan = oBomComponent.componentQuantity - item.getBindingContext().getObject().remainingQuantity;
                             item.insertCell(new Text({ text: oBomComponent.componentQuantityCommercialUom }), item.getCells().length - 1);
-                            item.insertCell(new Text({ text:issuedQuan }), item.getCells().length - 1);
+                            item.insertCell(new Text({ text:issuedQuantity }), item.getCells().length - 1);
                         }
                         if(oBomComponent){
                             oMdl.setProperty(item.getBindingContextPath()+"/zstorageLocation", oBomComponent.storageLocation);
@@ -324,7 +342,7 @@ sap.ui.define([
                             }
                         });
                     } catch (error) {}
-                });
+                };
                 if(bSort){ fnSortTable(); }
             };
 
@@ -347,8 +365,8 @@ sap.ui.define([
             };
 
 
-            function fnReadComponents(oParameters,oModel,oPodController){
-                return new Promise((resolve,reject)=>{
+            async function fnReadComponents(oParameters,oModel,oPodController){
+                return await new Promise((resolve,reject)=>{
                     var oShopOrder = oModel.getProperty("/shopOrder");
                     if(oShopOrder && oShopOrder.shopOrder === oParameters.shopOrder && oShopOrder.bomComponents.length > 0 && oShopOrder.itemsLength === iItemsLength ){
                         resolve(oShopOrder.bomComponents);
@@ -437,9 +455,195 @@ sap.ui.define([
             }
 
 
+        },
+        _getIssueForMaterial: async function(plant, material, materialVersion, orderNumber){
+            let results = [];
+            let additionalApiCalls = [];
+            
+
+            let firstApiCallResults = await this._callApiGetIssue(plant, material, materialVersion, orderNumber);
+            if(firstApiCallResults.totalPages&&firstApiCallResults.totalPages>1){
+                for(let i=1;i++;i<firstApiCallResults.totalPages){
+                    additionalApiCalls.push(this._callApiGetIssue(plant, material, materialVersion, orderNumber,i));
+                }
+            }
+
+            if(firstApiCallResults.content){
+                results =  firstApiCallResults.content;
+            }
+
+            if(additionalApiCalls.length>0){
+                let additionalResults = await Promise.all(additionalApiCalls);
+                for(const additionalResult of additionalResults){
+                    if(additionalResult.content){
+                        results = results.concat(additionalResult.content);
+                    }
+                }
+            }
+
+            return results;
+        },
+        _callApiGetIssue: async function(plant, material, materialVersion, orderNumber, page=0){
+            let controller = this.getController();
+            let sUrl = controller.getPublicApiRestDataSourceUri() + "inventory/v1/inventory/goodsIssues";
+
+            let parameters = {  plant: plant,
+                                material: material,
+                                materialVersion: materialVersion,
+                                order: orderNumber,
+                                size:50,
+                                page: page };
+            return await new Promise((resolve,reject)=>{
+                controller.ajaxGetRequest(sUrl, parameters,
+                    (oResponseData) => {
+                        debugger;
+                        resolve(oResponseData);
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        debugger;
+                        resolve();
+                    }   
+                );
+
+            });
+        },
+        _fnUpdateTableItems: async function(oTable, bomComponents, oPodController, oController, that, shopOrder){
+            let materialIssuesTab = [];
+            var bSort = false;
+            var oCompQuanFromOrder = false;
+
+            var oMdl = oTable.getModel();
+
+            var oConfiguration = oController.getConfiguration();
+            let orderInstance = await OrderRepository.readOrder(oController, that.getController().getPodController().getUserPlant(), shopOrder);
+            let bomInstance = await BomRepository.getInstance(oController, that.getController().getPodController().getUserPlant(), orderInstance.getBomNumber(), orderInstance.getBomType() );
+            
+            
+
+            if(oConfiguration&& typeof oConfiguration.compQuanFromOrder !== "undefined"){
+                oCompQuanFromOrder = oConfiguration.compQuanFromOrder;
+            }
+
+            var bColumnExists = oTable.getColumns().some(function (oColumn) {
+                return oColumn.getId() === "uomCol";
+              });
+            if (!bColumnExists){
+                let oNewColumn = new Column({ header: new Text({ text: this._oTextHandler.getText("uomColumnLabel")}), id: "uomCol" });
+                let oIssuedColumn = new Column({ header: new Text({ text: this._oTextHandler.getText("Issued quantity")}), id: "issuedCol" });
+                oTable.insertColumn(oNewColumn, oTable.getColumns().length - 1 );  
+                oTable.insertColumn(oIssuedColumn, oTable.getColumns().length - 1 );  
+            }
+            debugger;
+            for(const item of oTable.getItems()){
+                try {
+                    let issuedQuantity = 0;
+                    let itemData = item.getBindingContext().getObject();
+                    let materialIssues = materialIssuesTab.find(tab=>{ return tab.material === itemData.component.material });
+                    if(!materialIssues){
+                        let issues = await that._getIssueForMaterial(that.getController().getPodController().getUserPlant(), itemData.component.material, itemData.component.version, shopOrder);
+
+                        materialIssues = { material: itemData.component.material,
+                                           issues: issues
+                        };
+
+                        materialIssuesTab.push(materialIssues);
+                    }
+                    if(materialIssues.issues){
+                        let materialIssuesForSeq = materialIssues.issues.filter( issue=>{return issue.comments === itemData.componentSequence.toString() && issue.cancellationTriggered === false});
+                        for(const issue of materialIssuesForSeq){
+                            issuedQuantity = issuedQuantity + issue.quantityInBaseUnit.value;
+                        }
+                    }
+                    
+
+
+                    var itemCompSeq = item.getBindingContext().getObject().componentSequence;
+                    var oBomComponent = bomComponents.find((line) => line.sequence == itemCompSeq );
+                    if(oTable.getColumns().length > item.getCells().length&&oBomComponent){
+                        item.insertCell(new Text({ text: oBomComponent.componentQuantityCommercialUom }), item.getCells().length - 1);
+                        item.insertCell(new Text({ text:issuedQuantity }), item.getCells().length - 1);
+                    }
+                    if(oBomComponent){
+                        oMdl.setProperty(item.getBindingContextPath()+"/zstorageLocation", oBomComponent.storageLocation);
+                    }
+                    
+                    if( typeof item.getBindingContext().getObject().erpBackflushing !== "boolean"  ){
+                        bSort = true;
+                        if(bomComponents.find((line) => line.sequence == itemCompSeq && line.erpBackflushing) || bomInstance.getComponentBackflush(itemCompSeq)){
+                            oMdl.setProperty(item.getBindingContextPath()+"/erpBackflushing",true);
+                            oMdl.setProperty(item.getBindingContextPath()+"/buttonVisible",false);
+                        }else{
+                            oMdl.setProperty(item.getBindingContextPath()+"/erpBackflushing",false);
+                            oMdl.setProperty(item.getBindingContextPath()+"/buttonVisible",true);
+                        }
+                    }
+
+                    if(oBomComponent&&oBomComponent.componentType.toUpperCase() !== "NORMAL"){
+                        item.setVisible(false);
+                    }
+                    
+                    for(const cell of item.getCells()){
+                        if(cell.getContent){
+                            try {
+                                if( cell.getContent()[1].getBindingPath("visible") !== "buttonVisible" ){
+                                    cell.getContent()[1].bindProperty( 
+                                        "visible",{
+                                            parts: [
+                                            "buttonVisible", 
+                                            "remainingQuantity"],
+                                            formatter: function(buttonVisible,remainingQuantity){
+                                                return buttonVisible;
+                                            }
+                                        }
+                                    );
+                                    cell.getContent()[1].setText(that._oTextHandler.getText("labels.component.buttonConsume"));
+                                    cell.getContent()[1].attachPress(that._onPaletteQueuePress.bind(that));
+                                    cell.getContent()[0].setVisible(false);
+                                }
+                            } catch (error) {
+                                    
+                            }        
+                        }else if(cell.getText){
+                            if(oBomComponent&&oCompQuanFromOrder===true){
+                                try{
+                                    let oItemValues =  item.getBindingContext().getObject();
+                                    let oPath = cell.getBindingPath("text");
+                                    if(oPath==="requiredQty"){
+                                        cell.setText(oBomComponent.componentQuantity);
+                                    }else if(oPath==="remainingQty"){
+                                        let oRemainingQuantity = oBomComponent.componentQuantity - oItemValues.requiredQuantity + oItemValues.remainingQuantity;
+                                        cell.setText(oRemainingQuantity);
+                                    }
+                                }catch(oErr){}
+                            }
+                        }
+                    };
+                } catch (error) {
+                    debugger;
+                }
+            };
+            if(bSort){ this.fnSortTable(oTable); 
+
+            }
+        },
+        fnSortTable: function(oTable){
+            // erpBackflushing
+            try {
+                if( oTable.getBinding("items").aSorters[0].sPath === "erpBackflushing" ){
+                    if(oTable.getBinding("items").aSorters){
+                        oTable.getBinding("items").sort(oTable.getBinding("items").aSorters);
+                        oTable.getBinding("items").applySort();
+                    }
+                }else{
+                    var oNewSorter = [new sap.ui.model.Sorter("erpBackflushing",false)];
+                    oTable.getBinding("items").aSorters.forEach(sorter=>{oNewSorter.push(sorter)});
+                    oTable.getBinding("items").sort(oNewSorter);
+                    oTable.getBinding("items").applySort();
+                }
+            } catch (error) {
+                
+            }
+            
         }
-
-
-        
     })
 });

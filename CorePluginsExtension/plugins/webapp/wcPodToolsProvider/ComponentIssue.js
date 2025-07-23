@@ -120,7 +120,7 @@ sap.ui.define([
                 "isInventoryManaged": true,
                 "userId": this._oIssueData.controller.getUserId(),
                 "dateTime": this._getIssueDt(),
-                "comments": "",
+                "comments": `${this._oIssueData.componentSequence}`,
                 "calculatedData": null,
                 "customFieldData":  null
             };

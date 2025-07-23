@@ -337,9 +337,8 @@ sap.ui.define([
                 let oItem = this._getSelectedItem();
                 let oQuanAdditional = await AdditionalIssueDialog.showDialog(oItem);
                 if(oQuanAdditional>0){
-                    //await this._additionalIssue();
                     this._oDialogLog.setBusy(true)
-                    await oPallete.additionalIssue(oItem, oQuanAdditional, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity);
+                    await oPallete.additionalIssue(oItem, oQuanAdditional, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity, this._oHandlerData.sequence);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteAdditionalIssue"),true,true);
                     setTimeout( async ()=> {  await this._getDialogData();
                                             this._oDialogLog.setBusy(false);},1500);

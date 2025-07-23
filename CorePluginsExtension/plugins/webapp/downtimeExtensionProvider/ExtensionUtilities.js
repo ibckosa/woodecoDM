@@ -5,7 +5,8 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "sap/dm/dme/model/AjaxUtil",
-], function (BaseObject, DowntimeListButton, TextHandler, ResourceRepository, ErrorHandler, AjaxUtil) {
+    "sap/dm/dme/oeetransactionplugins/downtimePlugin/utils/Formatter"
+], function (BaseObject, DowntimeListButton, TextHandler, ResourceRepository, ErrorHandler, AjaxUtil, formatter) {
     "use strict";
 
     /**
@@ -78,6 +79,7 @@ sap.ui.define([
                     if(oTable.getColumns().length > item.getCells().length)
                         item.insertCell(new sap.m.TextArea({ value: "{comments}" }), item.getCells().length);
                 }
+
 
             // let oBinding2 = oController.dateModelForDowntime;
             // let oTable2 = oController.getView().byId("downtimeTable");

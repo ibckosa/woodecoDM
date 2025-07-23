@@ -281,7 +281,7 @@ sap.ui.define([
                 );
             });
         },
-        additionalIssue: async function(oLine, oQuantity, oSfc, oBomRef, oOperation, stepId){
+        additionalIssue: async function(oLine, oQuantity, oSfc, oBomRef, oOperation, componentSequence){
             this._additionalIssueChecks(oLine, oQuantity, oSfc, oBomRef, oOperation);
             let sfc = await SfcRepository.getInstance(this._oController, oLine.plant, oSfc);
             let step = sfc.getStepByOperation(oOperation);
@@ -313,7 +313,7 @@ sap.ui.define([
                 "isInventoryManaged": true,
                 "userId": this._oController.getUserId(),
                 "dateTime": this._getIssueDt(),
-                "comments": "ADDITIONAL_ISSUE",
+                "comments": `${componentSequence}`,
                 "calculatedData": null, 
                 "customFieldData":  JSON.stringify([{"id": "STORAGE_LOCATION", "value": String(oLine.storageLocation) }])
             };

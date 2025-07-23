@@ -88,6 +88,7 @@ sap.ui.define([
                                                                 resource: this._oResource,
                                                                 uom: oBomComponent.unitOfMeasure,
                                                                 storageLocation: oBomComponent.storageLocation,
+                                                                componentSequence: oBomComponent.sequence,
                                                                 palleteQueuesManager: this._oPalleteQueuesManager });
                     this._componentsIssue.push(oComponentIssue);
                 }
