@@ -262,39 +262,40 @@ sap.ui.define([
             return result;
         },
         _getGS1Barcode: function(){
-            debugger;
-            function loadScript(url, callback) {
-                let script = document.createElement('script');
-                script.type = 'text/javascript';
-                script.src = url;
-                script.onload = callback;
-                document.head.appendChild(script);
-            }
+                /*
+                debugger;
+                function loadScript(url, callback) {
+                    let script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.src = url;
+                    script.onload = callback;
+                    document.head.appendChild(script);
+                }
+                
+
+                loadScript('bwip.js', function() {
+
+        const oCanvas = document.createElement("canvas");
+    
+        try {
+    
+            bwipjs.toCanvas(oCanvas, {
+            bcid: "gs1datamatrix",
+            text: "(01)01234567890128(11)250716",
+            parsefnc: true,
+            scale: 6,
+            includetext: false
+            });
             
+            const sDataUrl = oCanvas.toDataURL("image/png");
+            const sBase64 = sDataUrl.split(",")[1];
 
-            loadScript('bwip.js', function() {
-
-      const oCanvas = document.createElement("canvas");
- 
-      try {
-  
-        bwipjs.toCanvas(oCanvas, {
-          bcid: "gs1datamatrix",
-          text: "(01)01234567890128(11)250716",
-          parsefnc: true,
-          scale: 6,
-          includetext: false
-        });
-        
-        const sDataUrl = oCanvas.toDataURL("image/png");
-        const sBase64 = sDataUrl.split(",")[1];
-
-        return sBase64;          
- 
-      } catch (e) {
-        console.error("Błąd generowania kodu:", e);
-      }
-    });
+            return sBase64;          
+    
+        } catch (e) {
+            console.error("Błąd generowania kodu:", e);
+        }
+        }); */
         }
     });
 
