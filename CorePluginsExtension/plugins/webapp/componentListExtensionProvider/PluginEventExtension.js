@@ -79,6 +79,7 @@ sap.ui.define([
         },
 
         onPodSelectionChangeEvent: function(oEvent){
+            debugger;
             this._oExtensionUtilities.logMessage("PluginEventExtension.onPodSelectionChangeEvent: hi");
         },
 
@@ -99,6 +100,7 @@ sap.ui.define([
         },
     
         loadComponent: function(oComponentList){
+            debugger;
             this._oExtensionUtilities.logMessage("PluginEventExtension.loadComponent: oComponentList = ", oComponentList);
         },
 
@@ -117,7 +119,7 @@ sap.ui.define([
 
         createAndRefreshTable: async function(oPluginConfiguration, oListConfiguration){
             this._oExtensionUtilities.logMessage("PluginEventExtension.createAndRefreshTable: hi");
-            
+            debugger;
             try {
                 this.getController().byId("componentList").attachEvent( "updateFinished", await this.onUpdateFinished.bind(this) );
                 var oList = this.getController().byId("componentList");
@@ -127,6 +129,7 @@ sap.ui.define([
         },
 
         updateListConfiguration: function(oListConfiguration){
+        
             this._oExtensionUtilities.logMessage("PluginEventExtension.updateListConfiguration: oListConfiguration hi");
         },
 

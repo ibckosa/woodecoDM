@@ -12,6 +12,10 @@ sap.ui.define([
             this.oExtensionUtilities = new ExtensionUtilities();
         },
         getExtensions: function () {
+            let pluginEventExtension =  new PluginEventExtension(this.oExtensionUtilities);
+            let lifeCycleExtension = new LifecycleExtension(this.oExtensionUtilities);
+
+
            return [
                new LifecycleExtension(this.oExtensionUtilities),
                new PluginEventExtension(this.oExtensionUtilities),
