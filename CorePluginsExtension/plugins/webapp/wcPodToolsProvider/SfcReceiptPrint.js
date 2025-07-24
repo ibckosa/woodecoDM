@@ -1,7 +1,6 @@
-const { toCanvas } = require("./bwip");
-
 sap.ui.define([
-    "sap/ui/base/Object"
+    "sap/ui/base/Object",
+    "sap/ui/thirdparty/jquery"          // potrzebne do includeScript
 ], function (ObjectUI5) {
     "use strict";
 
@@ -261,41 +260,43 @@ sap.ui.define([
             };
             return result;
         },
+        
+        pBwip: function () {
+            debugger;
+            const sUrl = sap.ui.require.toUrl("CorePluginExtensions/bwip.js");
+     
+            return new Promise(function (resolve, reject) {
+                jQuery.sap.includeScript(sUrl, "bwipjs", function () {
+                    if (window.bwipjs) {
+                        resolve(window.bwipjs);           // biblioteka gotowa
+                    } else {
+                        reject("Nie udało się załadować bwip-js z " + sUrl);
+                    }
+                });
+            });
+        }, 
         _getGS1Barcode: function(){
-                /*
-                debugger;
-                function loadScript(url, callback) {
-                    let script = document.createElement('script');
-                    script.type = 'text/javascript';
-                    script.src = url;
-                    script.onload = callback;
-                    document.head.appendChild(script);
-                }
-                
+            debugger;
+            return Bwip.then(function (bwipjs) {            // czekamy na bwip-js
+                const oCanvas = document.createElement("canvas");
+ 
+                bwipjs.toCanvas(oCanvas, {
+                    bcid:        "gs1datamatrix",
+                    text:        "(01)01234567890128(11)250716",
+                    parsefnc:    true,
+                    scale:       6,
+                    includetext: false
+                });
+                const sDataUrl = oCanvas.toDataURL("image/png");
+ 
+                const sBase64 = sDataUrl.split(",")[1];
+                return sBase64;
+ 
 
-                loadScript('bwip.js', function() {
-
-        const oCanvas = document.createElement("canvas");
-    
-        try {
-    
-            bwipjs.toCanvas(oCanvas, {
-            bcid: "gs1datamatrix",
-            text: "(01)01234567890128(11)250716",
-            parsefnc: true,
-            scale: 6,
-            includetext: false
+            }).catch(function (sErr) {                // obsługa błędów
+                Log.error(sErr);
             });
             
-            const sDataUrl = oCanvas.toDataURL("image/png");
-            const sBase64 = sDataUrl.split(",")[1];
-
-            return sBase64;          
-    
-        } catch (e) {
-            console.error("Błąd generowania kodu:", e);
-        }
-        }); */
         }
     });
 
