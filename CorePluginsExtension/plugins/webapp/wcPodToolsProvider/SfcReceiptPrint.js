@@ -1,8 +1,7 @@
-const { toCanvas } = require("./bwip");
 
 sap.ui.define([
-    "sap/ui/base/Object",
-    "sap/ui/thirdparty/jquery"          // potrzebne do includeScript
+    "sap/ui/base/Object"//,
+   // "sap/ui/thirdparty/jquery"          // potrzebne do includeScript
 ], function (ObjectUI5) {
     "use strict";
 
@@ -264,7 +263,7 @@ sap.ui.define([
             return result;
         },
         
-        pBwip: function () {
+       /* pBwip: function () {
             debugger;
             const sUrl = sap.ui.require.toUrl("CorePluginExtensions/bwip.js");
      
@@ -276,10 +275,10 @@ sap.ui.define([
                         reject("Nie udało się załadować bwip-js z " + sUrl);
                     }
                 });
-            });
-        }, 
+            }); 
+        }, */
         _getGS1Barcode: function(){
-            debugger;
+           /* debugger;
             return Bwip.then(function (bwipjs) {            // czekamy na bwip-js
                 const oCanvas = document.createElement("canvas");
  
@@ -299,7 +298,7 @@ sap.ui.define([
             }).catch(function (sErr) {                // obsługa błędów
                 Log.error(sErr);
             });
-            
+            */
         }
     });
 
