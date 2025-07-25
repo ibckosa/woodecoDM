@@ -12,6 +12,9 @@ sap.ui.define([
 
         handleError: function(oError){
             let oErrorText = this.getTextFromError(oError);
+            if(oError.apiName){
+                oErrorText = `Error in API: ${oError.apiName}\n${oErrorText}`;
+            }
             if(!oError.displayType){
                 this.showError(oErrorText);
             }else if(oError.displayType === "POPUP"){ 
@@ -59,6 +62,12 @@ sap.ui.define([
         throwErrorNoDisplay: function(oTextId, ...args){
             let oError = { errorMessage: this._textHandler.getText(oTextId, ...args),
                            displayType: "NO_DISPLAY" };
+            throw oError;
+        },
+        throwErrorWithApiName(apiName,oTextId, ...args){
+            let oError = { 
+                apiName: apiName,
+                errorMessage: this._textHandler.getText(oTextId, ...args)};
             throw oError;
         }
     })

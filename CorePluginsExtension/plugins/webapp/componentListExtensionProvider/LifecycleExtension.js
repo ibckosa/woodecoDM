@@ -6,8 +6,9 @@ sap.ui.define([
     "use strict";
 
     return PluginControllerExtension.extend("ibc.dm.plugins.componentListExtensionProvider.LifecycleExtension", {
-        constructor: function (oExtensionUtilities) {
+        constructor: function (oExtensionUtilities, pluginEventExtension) {
             this._oExtensionUtilities = oExtensionUtilities;
+            this._pluginEventExtension = pluginEventExtension;
             this._bInitialized = false;
         },
      
@@ -44,6 +45,10 @@ sap.ui.define([
                         this._oExtensionUtilities.setLogToConsole(false);
                     }
                 }
+            }
+            if(this._pluginEventExtension){
+                this._pluginEventExtension.clearModelOrder();
+                this._pluginEventExtension.onUpdateFinished();
             }
             this._oExtensionUtilities.logMessage("LifecycleExtension.onBeforeRendering: Assembly extension");
         },

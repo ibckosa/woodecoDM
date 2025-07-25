@@ -1,3 +1,5 @@
+const { toCanvas } = require("./bwip");
+
 sap.ui.define([
     "sap/ui/base/Object",
     "sap/ui/thirdparty/jquery"          // potrzebne do includeScript
@@ -180,6 +182,7 @@ sap.ui.define([
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {
+                        oError.apiName = "print/v1/print";
                         reject(oError);
                     }
                 );

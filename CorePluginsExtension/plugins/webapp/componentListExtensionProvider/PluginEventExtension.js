@@ -160,13 +160,18 @@ sap.ui.define([
                     shopOrder: oPodContr.getPodSelectionModel().getSelections()[0].shopOrder.shopOrder,
                     plant: oPodContr.getUserPlant()
                     };
-                var oTable = oEvent.getSource();
+                var oTable;
+                if(oEvent){
+                    oTable = oEvent.getSource();
+                }else if(this._oTable){
+                    oTable = this._oTable;
+                }
                 
 
                 if(!oTable || oTable.getItems().length == 0){
                     return;
                 }  
-        
+                this._oTable =  oTable;
                 var oMdl = oTable.getModel();
                 var oMdlData = oTable.getModel().getData();
                 
@@ -536,7 +541,6 @@ sap.ui.define([
                 oTable.insertColumn(oNewColumn, oTable.getColumns().length - 1 );  
                 oTable.insertColumn(oIssuedColumn, oTable.getColumns().length - 1 );  
             }
-            debugger;
             for(const item of oTable.getItems()){
                 try {
                     let issuedQuantity = 0;
@@ -557,14 +561,18 @@ sap.ui.define([
                             issuedQuantity = issuedQuantity + issue.quantityInBaseUnit.value;
                         }
                     }
+                    oMdl.setProperty(item.getBindingContextPath()+"/zIssuedQuantity", issuedQuantity);
                     
 
 
                     var itemCompSeq = item.getBindingContext().getObject().componentSequence;
+                    
+
                     var oBomComponent = bomComponents.find((line) => line.sequence == itemCompSeq );
+
                     if(oTable.getColumns().length > item.getCells().length&&oBomComponent){
                         item.insertCell(new Text({ text: oBomComponent.componentQuantityCommercialUom }), item.getCells().length - 1);
-                        item.insertCell(new Text({ text:issuedQuantity }), item.getCells().length - 1);
+                        item.insertCell(new Text({ text: "{zIssuedQuantity}" }), item.getCells().length - 1);
                     }
                     if(oBomComponent){
                         oMdl.setProperty(item.getBindingContextPath()+"/zstorageLocation", oBomComponent.storageLocation);
@@ -643,10 +651,15 @@ sap.ui.define([
                     oTable.getBinding("items").sort(oNewSorter);
                     oTable.getBinding("items").applySort();
                 }
-            } catch (error) {
-                
-            }
-            
+            } catch (error) {}  
+        },
+        clearModelOrder(){
+            try{
+                if(this._oTable){
+                    let oModel = this._oTable.getModel();
+                    oModel.setProperty("/shopOrder", undefined);
+                }
+            }catch(error){ }   
         }
     })
 });

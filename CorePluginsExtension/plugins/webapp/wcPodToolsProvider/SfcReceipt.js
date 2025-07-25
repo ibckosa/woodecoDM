@@ -42,7 +42,7 @@ sap.ui.define([
             this._oReceiptParameters.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.numberOfRolls;
             this._oReceiptParameters.numberOfRolls = 1;
             this._oReceiptParameters.totalQuantity = this._oReceiptParameters.quantity * this._oReceiptParameters.numberOfPalletes;
-
+            this._startProcessDate = new Date();
 
             let oSingleOperationSfc = true;
             let oLastOperation = false;
@@ -129,15 +129,15 @@ sap.ui.define([
                     await oIssuesManager.executeIssues();
                 }
     
-                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);  
                 await this._printLabel();
+                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager); 
                 OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
             }
 
         },
 
         _issueMultiNotLastOper: async function(){
-            this._checkSfcQuantityInWork();
+            this._checksIssueSigleOper();
             let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
             let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
                                                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
@@ -255,6 +255,7 @@ sap.ui.define([
                         }
                     },
                     (oError, sHttpErrorMessage) => {
+                        oError.apiName = "/inventory/v1/storageLocations";
                         reject(oError);
                     }   
                 );
@@ -280,6 +281,7 @@ sap.ui.define([
                         resolve(oResponseData.newSfcs[0]);
                     },
                     (oError, sHttpErrorMessage) => {
+                        oError.apiName = "sfc/v1/sfcs/split";
                         reject(oError);
                     }
                 );
@@ -304,6 +306,7 @@ sap.ui.define([
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {
+                        oError.apiName = "datacollection/v1/uncollectedParameters";
                         reject(oError);
                     }
                 );
@@ -386,7 +389,8 @@ sap.ui.define([
                         this._oController.showSuccessMessage(this._oTextHandler.getText("messageConfirmationSuccess"), true, true);
                         resolve();
                     },
-                    (oError, sHttpErrorMessage) => {                        
+                    (oError, sHttpErrorMessage) => {      
+                        oError.apiName = "sfc/complete";                  
                         reject(oError);
                     }
                 );
@@ -416,6 +420,7 @@ sap.ui.define([
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {
+                        oError.apiName = "packingUnits"; 
                         reject(oError);
                     }
                 );
@@ -451,7 +456,7 @@ sap.ui.define([
                 this._oController.onClosePress();
                 this._oController.navigateToMainPage();
             }else{    
-                 this._oController.publish("IbcCustomReceipt", { sendToAllPages: false });
+                 //this._oController.publish("IbcCustomReceipt", { sendToAllPages: false });
                 // this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
                 // this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
             }
@@ -527,6 +532,7 @@ sap.ui.define([
                         resolve(oResponseData);
                     },
                     (oError, sHttpErrorMessage) => {
+                        oError.apiName = "sfc/v1/worklist/sfcs"; 
                         reject(oError);
                     }
                 );
@@ -669,22 +675,25 @@ sap.ui.define([
                         resolve(oResponseData.newSfcs);
                     },
                     (oError, sHttpErrorMessage) => {
+                        oError.apiName = "sfc/v1/sfcs/split"; 
                         reject(oError);
                     }
                 );
             });
         },
         _checksIssueSigleOper: function(){
-            if(this._oReceiptParameters.totalQuantity > this._oReceiptParameters.sfcQuantity){
-                this._oErrorHandler.throwErrorPopup("error.q1.notEnoughSfcQuan");
+            let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
+
+            if(oSfcStep.quantityInWork < 1){
+                this._oErrorHandler.throwError("errorSfcNotInWork");
             }
-            this._checkSfcQuantityInWork();
         },
         _saveDataCollection: async function(postingDate, issueManager){
             let parameterValues = [];
 
             let guid = crypto.randomUUID();
             let date = new Date();
+            let stopProcessDate = new Date();
             //let date = date.toJSON();
             debugger;
             parameterValues.push({ name: "GUID",
@@ -694,6 +703,12 @@ sap.ui.define([
             parameterValues.push({ name: "DATE_CREATED",
                                    comment: guid,
                                    value: date.toJSON() });
+            parameterValues.push({ name: "PROCESS_START",
+                                   comment: guid,
+                                   value: this._startProcessDate.toJSON() });
+            parameterValues.push({ name: "PROCESS_STOP",
+                                   comment: guid,
+                                   value: stopProcessDate.toJSON() });
 
             parameterValues.push({ name: "Q1/Q3",
                                    comment: guid,
