@@ -549,29 +549,37 @@ sap.ui.define([
             let date = new Date();
             debugger;
             parameterValues.push({ name: "GUID",
+                                   comment: guid,
                                    value: guid });
             parameterValues.push({ name: "DATE_CREATED",
                                    comment: guid,
                                    value: date.toJSON() });
             parameterValues.push({ name: "Q1/Q3",
+                                   comment: guid,
                                    value: "Q3" });
 
             parameterValues.push({ name: "QUANTITY",
+                                   comment: guid,
                                    value: `${quantity}` });
 
             parameterValues.push({ name: "UOM",
+                                   comment: guid,
                                    value: this._oOrder.getInternalUom() });
 
             parameterValues.push({ name: "MATERIAL",
+                                   comment: guid,
                                    value: this._oOrder.getHeaderMaterial() });                                   
                                    
             parameterValues.push({ name: "Q3_CODE",
+                                   comment: guid,
                                    value: code });
 
             parameterValues.push({ name: "USER",
+                                   comment: guid,
                                    value: this.getUserId() });
 
             parameterValues.push({ name: "CANCELLED",
+                                   comment: guid,
                                    value: false });
 
             let issuesCreated = issueManager.getCreatedIssues();
@@ -581,6 +589,7 @@ sap.ui.define([
                                         .join('||');
 
                 parameterValues.push({ name: `CONSUMPTION`,
+                                       comment: guid,
                                        value: issueAsString });
             }
 
