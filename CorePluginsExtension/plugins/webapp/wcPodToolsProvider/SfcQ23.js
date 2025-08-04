@@ -204,6 +204,7 @@ sap.ui.define([
             let date = new Date();
             debugger;
             parameterValues.push({ name: "GUID",
+                                   comment: guid,
                                    value: guid });
 
             parameterValues.push({ name: "DATE_CREATED",
@@ -211,33 +212,43 @@ sap.ui.define([
                                    value: date.toJSON() });
 
             parameterValues.push({ name: "Q1/Q3",
+                                   comment: guid,
                                    value: "Q3" });
 
             parameterValues.push({ name: "QUANTITY",
+                                   comment: guid,
                                    value: `${this._oParameters.quantity}` });
 
             parameterValues.push({ name: "UOM",
+                                   comment: guid,
                                    value: this._oOrder.getInternalUom() });
 
             parameterValues.push({ name: "MATERIAL",
+                                   comment: guid,
                                    value: this._oParameters.material });                                   
                                    
             parameterValues.push({ name: "Q3_CODE",
+                                   comment: guid,
                                    value: this._oParameters.oeeCode });
 
             parameterValues.push({ name: "USER",
+                                   comment: guid,
                                    value: this._oController.getUserId() });
 
             parameterValues.push({ name: "CANCELLED",
+                                   comment: guid,
                                    value: false });
 
             parameterValues.push({ name: "SALES_ORDER",
+                                   comment: guid,
                                    value: this._oParameters.salesOrder });
 
             parameterValues.push({ name: "SALES_ORDER_ITEM",
+                                   comment: guid,
                                    value: this._oParameters.salesOrderItem });
 
             parameterValues.push({ name: "ITEM_NO",
+                                   comment: guid,
                                    value: `${this._oParameters.itemNumberErp}` });
 
 
