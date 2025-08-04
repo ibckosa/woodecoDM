@@ -1,9 +1,9 @@
-
 sap.ui.define([
-    "sap/ui/base/Object"//,
-   // "sap/ui/thirdparty/jquery"          // potrzebne do includeScript
-], function (ObjectUI5) {
-    "use strict";
+    "sap/ui/base/Object",
+    "sap/ui/thirdparty/jquery",
+    'ibc/dm/plugins/wcPodToolsProvider/bwip'
+], function (ObjectUI5, jQuery) {
+"use strict";
 
     let oSfc = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceiptPrint", {
         constructor: function(oController, oPrintDetails){
@@ -263,43 +263,52 @@ sap.ui.define([
             return result;
         },
         
-       /* pBwip: function () {
-            debugger;
-            const sUrl = sap.ui.require.toUrl("CorePluginExtensions/bwip.js");
-     
+
+       pBwip: function () {
+            const sUrl = "https://woodeco-dmc-qas-oiyz0u0q-dmc-qas-ibc-dm-corepluginsextension.cfapps.eu20-001.hana.ondemand.com/plugins/wcPodToolsProvider/bwip.js";
             return new Promise(function (resolve, reject) {
-                jQuery.sap.includeScript(sUrl, "bwipjs", function () {
-                    if (window.bwipjs) {
-                        resolve(window.bwipjs);           // biblioteka gotowa
-                    } else {
-                        reject("Nie udało się załadować bwip-js z " + sUrl);
-                    }
-                });
-            }); 
-        }, */
-        _getGS1Barcode: function(){
-           /* debugger;
-            return Bwip.then(function (bwipjs) {            // czekamy na bwip-js
+                debugger;
+                if (window.bwipjs && typeof window.bwipjs.toCanvas === "function") {
+                    resolve(window.bwipjs);
+                } else {
+                    jQuery.sap.includeScript(sUrl, "bwipjs", function () {
+                        console.log('Po załadowaniu BWIP:', window.bwipjs);
+                        console.log('Typ toCanvas:', typeof window.bwipjs?.toCanvas);
+                        if (window.bwipjs && typeof window.bwipjs.toCanvas === "function") {
+                            resolve(window.bwipjs);
+                        } else {
+                            reject("Nie udało się załadować bwip-js lub brak toCanvas.");
+                        }
+                    }, function () {
+                        reject("Błąd ładowania skryptu: " + sUrl);
+                    });
+                }
+            });
+        }, 
+
+        _getGS1Barcode: function () {
+            debugger;
+            return this.pBwip().then(function (bwipjs) {
                 const oCanvas = document.createElement("canvas");
- 
                 bwipjs.toCanvas(oCanvas, {
-                    bcid:        "gs1datamatrix",
-                    text:        "(01)01234567890128(11)250716",
-                    parsefnc:    true,
-                    scale:       6,
+                    bcid: "gs1datamatrix",
+                    text: "(01)01234567890128(11)250716",
+                    parsefnc: true,
+                    scale: 6,
                     includetext: false
                 });
+        
                 const sDataUrl = oCanvas.toDataURL("image/png");
- 
                 const sBase64 = sDataUrl.split(",")[1];
                 return sBase64;
- 
-
-            }).catch(function (sErr) {                // obsługa błędów
-                Log.error(sErr);
             });
-            */
         }
+        
+        
+
+        
+        
+        
     });
 
     return oSfc;
