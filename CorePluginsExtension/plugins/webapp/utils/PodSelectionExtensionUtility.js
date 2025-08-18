@@ -5,13 +5,11 @@ sap.ui.define([
 	"sap/m/MessageBox",
 	"sap/m/MessageToast",
     "sap/m/ToolbarSpacer",
-    "sap/ui/comp/filterbar/FilterGroupItem",
 	"sap/ui/model/json/JSONModel",
     "sap/dm/dme/podfoundation/util/PodUtility",
     "sap/m/Dialog",
     "sap/m/Text",
     "sap/m/library",
-    "sap/m/TextArea",
     "sap/m/Table",
     "sap/m/Column",
     "sap/m/ColumnListItem",
@@ -31,10 +29,11 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/PiqDtUpdate"
-], function (BaseObject, Button, Input, MessageBox, MessageToast, ToolbarSpacer, FilterGroupItem, JSONModel, PodUtility , Dialog, Text
-    , mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler, TextHandler,
-    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository, PiqDtUpdate) {
+    "ibc/dm/plugins/wcPodToolsProvider/PiqDtUpdate",
+    "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader"
+], function (BaseObject, Button, Input, MessageBox, MessageToast, ToolbarSpacer, JSONModel, PodUtility , Dialog, Text
+    , mobileLibrary, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler, TextHandler,
+    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository, PiqDtUpdate, NonconformanceReader) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
@@ -495,7 +494,14 @@ sap.ui.define([
             if(oStartDate === null){this._throwError("q23.error.startDate");}
             if(oEndDate === null){this._throwError("q23.error.endDate");}
 
-            let oNonconformances  = await this._getNonconformances(oStartDate, oEndDate);
+            let nonConformancesCodeReader = new NonconformanceReader(this._oSelController, { plant: this._oSelController.getPodController().getUserPlant(),
+                                                                                             start_date: oStartDate.toJSON(),
+                                                                                             end_date: oEndDate.toJSON(),
+                                                                                             resource: this._oResource,
+                                                                                             excludeStorned: true  } );
+
+            let oNonconformances  = await nonConformancesCodeReader.readNonconformances();
+            //let oNonconformances  = await this._getNonconformances(oStartDate, oEndDate);
 
             let oNonconformancesFiltered = oNonconformances.filter(
                 nonconformance=> {

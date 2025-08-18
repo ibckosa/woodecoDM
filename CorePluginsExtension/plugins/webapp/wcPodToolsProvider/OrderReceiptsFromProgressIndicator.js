@@ -42,8 +42,7 @@ sap.ui.define([
                 orderProgress.model.refresh();
             }
         }
-    }
-
+    };
 
     return orderReceiptsFromProgressIndicator;
 });

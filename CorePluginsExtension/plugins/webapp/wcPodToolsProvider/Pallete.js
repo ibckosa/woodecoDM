@@ -133,7 +133,7 @@ sap.ui.define([
                 LGORT: oLine.storageLocation,
                 HU: oGeneratedHu,
                 CHARGE: oGeneratedHu,
-                MATNR: oLine.packingMaterial,
+                MATNR: oLine.palleteDetails.material,
                 MATTYP: "PACKAGES",
                 MENGE: parseFloat(oQuantity),
                 MENGE_EINH: oLine.uom,

@@ -3,8 +3,10 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/LinkReader",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader",
-    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
-], function (ObjectUI5, LinkReader, MaterialRepository, SfcDataCollectionReader, ErrorHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/BomRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/IssueReader"
+], function (ObjectUI5, LinkReader, MaterialRepository, SfcDataCollectionReader, ErrorHandler, BomRepository, IssueReader) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.Order", {
         constructor: function(oController, oPlant, oOrderNumber){
@@ -515,6 +517,44 @@ sap.ui.define([
 
                 return parseInt(packagingMaterial.field_value); 
             }           
+        },
+        getIssuesNonBackflush: async function(){
+            let result = [];
+            let materialsUniqe = [];
+            let bom = await BomRepository.getInstance(this._oController, this._oPlant, this._oDetails.bom.bom, this._oDetails.bom.type );
+            let components = bom.getNonBackFlushComponents();
+
+            
+            for(const component of components){
+                const materialUniqe = materialsUniqe.find(material=>{return material.material === component.material.material && 
+                                                                            material.version === component.material.version                     
+                });
+                result.push({
+                    material: component.material.material, 
+                    version: component.material.version,
+                    componentSequence: component.sequence.toString(),
+                    issuedQuantity: 0
+                })
+                if(!materialUniqe){
+                    materialsUniqe.push({
+                        material: component.material.material,
+                        version: component.material.version
+                    });
+                }
+            }
+
+            for(const materialUniqe of materialsUniqe){
+                let materialIssues =  await IssueReader.readIssues(this._oController, this._oPlant, this._oOrderNumber, materialUniqe.material, materialUniqe.version)
+                for(const materialIssue of materialIssues){
+                    if(materialIssue.cancellationTriggered === false){
+                        let resultLine = result.find(line=>{return materialIssue.comments === line.componentSequence });
+                        if(resultLine){
+                            resultLine.issuedQuantity = resultLine.issuedQuantity + materialIssue.quantityInBaseUnit.value;
+                        }
+                    }
+                }
+            }
+            return result;
         }
 
         

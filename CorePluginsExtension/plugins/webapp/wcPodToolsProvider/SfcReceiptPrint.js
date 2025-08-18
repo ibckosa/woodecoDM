@@ -1,7 +1,7 @@
 sap.ui.define([
     "sap/ui/base/Object",
-    "sap/ui/thirdparty/jquery",
-    'ibc/dm/plugins/wcPodToolsProvider/bwip'
+    "sap/ui/thirdparty/jquery"
+   //"extlib/bwip"
 ], function (ObjectUI5, jQuery) {
 "use strict";
 
@@ -20,6 +20,13 @@ sap.ui.define([
         },
 
         print: async function(){
+            debugger;
+            try{
+                let windowTemp = window;
+                let windowCanv = window.bwipjs;
+            }catch(oError){
+                debugger;
+            }
             let oPrintingInterface = this._getPrintingInterface();
             const today = new Date();
             const day = String(today.getDate()).padStart(2, '0');
@@ -100,7 +107,6 @@ sap.ui.define([
             //         }
             //     );
             // });
-
         },
 
         _getPrintingInterface: function(){
@@ -265,7 +271,7 @@ sap.ui.define([
         
 
        pBwip: function () {
-            const sUrl = "https://woodeco-dmc-qas-oiyz0u0q-dmc-qas-ibc-dm-corepluginsextension.cfapps.eu20-001.hana.ondemand.com/plugins/wcPodToolsProvider/bwip.js";
+            const sUrl = "https://github.com/metafloor/bwip-js/blob/master/src/bwipp.js";
             return new Promise(function (resolve, reject) {
                 debugger;
                 if (window.bwipjs && typeof window.bwipjs.toCanvas === "function") {
@@ -286,8 +292,8 @@ sap.ui.define([
             });
         }, 
 
-        _getGS1Barcode: function () {
-            debugger;
+        _getGS1Barcode: async function () {
+
             return this.pBwip().then(function (bwipjs) {
                 const oCanvas = document.createElement("canvas");
                 bwipjs.toCanvas(oCanvas, {
@@ -302,13 +308,7 @@ sap.ui.define([
                 const sBase64 = sDataUrl.split(",")[1];
                 return sBase64;
             });
-        }
-        
-        
-
-        
-        
-        
+        }    
     });
 
     return oSfc;

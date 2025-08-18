@@ -5,7 +5,8 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
-], function (ObjectUI5, ErrorHandler, OrderRepository, SfcRepository, mobileLibrary, TextHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator"
+], function (ObjectUI5, ErrorHandler, OrderRepository, SfcRepository, mobileLibrary, TextHandler, OrderReceiptsFromProgressIndicator) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcMovementReverse", {
         constructor: function(controller, plant, workCenter, resource, parameters, orderNumber, currentSfcNumber, routing, routingVersion){
@@ -42,8 +43,8 @@ sap.ui.define([
                     break;
             }
 
-            this._controller.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
-            this._controller.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+            // this._controller.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
+            // this._controller.publish("PodSelectionChangeEvent", { sendToAllPages: true });
         },
         _executeAI: async function(){
             if(this._parameters.CONSUMPTION){
@@ -76,6 +77,8 @@ sap.ui.define([
             }
 
             await this._saveReversedDataCollection();
+
+            this._updateProgressBar();
         },
         _executeQ3: async function(){
             if(this._sfc.getIsMultiOperation() && this._sfc.checkIsLastOperation(this._parameters.SFC_STEP.operation.operation)){
@@ -142,6 +145,18 @@ sap.ui.define([
                 parameterValues.push({ name: "Q3_CODE",
                     comment: this._parameters.GUID,
                     value: this._parameters.Q3_CODE });
+            }
+
+            if(this._parameters.NC_CODE){
+                parameterValues.push({ name: "NC_CODE",
+                    comment: this._parameters.GUID,
+                    value: this._parameters.NC_CODE });
+            }
+
+            if(this._parameters.NC_CODE_DESCRIPTION){
+                parameterValues.push({ name: "NC_CODE_DESCRIPTION",
+                    comment: this._parameters.GUID,
+                    value: this._parameters.NC_CODE_DESCRIPTION });
             }
 
             if(this._parameters.UOM){
@@ -510,6 +525,9 @@ sap.ui.define([
 
                this.oApproveDialog.open();
             });
+        },
+        _updateProgressBar: function(){
+            OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._orderNumber, - this._parameters.QUANTITY);
         }
     });
 });

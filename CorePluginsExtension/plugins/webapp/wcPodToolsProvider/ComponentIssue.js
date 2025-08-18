@@ -67,7 +67,6 @@ sap.ui.define([
                     await oPallete.palleteReservationAndConsumption(pallete, this._oIssueData.plant, this._oIssueData.orderNumber, this._oIssueData.sequence, false, true);
                 }
                 let oIssueResponse = await this._issue(pallete, oQuanToIssueFromPallete);
-                debugger;
                 this._createdIssues.push({  
                     txnId: oIssueResponse.txnId,
                     stepId: oIssueResponse.stepId,

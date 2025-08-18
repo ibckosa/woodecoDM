@@ -14,7 +14,8 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/Sfc",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
-], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader, Sfc, TextHandler, OrderRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader"
+], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader, Sfc, TextHandler, OrderRepository, NonconformanceReader) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView", {
@@ -106,6 +107,7 @@ sap.ui.define([
             var sPodType = oPodSelectionModel.getPodType();
 
             try{
+                let aSelection = this.getPodSelectionModel().getSelections()[0];
                 if(oPodSelectionModel.workCenter === undefined || oPodSelectionModel.workCenter === ""){
                     return;
                 }
@@ -115,8 +117,22 @@ sap.ui.define([
                 this._oWorkCenter = oPodSelectionModel.workCenter;
                 this._oResource = oPodSelectionModel.resource.resource;
 
-                var aSelection = this.getPodSelectionModel().getSelections()[0];
+                //var aSelection = this.getPodSelectionModel().getSelections()[0];
                 let oCodesTab = await NcCodesReader.readCodes(this, this.getPodController().getUserPlant(), this._oWorkCenter, this._oResource);
+
+                let nonConformancesCodeReader = new NonconformanceReader(this, { plant: this.getPodController().getUserPlant(),
+                                                                                 operation_activity: aSelection.getSfcData().getOperation(),
+                                                                                 resource: this._oResource,
+                                                                                 excludeStorned: true  } );
+
+                let nonconformances  = await nonConformancesCodeReader.readNonconformances();
+                for(const codeLine of oCodesTab){
+                    codeLine.conconformanceQuantity = 0;
+                    let nonconformancesFiltered = nonconformances.filter(nonconformance=>{ return nonconformance.code === codeLine.code });
+                    for(const nonconformance of nonconformancesFiltered){
+                        codeLine.conconformanceQuantity = codeLine.conconformanceQuantity + nonconformance.quantity;
+                    }
+                }
                 //var oCodesTab = await this._getCodes(aSelection.getSfcData().getWorkCenter());
                 var oModelData = { items: oCodesTab };
                 var oModel = new JSONModel(oModelData);
@@ -268,8 +284,9 @@ sap.ui.define([
                     await oIssuesManager.executeIssues();
                 }
 
-                await this._saveDataCollection(oScrapQuantity, oSfcDetails, oSelectedItem.oeeCode, oIssuesManager);
+                await this._saveDataCollection(oScrapQuantity, oSfcDetails, oSelectedItem.oeeCode, oIssuesManager, oSelectedItem.code, oSelectedItem.codeDescription);
                 this._showMessageSuccess("success.ProccessFinished");
+                //oEvent.getSource().getBindingContext().setProperty("/quantity", "0");
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
                     this.getPodSelectionModel().setInputValue(oSfcFirst);
                     this.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
@@ -541,7 +558,7 @@ sap.ui.define([
 
             });
         },
-        _saveDataCollection: async function(quantity, sfcDetails, code, issueManager){
+        _saveDataCollection: async function(quantity, sfcDetails, code, issueManager, ncCode, ncCodeDescription){
             let parameterValues = [];
 
             
@@ -574,6 +591,14 @@ sap.ui.define([
                                    comment: guid,
                                    value: code });
 
+            parameterValues.push({ name: "NC_CODE",
+                                   comment: guid,
+                                   value: ncCode });
+
+            parameterValues.push({ name: "NC_CODE_DESCRIPTION",
+                                   comment: guid,
+                                   value: ncCodeDescription });
+
             parameterValues.push({ name: "USER",
                                    comment: guid,
                                    value: this.getUserId() });
@@ -581,6 +606,10 @@ sap.ui.define([
             parameterValues.push({ name: "CANCELLED",
                                    comment: guid,
                                    value: false });
+
+            parameterValues.push({ name: "ITEM_NO",
+                                   comment: guid,
+                                   value: `0001` });
 
             let issuesCreated = issueManager.getCreatedIssues();
             for(const issue of issuesCreated){

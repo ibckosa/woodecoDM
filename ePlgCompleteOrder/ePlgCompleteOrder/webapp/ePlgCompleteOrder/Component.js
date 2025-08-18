@@ -145,15 +145,32 @@ sap.ui.define([
             });
         },
         _refreshPod: function(){
-            let component = this.getPodOwnerComponent();
-            let mainPodController = component.getMainPodController();
-            let podSelectionModel = mainPodController.getPodSelectionModel();
-            podSelectionModel.setInputValue("");
-            podSelectionModel.clearSelections();
+            try{
+                let component = this.getPodOwnerComponent();
+                let mainPodController = component.getMainPodController();
+                let podSelectionModel = mainPodController.getPodSelectionModel();
+                podSelectionModel.setInputValue("");
+                podSelectionModel.clearSelections();
+                //mainPodController.closePlugin(this);
+                mainPodController.navigateToMainPage();
+                mainPodController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+                // mainPodController.publish("InputChangeEvent", {  serverNotificationEvent: "SFC_START", source: component, newValue: null, oldValue: undefined  });
+                // mainPodController.publish("WorklistSelectEvent", {  sendToAllPages: true, selections: [], source: component, clearInput: true  });
+                // mainPodController.publish("WorklistRefreshedEvent", {  sendToAllPages: true, model: podSelectionModel, source: component, _bInitialLoadWorklist: false });
+                // mainPodController.publish("OperationListSelectEvent", {  sendToAllPages: true, source: component, selections: [] });
+                // mainPodController.publish("OperationListSelectEvent", {  sendToAllPages: true, source: component, selections: [] });
+                // mainPodController.publish("InputChangeEvent", {  sendToAllPages: true, serverNotificationEvent: "SFC_START", source: component, newValue: null, oldValue: undefined  });
 
-            mainPodController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-            mainPodController.closePlugin(this);
-            mainPodController.navigateToMainPage();
+
+
+                // mainPodController.publish("PodSelectionChangeEvent", {  sendToAllPages: true,  source: component, newValue: null  });
+                
+                // mainPodController.closePlugin(this);
+                // mainPodController.navigateToMainPage();
+
+                //
+
+            }catch(error){}
         },
         _completeSOSingleOperation: async function(){
             let maxOrderQuantity = this.order.getMaxOrderQuantitySO();

@@ -8,8 +8,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/Sfc"
-], function (ObjectUI5, ErrorHandler, AjaxUtil, TextHandler, Dialog, mobileLibrary, ResourceRepository, OrderRepository, SfcRepository, Sfc
+    "ibc/dm/plugins/wcPodToolsProvider/Sfc",
+    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager"
+], function (ObjectUI5, ErrorHandler, AjaxUtil, TextHandler, Dialog, mobileLibrary, ResourceRepository, OrderRepository, SfcRepository, Sfc, IssuesManager
 ) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcQ23", {
@@ -32,6 +33,7 @@ sap.ui.define([
             //isLastOperation
             //isCommentRequired
             //nonconformanceCode
+            //nonconformanceCodeDescription
             //resourceReasonCode
             //oeeCode
             //uom
@@ -47,11 +49,18 @@ sap.ui.define([
             this._oResource = await ResourceRepository.getResourceInstance(this._oController, this._oParameters.plant, this._oParameters.resource);
             this._oOrder = await OrderRepository.readOrder(this._oController, this._oParameters.plant, this._oParameters.order);
             this._sfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oParameters.plant, this._oParameters.sfc, this._oParameters.routing, this._oParameters.routingVersion);
+            let automaticIssues = this._oResource.getConsumptionMode()==="AUTOMATIC";
 
             this._executeCheksMO();
             
             let oComment = await this._getComment(this._oParameters.isCommentRequired);
 
+            let oIssuesManager = new IssuesManager(this._oController, this._oParameters.plant, this._oParameters.workCenter, this._oParameters.resource, 
+                this._oParameters.order, this._oParameters.sfc, this._oParameters.operationActivity, this._oParameters.quantity);
+            if(automaticIssues){
+                await oIssuesManager.prepareIssues();
+            } 
+            
             this._oParameters.sfc = await Sfc.splitSfc(this._oController, this._oParameters.plant, this._oParameters.sfc , this._oParameters.quantity, true);
             let oNonconformanceId =  await this._logNonconformance(oComment);
 
@@ -61,13 +70,17 @@ sap.ui.define([
 
             
             await this._executeSfcScrap();
-            await this._saveDataCollection();
+            if(automaticIssues){
+                oIssuesManager.changeSfcNumber(this._oParameters.sfc);
+                await oIssuesManager.executeIssues();
+            }
+            await this._saveDataCollection(oIssuesManager);
 
 
             this._oController.showSuccessMessage(this._oTextHandler.getText("success.q23.ProccessFinished"), true, true);
-            this._oController.getPodSelectionModel().setInputValue(this._oParameters.sfc);
-            this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
-            this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+            // this._oController.getPodSelectionModel().setInputValue(this._oParameters.sfc);
+            // this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
+            // this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
         },
         
 
@@ -197,7 +210,7 @@ sap.ui.define([
                     );
                 });
         },
-        _saveDataCollection: async function(){
+        _saveDataCollection: async function(issueManager){
             let parameterValues = [];
 
             let guid = crypto.randomUUID();
@@ -231,6 +244,14 @@ sap.ui.define([
                                    comment: guid,
                                    value: this._oParameters.oeeCode });
 
+            parameterValues.push({ name: "NC_CODE",
+                                   comment: guid,
+                                   value: this._oParameters.nonconformanceCode });
+
+            parameterValues.push({ name: "NC_CODE_DESCRIPTION",
+                                   comment: guid,
+                                   value: this._oParameters.nonconformanceCodeDescription });
+
             parameterValues.push({ name: "USER",
                                    comment: guid,
                                    value: this._oController.getUserId() });
@@ -250,6 +271,8 @@ sap.ui.define([
             parameterValues.push({ name: "ITEM_NO",
                                    comment: guid,
                                    value: `${this._oParameters.itemNumberErp}` });
+
+                                   
 
 
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";

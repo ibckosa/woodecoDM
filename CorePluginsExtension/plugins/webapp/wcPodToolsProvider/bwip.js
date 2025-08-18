@@ -41,3 +41,4 @@ if (typeof window !== "undefined") {
         BWIPJS_VERSION:BWIPJS_VERSION, BWIPP_VERSION:BWIPP_VERSION,
     };
 }));
+e

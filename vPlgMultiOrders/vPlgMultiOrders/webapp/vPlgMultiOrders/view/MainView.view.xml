@@ -144,6 +144,7 @@
                                 <HBox justifyContent="Center" alignItems="Center" width="100%">
                                     <Label text="Liczba wydruków" id="sdasd" labelFor="rbg1" class="sapUiSmallMarginEnd fontText"/>
                                     <RadioButtonGroup id="rbg1" columns="5" class="printRadioButtonGroup">
+                                        <RadioButton id="rg0" text="0" class="myRadioButtonGroup" />    
                                         <RadioButton id="rg1" text="1" class="myRadioButtonGroup" />
                                         <RadioButton id="rg2" text="2" class="myRadioButtonGroup"/>
                                         <RadioButton id="rg3" text="3" class="myRadioButtonGroup"/>

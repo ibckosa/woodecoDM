@@ -5,13 +5,14 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/ConfirmDialog",
     "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
-], function (ObjectUI5, OrderRepository, SfcRepository, ConfirmDialog, OrderReceiptsFromProgressIndicator, ResourceRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
+], function (ObjectUI5, OrderRepository, SfcRepository, ConfirmDialog, OrderReceiptsFromProgressIndicator, ResourceRepository, ErrorHandler) {
     "use strict";
     let CompleteOrder = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.CompleteOrder", {
         constructor: function(controller, parameters){
             this._controller = controller;
             this._parameters = parameters;
-
+            this._errorHandler = new ErrorHandler(this._controller);
             //parameters:
             //workCenter
             //resource
@@ -27,6 +28,8 @@ sap.ui.define([
             this._order = await OrderRepository.readOrderByPassBuffer(this._controller, this._parameters.plant, this._parameters.order);
             this._sfc = await SfcRepository.getInstance(this._controller, this._parameters.plant, this._parameters.sfc, this._parameters.routing, this._parameters.routingVersion );
             this._resource = await ResourceRepository.getResourceInstance(this._controller, this._parameters.plant, this._parameters.resource);
+
+            
 
             if( !this._resource.getParametersHu() &&
                 (this._order.getIsOrderMO() || !this._sfc.getIsMultiOperation() || !this._sfc.checkIsLastOperation(this._parameters.operation)) ){
@@ -69,6 +72,7 @@ sap.ui.define([
                     await confirmDialog.show();
                 }
             }
+            await this._checkIssueForComponents();
 
             await this._signoff([this._parameters.sfc]);
 
@@ -92,6 +96,9 @@ sap.ui.define([
                 confirmDialog.setContentText("error.q1.greaterMaxQuantity");
                 await confirmDialog.show();
             }
+
+            await this._checkIssueForComponents();
+
 
             await this._signoff([this._parameters.sfc]);
             // for(const sfc of sfcs){
@@ -212,6 +219,18 @@ sap.ui.define([
                     }
                 );
             });
+        },
+        _checkIssueForComponents: async function(){
+            let sfcs = this._order.getSfcs();
+
+            if(sfcs.length<2){
+                return; }
+
+            let componentIssues = await this._order.getIssuesNonBackflush();
+            let componentNoIssue = componentIssues.find(component=>{ return component.issuedQuantity === 0});
+            if(componentNoIssue){
+                this._errorHandler.throwErrorPopup("error.completeOrder.noComponentIssues", componentNoIssue.componentSequence ,componentNoIssue.material);
+            }
         }
 
     });

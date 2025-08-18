@@ -264,9 +264,37 @@ sap.ui.define([
             if(!scrapMaterial){
                 this._errorHandler.throwErrorPopup("error.q23.noScrapingMaterial");
             }
-            return toString(parseInt(scrapMaterial.value));
+            return (parseInt(scrapMaterial.value)).toString();
         }
     });
+
+    material.CONSTANTS = {
+        DECOR_FRONT: "DEKOR_VS",
+        DECOR_BACK: "DEKOR_RS",
+        STRUCTURE_FRONT: "OBERFL_RS",
+        STRUCTURE_BACK: "OBERFL_VS",
+        DECOR_FRONT_TYPE: "decorFront",
+        DECOR_BACK_TYPE: "decorBack",
+        STRUCTURE_FRONT_TYPE: "structureFront",
+        STRUCTURE_BACK_TYPE: "structureBack",
+        CYLINDER_FRONT_1: "CYLINDER_VS_1",
+        CYLINDER_FRONT_1_TYPE: "cylinderFront1",
+        CYLINDER_FRONT_2: "CYLINDER_VS_2",
+        CYLINDER_FRONT_2_TYPE: "cylinderFront2",
+        CYLINDER_FRONT_3: "CYLINDER_VS_3",
+        CYLINDER_FRONT_3_TYPE: "cylinderFront3",
+        CYLINDER_FRONT_4: "CYLINDER_VS_4",
+        CYLINDER_FRONT_4_TYPE: "cylinderFront4",
+        CYLINDER_BACK_1: "CYLINDER_RS_1",
+        CYLINDER_BACK_1_TYPE: "cylinderBack1",
+        CYLINDER_BACK_2: "CYLINDER_RS_2",
+        CYLINDER_BACK_2_TYPE: "cylinderBack2",
+        CYLINDER_BACK_3: "CYLINDER_RS_3",
+        CYLINDER_BACK_3_TYPE: "cylinderBack3",
+        CYLINDER_BACK_4: "CYLINDER_RS_4",
+        CYLINDER_BACK_4_TYPE: "cylinderBack4"
+    }
+    material._oTextHandler = new TextHandler();
 
     material.getGraphicLinkFromCustomData = async function(customData, controller){
         let oReturn = [];

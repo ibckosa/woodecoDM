@@ -41,8 +41,11 @@ sap.ui.define([
                 oReturn = oError.message;
             }else if(oError.errorMessage){
                 oReturn = oError.errorMessage;
-            }else{
-                oReturn = oError;
+            }else if(oError.error&&oError.error.message){
+                oReturn = oError.error.message;
+            }            
+            else{
+                oReturn = oError.toString();
             }
 
             if(oReturn===""){

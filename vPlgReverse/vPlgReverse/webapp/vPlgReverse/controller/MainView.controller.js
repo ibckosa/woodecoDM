@@ -19,13 +19,7 @@ sap.ui.define([
 			           
             
 		},
-
-
-
-
         onAfterRendering: function(){
-        
-
         },
 
         onBeforeRendering:  async function () {   
@@ -128,6 +122,9 @@ sap.ui.define([
                         collection.confText = `${collection["Q1/Q3"]}: ${collection.MATERIAL}: ${collection.HU} - ${collection.QUANTITY} ${collection.UOM}`
                     }else{
                         collection.confText = `${collection["Q1/Q3"]}: ${collection.MATERIAL}: ${collection.SFC_NUMBER} - ${collection.QUANTITY} ${collection.UOM}`
+                    }
+                    if(collection.NC_CODE_DESCRIPTION){
+                        collection.confText = collection.confText + `\n${collection.NC_CODE_DESCRIPTION}`;
                     }
                 }
 
@@ -259,6 +256,9 @@ sap.ui.define([
                         collection.confText = `${collection["Q1/Q3"]}: ${collection.MATERIAL}: ${collection.HU} - ${collection.QUANTITY} ${collection.UOM}`
                     }else{
                         collection.confText = `${collection["Q1/Q3"]}: ${collection.MATERIAL}: ${collection.SFC_NUMBER} - ${collection.QUANTITY} ${collection.UOM}`
+                    }
+                    if(collection.NC_CODE_DESCRIPTION){
+                        collection.confText = collection.confText + `\n${collection.NC_CODE_DESCRIPTION}`;
                     }
                 }
 

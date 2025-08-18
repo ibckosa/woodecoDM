@@ -31,6 +31,18 @@ sap.ui.define([
         getComponents: function(){
             return this._oDetails.components;
         },
+        getNonBackFlushComponents: function(){
+            let result = [];
+
+            for(let bomComponent of this._oDetails.components){
+                let customValueBackflush = bomComponent.customValues.find( customValue=>{ return customValue.attribute==="BACKFLUSH"});
+                if((!(bomComponent.backflushEnabled || (customValueBackflush&&customValueBackflush.value==="X")) && bomComponent.componentType === "NORMAL")){
+                    result.push(bomComponent);
+                }
+            }
+
+            return result;
+        },
         getComponentBackflush: function(componentSequence){
             let result = false;
             try{

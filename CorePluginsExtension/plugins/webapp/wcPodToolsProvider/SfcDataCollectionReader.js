@@ -166,7 +166,7 @@ sap.ui.define([
 
     };
     dataCollectionReader._getStructure = function(){
-        return ['GUID', "CREATED_DATETIME", "DATE_CREATED", "SFC_NUMBER", "SFC_STEP", "Q1/Q3", "Q3_CODE", "QUANTITY", "UOM", "MATERIAL", "ITEM_NO", "SALES_ORDER", "SALES_ORDER_ITEM", "HU", "CANCELLED", "USER", "CONSUMPTION"];
+        return ['GUID', "CREATED_DATETIME", "DATE_CREATED", "SFC_NUMBER", "SFC_STEP", "Q1/Q3", "Q3_CODE", "QUANTITY", "UOM", "MATERIAL", "ITEM_NO", "SALES_ORDER", "SALES_ORDER_ITEM", "HU", "CANCELLED", "USER", "CONSUMPTION", "NC_CODE", "NC_CODE_DESCRIPTION"];
     };
     dataCollectionReader._convertConsumption = function(consumptionValue){
         let consumptionStructure = {

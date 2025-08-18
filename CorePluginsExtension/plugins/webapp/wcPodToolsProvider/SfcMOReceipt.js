@@ -12,8 +12,9 @@ sap.ui.define([
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator"
-], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository"
+], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator, ResourceRepository) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceipt", {
         constructor: function(oController, oReceiptParameters){
@@ -51,7 +52,17 @@ sap.ui.define([
             this._oOrder = await OrderRepository.readOrderByPassBuffer(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.order);
             this._oSfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc, this._oReceiptParameters.routing, this._oReceiptParameters.routingVersion  );
             this._oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.material);
+            this._oResource = await ResourceRepository.getResourceInstance(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.resource);
+
+
+            this._oReceiptParameters.totalQuantity = this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber * this._oReceiptParameters.palletesNumber;
+            this._oReceiptParameters.quantity  = this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber;
+            this._oReceiptParameters.packageNumber = 1;
+
+
+            let automaticIssues = this._oResource.getConsumptionMode()==="AUTOMATIC";
             let _oPrintingEndpoint = this._getPrintingEndPoint();
+            
 
             this._fillMissingParameters();
             await this._generalChecks();
@@ -61,13 +72,24 @@ sap.ui.define([
 
             if(!oStorageLocation.isEWMManagedStorageLocation){
                 await this._checkRequiredParams();
-                await this._checkConfirmMm();
-            }
+                await this._checkConfirmMm(); }
 
             let sourceSfc = this._oReceiptParameters.sfc;
 
+            if(automaticIssues&&this._oReceiptParameters.palletesNumber>1){
+                let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
+                                                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.totalQuantity);
+                await oIssuesManager.prepareIssues();
+            }
+
             for(let i=0; i<this._oReceiptParameters.palletesNumber;i++){
-                this._oReceiptParameters.sfc = await Sfc.splitSfc(this._oController, this._oReceiptParameters.plant, sourceSfc , this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber, true);
+                let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
+                    this._oReceiptParameters.order, sourceSfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
+                if(automaticIssues){
+                    await oIssuesManager.prepareIssues();
+                } 
+
+                this._oReceiptParameters.sfc = await Sfc.splitSfc(this._oController, this._oReceiptParameters.plant, sourceSfc , this._oReceiptParameters.quantity, true);
                 let sfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc, this._oReceiptParameters.routing, this._oReceiptParameters.routingVersion );
                 await sfc.complete(this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource);
                 //await this._executeQuantityConfirmation();
@@ -76,7 +98,12 @@ sap.ui.define([
                 }else{
                     await this._executeMmReceipt();
                 }
-                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z');                        
+
+                if(automaticIssues){
+                    oIssuesManager.changeSfcNumber(this._oReceiptParameters.sfc);
+                    await oIssuesManager.executeIssues();
+                }
+                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);                        
                 await this._printLabel(_oPrintingEndpoint);
             }
 
@@ -101,12 +128,12 @@ sap.ui.define([
                 }
             }
 
-            if(this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber * this._oReceiptParameters.palletesNumber > this._oReceiptParameters.maxLeftQuantity ){
+            if(this._oReceiptParameters.quantity *  this._oReceiptParameters.palletesNumber > this._oReceiptParameters.maxLeftQuantity ){
                 this._oErrorHandler.throwErrorPopup("error.q1.exceedMaxQuantity", this._oReceiptParameters.maxQuantity, this._oOrder.getInternalUom());
             }
 
-            if(this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber > this._oReceiptParameters.quantityPerPalletMax || 
-               this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber < this._oReceiptParameters.quantityPerPalletMin){
+            if(this._oReceiptParameters.quantity  > this._oReceiptParameters.quantityPerPalletMax || 
+               this._oReceiptParameters.quantity  < this._oReceiptParameters.quantityPerPalletMin){
                 await this._checkConfirmTolerance();
             }
         },
@@ -197,7 +224,7 @@ sap.ui.define([
                 shopOrder: this._oReceiptParameters.order,
                 sfc: this._oReceiptParameters.sfc,
                 operationActivity: this._oReceiptParameters.operationActivity,
-                yieldQuantity: this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber,
+                yieldQuantity: this._oReceiptParameters.quantity ,
                 yieldQuantityUnit: this._oReceiptParameters.unitOfMeasure,
                 workCenter: this._oReceiptParameters.workCenter
             }
@@ -226,7 +253,7 @@ sap.ui.define([
                                                materialVersion: this._oReceiptParameters.materialVersion,
                                                packingMaterial: "PALETA",
                                                handlingUnit: oHu,
-                                               quantity: { unitOfMeasure: { commercialUnitOfMeasure: this._oReceiptParameters.unitOfMeasure }, value: this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber },
+                                               quantity: { unitOfMeasure: { commercialUnitOfMeasure: this._oReceiptParameters.unitOfMeasure }, value: this._oReceiptParameters.quantity },
                                                requireQuantityToleranceCheck: false,
                                                comments: `${this._oReceiptParameters.salesOrder}${this._oReceiptParameters.salesOrderItem}`,
                                                sfc: this._oReceiptParameters.sfc }],
@@ -270,8 +297,8 @@ sap.ui.define([
             //     this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
             // }
 
-            this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
-            this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+            // this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
+            // this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
         },
         _checkSfcQuantityInWork: function(){
             let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
@@ -306,11 +333,10 @@ sap.ui.define([
             oPrintingDetails.orderLineCustomValues = this._oOrder.getOrderLineCustomValues(this._oReceiptParameters.itemNumber);
             oPrintingDetails.orderCustomValues = this._oOrder.getHeaderCustomValues();
             oPrintingDetails.materialCustomValues = this._oMaterial.getCustomValues();
-            oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber;
             oPrintingDetails.printer = this._oReceiptParameters.printer;
             oPrintingDetails.operation = this._oReceiptParameters.stepId;
             oPrintingDetails.document = 'DM_A4';
-            oPrintingDetails.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber;
+            oPrintingDetails.quantity = this._oReceiptParameters.quantity;
             oPrintingDetails.printingCopies = this._oReceiptParameters.printingCopies;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oController, oPrintingDetails);
@@ -351,7 +377,7 @@ sap.ui.define([
                this.oToleranceDialog.open();
             });
         },
-        _saveDataCollection: async function(postingDate){
+        _saveDataCollection: async function(postingDate, issueManager){
             let parameterValues = [];
 
             let guid = crypto.randomUUID();
@@ -372,7 +398,7 @@ sap.ui.define([
 
             parameterValues.push({ name: "QUANTITY",
                                    comment: guid,
-                                   value: `${this._oReceiptParameters.quantity * this._oReceiptParameters.packageNumber}` });
+                                   value: `${this._oReceiptParameters.quantity}` });
 
             parameterValues.push({ name: "UOM",
                                    comment: guid,
@@ -412,12 +438,33 @@ sap.ui.define([
                                    comment: guid,
                                    value: this._oController.getUserId() });
 
+            parameterValues.push({ name: "Q3_CODE",
+                                   comment: guid,
+                                   value: "" });
+
+            parameterValues.push({ name: "NC_CODE",
+                                   comment: guid,
+                                   value: "" });
+
+            parameterValues.push({ name: "NC_CODE_DESCRIPTION",
+                                   comment: guid,
+                                   value: "" });
+
             parameterValues.push({ name: "CANCELLED",
                                    comment: guid,
                                    value: false });
+
+            let issuesCreated = issueManager.getCreatedIssues();
+            for(const issue of issuesCreated){
+                let issueAsString = Object.entries(issue)
+                                        .map(([key, value]) => `${key}:${value}`)
+                                        .join('||');
+
+                parameterValues.push({ name: `CONSUMPTION`,
+                                       comment: guid,
+                                       value: issueAsString });
+            }
             
-
-
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
             let oRequestParameters = {
                 plant: this._oReceiptParameters.plant,

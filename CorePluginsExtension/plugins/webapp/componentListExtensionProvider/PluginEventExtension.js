@@ -259,9 +259,9 @@ sap.ui.define([
                     return oColumn.getId() === "uomCol";
                   });
                 if (!bColumnExists){
-                    let oNewColumn = new Column({ header: new Text({ text: _getText("uomColumnLabel", oPodController)}), id: "uomCol" });
-                    let oIssuedColumn = new Column({ header: new Text({ text: _getText("Issued quantity", oPodController)}), id: "issuedCol" });
-                    oTable.insertColumn(oNewColumn, oTable.getColumns().length - 1 );  
+                    let oNewColumn = new Column({ header: new Text({ text: that._oTextHandler.getText("labels.components.uomColumn")}), id: "uomCol" });
+                    let oIssuedColumn = new Column({ header: new Text({ text: that._oTextHandler.getText("labels.components.issuedQuanColumn")}), id: "issuedCol" });
+                    oTable.insertColumn(oNewColumn, oTable.getColumns().length );  
                     oTable.insertColumn(oIssuedColumn, oTable.getColumns().length - 1 );  
                 }
                 debugger;
@@ -282,7 +282,7 @@ sap.ui.define([
                         if(materialIssues.issues){
                             let materialIssuesForSeq = materialIssues.issues.filter( issue=>{return issue.comment === itemData.componentSequence && issue.cancellationTriggered === false});
                             for(issue of materialIssuesForSeq){
-                                issuedQuantity = issuedQuantity + issue.quantityInBaseUnit.value;
+                                issuedQuantity = Math.round((issuedQuantity + issue.quantityInBaseUnit.value)*1000)/1000;
                             }
                         }
                         
@@ -536,8 +536,8 @@ sap.ui.define([
                 return oColumn.getId() === "uomCol";
               });
             if (!bColumnExists){
-                let oNewColumn = new Column({ header: new Text({ text: this._oTextHandler.getText("uomColumnLabel")}), id: "uomCol" });
-                let oIssuedColumn = new Column({ header: new Text({ text: this._oTextHandler.getText("Issued quantity")}), id: "issuedCol" });
+                let oNewColumn = new Column({ header: new Text({ text: this._oTextHandler.getText("labels.components.uomColumn")}), id: "uomCol" });
+                let oIssuedColumn = new Column({ header: new Text({ text: this._oTextHandler.getText("labels.components.issuedQuanColumn")}), id: "issuedCol" });
                 oTable.insertColumn(oNewColumn, oTable.getColumns().length - 1 );  
                 oTable.insertColumn(oIssuedColumn, oTable.getColumns().length - 1 );  
             }
@@ -558,7 +558,7 @@ sap.ui.define([
                     if(materialIssues.issues){
                         let materialIssuesForSeq = materialIssues.issues.filter( issue=>{return issue.comments === itemData.componentSequence.toString() && issue.cancellationTriggered === false});
                         for(const issue of materialIssuesForSeq){
-                            issuedQuantity = issuedQuantity + issue.quantityInBaseUnit.value;
+                            issuedQuantity = Math.round((issuedQuantity + issue.quantityInBaseUnit.value)*1000)/1000;
                         }
                     }
                     oMdl.setProperty(item.getBindingContextPath()+"/zIssuedQuantity", issuedQuantity);

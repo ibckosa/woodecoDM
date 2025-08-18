@@ -130,7 +130,7 @@ sap.ui.define([
                 }
     
                 await this._printLabel();
-                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager); 
+                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager, true); 
                 OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
             }
 
@@ -386,7 +386,7 @@ sap.ui.define([
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPostRequest(sUrl, oRequestParameters,
                     oResponseData => {
-                        this._oController.showSuccessMessage(this._oTextHandler.getText("messageConfirmationSuccess"), true, true);
+                        //this._oController.showSuccessMessage(this._oTextHandler.getText("messageConfirmationSuccess"), true, true);
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {      
@@ -688,7 +688,7 @@ sap.ui.define([
                 this._oErrorHandler.throwError("errorSfcNotInWork");
             }
         },
-        _saveDataCollection: async function(postingDate, issueManager){
+        _saveDataCollection: async function(postingDate, issueManager, repeatWrongSave=false){
             let parameterValues = [];
 
             let guid = crypto.randomUUID();
@@ -740,9 +740,16 @@ sap.ui.define([
                     comment: guid,
                     value: "" });
             }
-
                                    
             parameterValues.push({ name: "Q3_CODE",
+                                   comment: guid,
+                                   value: "" });
+
+            parameterValues.push({ name: "NC_CODE",
+                                   comment: guid,
+                                   value: "" });
+
+            parameterValues.push({ name: "NC_CODE_DESCRIPTION",
                                    comment: guid,
                                    value: "" });
 
@@ -782,13 +789,22 @@ sap.ui.define([
                 sfcs: [ this._oReceiptParameters.sfc ]
             };
 
+            let that = this;
+
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-                    oResponseData => {
+                    async oResponseData => {
+                        if(!oResponseData||!oResponseData.success||(oResponseData.failedSfcs&&oResponseData.failedSfcs.length>0)){
+                            await that._saveDataCollection('', issueManager);
+                        }
+
                         resolve();
                     },
-                    (oError, sHttpErrorMessage) => {                        
-                        resolve();
+                    async (oError, sHttpErrorMessage) => {
+                        if(repeatWrongSave){
+                            await that._saveDataCollection('', issueManager);
+                        }  
+                        resolve();                         
                     }
                 );
             });

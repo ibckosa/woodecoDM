@@ -36,6 +36,7 @@ sap.ui.define([
         },
 
         setHandlerData: function(oHandlerData){
+            this._issuedQuantity = undefined;
             this._oHandlerData = oHandlerData;
         },
 
@@ -50,10 +51,7 @@ sap.ui.define([
             }
         },
         _displayDialogLog: async function () {
-            
-            
             return await new Promise( async (resolve, reject) => {
-                debugger;
                 this._resolveLogDialog = resolve;
                 this._rejectLogDialog = reject;
                 
@@ -72,6 +70,17 @@ sap.ui.define([
                                 text: this._textHandler.getText("labels.loghu.button.close"),
                                 press: function () {
                                     this._oDialogLog.close();
+
+                                        try{
+                                            let model = this._oPluginViewController.byId("componentList").getModel();
+                                            let modelData = this._oPluginViewController.byId("componentList").getModel().getData();
+                                            let component = modelData.Components.find( line=>{ return line.componentSequence === this._oHandlerData.sequence } );
+                                            component.zIssuedQuantity = Math.round( (component.zIssuedQuantity + this._getIssuedQuantity() ) * 1000)/1000;
+                                            model.setData(modelData);
+                                            this._oPluginViewController.byId("componentList").setModel(model)
+                                        }catch(error){
+                                            debugger;
+                                        }
                                     this._resolveLogDialog();
                                 }.bind(this)
                             })
@@ -82,8 +91,6 @@ sap.ui.define([
                 let oTitle = this._getDialogTitle();
                 this._oDialogLog.setTitle(oTitle);
                 this._oDialogLog.open();
-
-
             });
         },
         _getColumns: function(){
@@ -157,7 +164,6 @@ sap.ui.define([
             return oPanel;
         },
         _getActionButtons: function () {
-            debugger;
             let oButtonsVisible = { reservation: true,
                                     endReservation: true,
                                     return: true,
@@ -288,7 +294,7 @@ sap.ui.define([
                         item.erpResourceId = oResource.getResourceErpId();
                         await oPallete.palleteReturn(item, oZweiEndpoint);
                         await oPallete.reducePalleteQuan(item, item.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
-                        await this._executeLabelPrint(item, oPrintingEndpoint, oPrinter);
+                        await this._executeLabelPrint(item, oPrinter, item.quantity);
                         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     }
                 }catch(oError){this._oErrorHandler.handleError(oError);}
@@ -319,7 +325,7 @@ sap.ui.define([
                     await oPallete.palleteReturnNpw(oItem, oZweiEndpoint, oDialogReturn.quantity);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturnNpw"),true,true);
                     await oPallete.reducePalleteQuan(oItem, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc );
-                    await this._executeLabelPrint(oItem, oPrintingEndpoint, oPrinter);
+                    await this._executeLabelPrint(oItem, oPrinter, oDialogReturn.quantity);
                     setTimeout( async ()=> {                    await this._getDialogData();
                         this._oDialogLog.setBusy(false);},1500);
                 }else{
@@ -339,6 +345,7 @@ sap.ui.define([
                 if(oQuanAdditional>0){
                     this._oDialogLog.setBusy(true)
                     await oPallete.additionalIssue(oItem, oQuanAdditional, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity, this._oHandlerData.sequence);
+                    this._addIssuedQuantity(oQuanAdditional);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteAdditionalIssue"),true,true);
                     setTimeout( async ()=> {  await this._getDialogData();
                                             this._oDialogLog.setBusy(false);},1500);
@@ -358,8 +365,8 @@ sap.ui.define([
                     try{
                         let oPallete  = new Palette(this._oPluginViewController);
                         await oPallete.additionalIssue(item, item.quantity, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity);
+                        this._addIssuedQuantity(item.quantity);
                         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteAdditionalIssue"),true,true);
-
                     }catch(oError){
                         this._oErrorHandler.handleError(oError);
                     }
@@ -457,7 +464,6 @@ sap.ui.define([
         _logNonconformance: async function(oQuantity, oLine, oCode, sfc){
             let sUrl = this._oPluginViewController.getPublicApiRestDataSourceUri() + "nonconformance/v1/log";
 
-            debugger;
             let oRequestParameters = {
                 code: oCode,
                 plant: oLine.plant,
@@ -498,7 +504,7 @@ sap.ui.define([
 
             });
         },
-        _executeLabelPrint: async function(oItem, oEndpoint, oPrinter){
+        _executeLabelPrint: async function(oItem, printer, quantity){
             let oPrintingDetails = {};
             
             if(oItem.scrapingMaterial){
@@ -508,19 +514,18 @@ sap.ui.define([
             }
 
             let oMaterial = await MaterialRepository.getMaterialInstance(this._oPluginViewController, oItem.plant, oPrintingDetails.material);
-            oPrintingDetails.endpoint = oEndpoint;
             oPrintingDetails.plant  = oItem.plant;
-            oPrintingDetails.order = undefined;
+            oPrintingDetails.order = "";
             oPrintingDetails.workCenter = oItem.workCenter;
             oPrintingDetails.resource = oItem.resource;
-            oPrintingDetails.sfc = undefined;
+            oPrintingDetails.sfc = "";
             
             oPrintingDetails.HU = oItem.handlingUnit;
             oPrintingDetails.orderLineCustomValues = [];
             oPrintingDetails.orderCustomValues = [];
             oPrintingDetails.materialCustomValues = oMaterial.getCustomValues();
-            oPrintingDetails.quantity = oItem.quantity;
-            oPrintingDetails.printer = oPrinter;
+            oPrintingDetails.quantity = quantity;
+            oPrintingDetails.printer = printer;
             oPrintingDetails.operation = "";
             oPrintingDetails.document = 'DM_INFO';
             oPrintingDetails.printingCopies = 1;
@@ -537,6 +542,19 @@ sap.ui.define([
                 this._oErrorHandler.throwError("error.printing.noPrinter");
             }
             return oPrinter;
+        },
+        _addIssuedQuantity: function(oQuan){
+            if(!this._issuedQuantity){
+                this._issuedQuantity = 0;
+            }
+            this._issuedQuantity = this._issuedQuantity + parseFloat(oQuan);
+        },
+        _getIssuedQuantity: function(){
+            if(!this._issuedQuantity){
+                this._issuedQuantity = 0;
+            }
+
+            return this._issuedQuantity;
         }
 
     })

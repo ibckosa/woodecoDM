@@ -186,6 +186,8 @@ sap.ui.define([
                     material: selectedOrder.selectedOrder.materialNumber,
                     materialVersion: aSelectionFirstRow.getSfcData().getMaterialVersion(),
                     quantity: parseInt(this.byId("inputReceiptQuantity").getValue()),
+                    palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
+                    packageNumber: parseInt(this.byId("inputPackageQuan").getValue()),
                     maxQuantity: selectedOrder.selectedOrder.maxQuantity,
                     maxLeftQuantity: selectedOrder.selectedOrder.maxLeftQuantity,
                     unitOfMeasure: "",		
@@ -195,9 +197,7 @@ sap.ui.define([
                     sfcQuantity: parseInt(aSelectionFirstRow.getSfcData().getQuantity()),
                     operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
                     workCenter: oPodSelectionModel.workCenter,
-                    palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
                     printingCopies: parseInt(this.byId("rbg1").getSelectedButton().getText()),
-                    packageNumber: parseInt(this.byId("inputPackageQuan").getValue()),
                     printer: oResource.getPrinterId(),
                     salesOrder: selectedOrder.selectedOrder.salesOrder,
                     salesOrderItem: selectedOrder.selectedOrder.salesOrderItem,
@@ -211,13 +211,17 @@ sap.ui.define([
                 ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcMOReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeReceipt();
+                    selectedOrder.selectedOrder.deliveredQuantity = selectedOrder.selectedOrder.deliveredQuantity + oReceiptParameters.palletesNumber * oReceiptParameters.packageNumber * oReceiptParameters.quantity;
+                    this.getView().getModel("viewModel").setData(selectedOrder);
                     this.getView().setBusy(false);
-                    setTimeout( async ()=> { 
-                        if(this._oResourceInstance.getMOSelectionMode().toUpperCase()==="AUTOMATIC"){
-                            this._oOrderNumberPrevious = "";
-                        }
-                        await this._loadData();
-                    },1500);
+                    // setTimeout( async ()=> { 
+                    //     if(this._oResourceInstance.getMOSelectionMode().toUpperCase()==="AUTOMATIC"){
+                    //         this._oOrderNumberPrevious = "";
+                    //     }
+                    //     await this._loadData();
+                    // },1500);
+                    
+
             }catch(oError){
                 this.getView().setBusy(false);
                 this._oErrorHandler.handleError(oError);
@@ -247,6 +251,7 @@ sap.ui.define([
                                         operationActivity: aSelectionFirstRow.getSfcData().getOperation(),
                                         isCommentRequired: selectedCode.dataType ==="NC_DATA_COMMENT_REQUIERED",
                                         nonconformanceCode: selectedCode.code,
+                                        nonconformanceCodeDescription: selectedCode.codeDescription,
                                         resourceReasonCode: selectedCode.resourceReasonCode,
                                         oeeCode: selectedCode.oeeCode,
                                         salesOrder: selectedOrder.selectedOrder.salesOrder,
@@ -552,7 +557,7 @@ sap.ui.define([
             }
 
             try{
-                orderInputInstance = await OrderRepository.readOrder(this, this._oPlant, orderInput);
+                orderInputInstance = await OrderRepository.readOrderByPassBuffer(this, this._oPlant, orderInput);
 
             }catch(oError){
                 await this._dialogNoOAOrder(orderInput)
