@@ -11,6 +11,7 @@ sap.ui.define([
         let result = { orderNumber: orderNumber,
                        quantityDone: 0,
                        totalOrderQuantity:0,
+                       receiptCount: 0,
                        model: undefined };
         let orderProgress = orderReceiptsFromProgressIndicator._orderProgress.find(progress=>{return progress.orderNumber === orderNumber});
         if(orderProgress){
@@ -19,11 +20,12 @@ sap.ui.define([
         return result;
     };
 
-    orderReceiptsFromProgressIndicator.setOrderProgress = function(orderNumber, quantityDone, totalOrderQuan, model){
+    orderReceiptsFromProgressIndicator.setOrderProgress = function(orderNumber, quantityDone, totalOrderQuan, model, receiptCount = 0){
         orderReceiptsFromProgressIndicator._orderProgress = orderReceiptsFromProgressIndicator._orderProgress.filter( progress=>{ return progress.orderNumber !== orderNumber });
         orderReceiptsFromProgressIndicator._orderProgress.push({ orderNumber: orderNumber,
                                                                  quantityDone: quantityDone,
                                                                  totalOrderQuantity: totalOrderQuan,
+                                                                 receiptCount: receiptCount,
                                                                  model: model });
     };
 
@@ -31,6 +33,11 @@ sap.ui.define([
         let orderProgress = orderReceiptsFromProgressIndicator._orderProgress.find(progress=>{return progress.orderNumber === orderNumber});
         if(orderProgress){
             orderProgress.quantityDone = orderProgress.quantityDone + quantityRecipted;
+            if(quantityRecipted>=0){
+                orderProgress.receiptCount = orderProgress.receiptCount + 1;
+            }else{
+                orderProgress.receiptCount = orderProgress.receiptCount - 1;
+            }
 
             let progressData = orderProgress.model.getData();
             progressData.sfcCardCustom.percentProgress = "";

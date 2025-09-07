@@ -1,8 +1,9 @@
 sap.ui.define([
     "sap/ui/base/Object",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
-    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository"
-], function (ManagedObject, ErrorHandler, SfcRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
+], function (ManagedObject, ErrorHandler, SfcRepository, DataCollectionSaver) {
     "use strict";
     let Pallete = ManagedObject.extend("ibc.dm.plugins.wcPodToolsProvider.Pallete", {
         constructor: function(oContoller){
@@ -394,61 +395,91 @@ sap.ui.define([
             let parameterValues = [];
             let guid = crypto.randomUUID();
             let date = new Date();
-            debugger;
-            parameterValues.push({ name: "GUID",
-                                   comment: guid,
-                                   value: guid });
+            // debugger;
+            // parameterValues.push({ name: "GUID",
+            //                        comment: guid,
+            //                        value: guid });
 
-            parameterValues.push({ name: "DATE_CREATED",
-                                   comment: guid,
-                                   value: date.toJSON() });
+            // parameterValues.push({ name: "DATE_CREATED",
+            //                        comment: guid,
+            //                        value: date.toJSON() });
 
-            parameterValues.push({ name: "Q1/Q3",
-                                   comment: guid,
-                                   value: "AI" });
+            // parameterValues.push({ name: "Q1/Q3",
+            //                        comment: guid,
+            //                        value: "AI" });
 
-            parameterValues.push({ name: "CANCELLED",
-                                   comment: guid,
-                                   value: false });
+            // parameterValues.push({ name: "CANCELLED",
+            //                        comment: guid,
+            //                        value: false });
 
-            parameterValues.push({ name: "USER",
-                                   comment: guid,
-                                   value: this._oController.getUserId() });
+            // parameterValues.push({ name: "USER",
+            //                        comment: guid,
+            //                        value: this._oController.getUserId() });
 
             let consumptionValue = `txnId:${issueResponse.txnId}||stepId:${stepId}||order:${oLine.orderNumber}||operation:${oOperation}||quantity:${oQuantity}||uom:${oLine.uom}`;
             consumptionValue = consumptionValue + `||handlingUnit:${oLine.handlingUnit}||storageLocation:${oLine.storageLocation}||material:${oLine.materialId}||sfc:${oSfc}`;
-            parameterValues.push( {
-                name: `CONSUMPTION`,
-                comment: guid,
-                value: consumptionValue
-            });
+            // parameterValues.push( {
+            //     name: `CONSUMPTION`,
+            //     comment: guid,
+            //     value: consumptionValue
+            // });
             
 
 
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
-            let oRequestParameters = {
-                plant: oLine.plant,
-                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
-                         version: "A" },
-                operation: { operation: oOperation,
-                              version: "ERP001" },
-                parameterValues: parameterValues,
-                stepId: issueResponse.stepid,
-                workCenter: oLine.workCenter,
-                resource: oLine.resource,
-                sfcs: [ oSfc ]
-            };
+            // let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            // let oRequestParameters = {
+            //     plant: oLine.plant,
+            //     group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+            //              version: "A" },
+            //     operation: { operation: oOperation,
+            //                   version: "ERP001" },
+            //     parameterValues: parameterValues,
+            //     stepId: issueResponse.stepid,
+            //     workCenter: oLine.workCenter,
+            //     resource: oLine.resource,
+            //     sfcs: [ oSfc ]
+            // };
 
-            return await new Promise((resolve,reject)=>{
-                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-                    oResponseData => {
-                        resolve();
-                    },
-                    (oError, sHttpErrorMessage) => {                        
-                        resolve();
-                    }
-                );
-            });
+            // return await new Promise((resolve,reject)=>{
+            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+            //         oResponseData => {
+            //             resolve();
+            //         },
+            //         (oError, sHttpErrorMessage) => {                        
+            //             resolve();
+            //         }
+            //     );
+            // });
+
+            await DataCollectionSaver.saveProductionDC(
+                this._oController,
+                {
+                    plant: oLine.plant,
+                    sfc: oSfc,
+                    resource: oLine.resource,
+                    operation: oOperation,
+                    productionProcessType: "AI",
+                    q3Code: "",
+                    quantity: `0`,
+                    uom: '',
+                    material: '',
+                    itemNo: '',
+                    salesOrder: "", 
+                    saledOrderItem: "",
+                    hu: "",
+                    cancelled: false,
+                    user: this._oController.getUserId(),
+                    consumption: consumptionValue,
+                    dateCreated: date.toJSON(),
+                    processStart: '',
+                    processStop: '',
+                    ncCode: "",
+                    ncCodeDescription: "",
+                    guid: guid
+                }
+
+            );
+
         },
         _additionalIssueCallApi: async function(oRequestParameters){
             let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";

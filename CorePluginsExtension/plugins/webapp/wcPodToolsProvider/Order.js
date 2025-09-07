@@ -109,7 +109,7 @@ sap.ui.define([
                             break;
                         case "ZZVERP":
                             oMoStructure.packagingCode = attribute.field_value;
-                            let oPartOfPackingCode = attribute.field_value.substring(7,10);
+                            let oPartOfPackingCode = attribute.field_value.substring(6,10);
                             if(!isNaN(oPartOfPackingCode)){
                                 oMoStructure.quantityPerPallet = Number(oPartOfPackingCode); 
                             }
@@ -205,6 +205,9 @@ sap.ui.define([
         getSfcs: function(){
             return this._oDetails.sfcs;
         },
+        getProducationQuantity: function(){
+            return this._oDetails.productionQuantity;
+        },
         _getMultiOrdersStructure: function(){
             return {
                 orderNumber: "",
@@ -245,6 +248,19 @@ sap.ui.define([
                 }
             }catch(oError){}
             return oReturn;
+        },
+        getQuantityFromPackingCode(itemNumber = 1){
+            let result = 0;
+
+            let packingCode = this.getPackingCode(itemNumber);
+            if(packingCode){
+                let partOfPackingCode = packingCode.substring(6,10);
+                if(!isNaN(partOfPackingCode)){
+                    result = Number(partOfPackingCode); 
+                }
+            }
+
+            return result;
         },
         _getOrderReceipts: async function(){
             var oParameters = { order: this._oOrderNumber,
@@ -426,7 +442,7 @@ sap.ui.define([
             try{
                 let packingCode = this.getPackingCode(itemNumber);
                 if(packingCode){
-                    let partOfPackingCode = packingCode.substring(7,10);
+                    let partOfPackingCode = packingCode.substring(6,10);
                     if(!isNaN(partOfPackingCode)){
                         result.minPalleteQuantity = result.maxPalleteQuantity = parseInt(partOfPackingCode);
                         let tollerancePlus = this.getTollerancePlus(itemNumber);
@@ -554,6 +570,36 @@ sap.ui.define([
                     }
                 }
             }
+            return result;
+        },
+        getCustomerOrder: function(){
+            let result = "";
+            if(this._oDetails.customerOrder){
+                result = this._oDetails.customerOrder;
+            }
+            return result;
+        },
+        getCustomerOrderItem: function(){
+            let result = "";
+            if(this._oDetails.customerOrderItem){
+                result = this._oDetails.customerOrderItem;
+            }
+            return result;
+        },
+        getSplittedComponents: function(){
+            let result = [];
+
+            try{
+                let customValueSplittedComponents = this._oDetails.customValues.find(customValues => {return customValues.attribute === `COMPONENTS_PC_SPLITTED`; })
+                let reservationItemNumbers = customValueSplittedComponents.value.split("$&")
+                for(const reservationItemNuber of reservationItemNumbers){
+                    result.push(reservationItemNuber);
+                }
+            }catch(error){
+
+            }
+
+
             return result;
         }
 

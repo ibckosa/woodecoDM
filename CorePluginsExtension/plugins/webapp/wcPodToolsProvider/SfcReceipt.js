@@ -13,8 +13,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
     "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
-    "ibc/dm/plugins/wcPodToolsProvider/CompleteOrder"
-], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator, CompleteOrder) {
+    "ibc/dm/plugins/wcPodToolsProvider/CompleteOrder",
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
+], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator, CompleteOrder, DataCollectionSaver) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceipt", {
         constructor: function(oController, oReceiptParameters){
@@ -93,7 +94,7 @@ sap.ui.define([
 
             if(this._oReceiptParameters.numberOfPalletes > 1 && this._oReceiptParameters.automaticIssues){
                 let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
-                                                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.totalQuantity);
+                                                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.totalQuantity, this._oOrder.getCustomerOrder(), this._oOrder.getCustomerOrderItem());
                 await oIssuesManager.prepareIssues();
             }
 
@@ -110,7 +111,7 @@ sap.ui.define([
             for(let i=0;i<this._oReceiptParameters.numberOfPalletes;i++){
                 this._oReceiptParameters.sfc = this._oSfc.getSfcNumber();
                 let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
-                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
+                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity, this._oOrder.getCustomerOrder(), this._oOrder.getCustomerOrderItem());
                 if(this._oReceiptParameters.automaticIssues){
                     await oIssuesManager.prepareIssues();
                 } 
@@ -128,10 +129,11 @@ sap.ui.define([
                 if(this._oReceiptParameters.automaticIssues){
                     await oIssuesManager.executeIssues();
                 }
-    
+
+                OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
                 await this._printLabel();
                 await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager, true); 
-                OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
+                
             }
 
         },
@@ -140,7 +142,7 @@ sap.ui.define([
             this._checksIssueSigleOper();
             let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
             let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
-                                                   this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
+                                                   this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity, this._oOrder.getCustomerOrder(), this._oOrder.getCustomerOrderItem());
             if(this._oReceiptParameters.automaticIssues){
                 await oIssuesManager.prepareIssues();
             }
@@ -159,9 +161,9 @@ sap.ui.define([
             if(this._oReceiptParameters.automaticIssues){
                 await oIssuesManager.executeIssues();
             }
-
-            await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);    
             OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
+            await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);    
+            
 
         },
 
@@ -170,7 +172,7 @@ sap.ui.define([
             let oSfcAvailQuan = oSfcStep.quantityInWork + oSfcStep.quantityInQueue;
 
             let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
-                                                   this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
+                                                   this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity, this._oOrder.getCustomerOrder(), this._oOrder.getCustomerOrderItem());
             if(this._oReceiptParameters.automaticIssues){
                 await oIssuesManager.prepareIssues();
             }
@@ -206,9 +208,9 @@ sap.ui.define([
             if(this._oReceiptParameters.automaticIssues){
                 await oIssuesManager.executeIssues();
             }
-
-            await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);  
             OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);  
+            await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);  
+            
         },
 
         _getSfcStep: function(){
@@ -447,14 +449,15 @@ sap.ui.define([
                         }
                     )
                     completeOrder.execute();
+                    oPodSelectionModel.setInputValue("");
+                    oPodSelectionModel.clearSelections();
+
+                    this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+                    this._oController.onClosePress();
+                    this._oController.navigateToMainPage();
                 }
 
-                oPodSelectionModel.setInputValue("");
-                oPodSelectionModel.clearSelections();
 
-                this._oController.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-                this._oController.onClosePress();
-                this._oController.navigateToMainPage();
             }else{    
                  //this._oController.publish("IbcCustomReceipt", { sendToAllPages: false });
                 // this._oController.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
@@ -551,16 +554,12 @@ sap.ui.define([
             this._oReceiptParameters.unitOfMeasure = this._oOrder.getUom();
         },
         _getPrintingEndPoint: function(){
-            let oReturn = this._oController.getConfigurationValue("printerEndPoint");
-
-            if(!oReturn||oReturn===""){
-                this._oErrorHandler.throwErrorPopup("error.printing.noEndpoint");
-            }
-            return oReturn;
+            return '';
         },
-        _printLabel: async function(oEndpoint){
+        _printLabel: async function(){
+            let orderProgress = OrderReceiptsFromProgressIndicator.getOrderProgress(this._oReceiptParameters.order);
+
             let oPrintingDetails = {};
-            //oPrintingDetails.endpoint = oEndpoint;
             oPrintingDetails.plant  = this._oReceiptParameters.plant;
             oPrintingDetails.order = this._oReceiptParameters.order;
             oPrintingDetails.workCenter = this._oReceiptParameters.workCenter;
@@ -575,6 +574,23 @@ sap.ui.define([
             oPrintingDetails.printer = this._oReceiptParameters.printer;
             oPrintingDetails.operation = this._oReceiptParameters.stepId;
             oPrintingDetails.document = 'DM_INFO';
+            oPrintingDetails.inputOrder = this._oOrder.getInputOrder();
+            oPrintingDetails.inputOrderDate = this._oOrder.getInputOrderDate();
+            oPrintingDetails.receiptCount = orderProgress.receiptCount;
+            oPrintingDetails.printType = SfcReceiptPrint.PRINT_Q1;
+            let plannedQuantity = this._oOrder.getProducationQuantity();
+            if(plannedQuantity){
+                let qantityFromPackingCode = this._oOrder.getQuantityFromPackingCode();
+                if(qantityFromPackingCode){
+                    oPrintingDetails.plannedPalletes = Math.ceil(plannedQuantity/qantityFromPackingCode);
+                }
+            }else{
+                oPrintingDetails.plannedPalletes = 0;
+            }
+
+
+            //order from formatki
+            //data from formatki
             oPrintingDetails.printingCopies = this._oReceiptParameters.printingCopies;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oController, oPrintingDetails);
@@ -589,7 +605,7 @@ sap.ui.define([
             let oQuantity = this._oReceiptParameters.quantity * this._oReceiptParameters.numberOfPalletes;
 
             let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
-                this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, oQuantity);
+                this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, oQuantity, this._oOrder.getCustomerOrder(), this._oOrder.getCustomerOrderItem());
             if(this._oReceiptParameters.automaticIssues){
                 await oIssuesManager.prepareIssues();
             }
@@ -620,7 +636,7 @@ sap.ui.define([
                 this._oReceiptParameters.sfcQuantity = sfcToProcess.quantity;
                 oSfcStep.quantityInWork = sfcToProcess.quantity;
                 oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
-                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
+                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity, this._oOrder.getCustomerOrder(), this._oOrder.getCustomerOrderItem());
                 
                 if(this._oReceiptParameters.automaticIssues){
                     await oIssuesManager.prepareIssues();
@@ -644,10 +660,10 @@ sap.ui.define([
                 if(this._oReceiptParameters.automaticIssues){
                     await oIssuesManager.executeIssues();
                 }
-               
+                OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
                 await this._printLabel(_oPrintingEndpoint);
                 await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);   
-                OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
+                
             }
         },
         _issueMultiNotLastOperMutliPalletes: async function(){
@@ -689,125 +705,158 @@ sap.ui.define([
             }
         },
         _saveDataCollection: async function(postingDate, issueManager, repeatWrongSave=false){
-            let parameterValues = [];
+            // let parameterValues = [];
 
             let guid = crypto.randomUUID();
             let date = new Date();
             let stopProcessDate = new Date();
             //let date = date.toJSON();
-            debugger;
-            parameterValues.push({ name: "GUID",
-                                   comment: guid,
-                                   value: guid });
+            // debugger;
+            // parameterValues.push({ name: "GUID",
+            //                        comment: guid,
+            //                        value: guid });
 
-            parameterValues.push({ name: "DATE_CREATED",
-                                   comment: guid,
-                                   value: date.toJSON() });
-            parameterValues.push({ name: "PROCESS_START",
-                                   comment: guid,
-                                   value: this._startProcessDate.toJSON() });
-            parameterValues.push({ name: "PROCESS_STOP",
-                                   comment: guid,
-                                   value: stopProcessDate.toJSON() });
+            // parameterValues.push({ name: "DATE_CREATED",
+            //                        comment: guid,
+            //                        value: date.toJSON() });
+            // parameterValues.push({ name: "PROCESS_START",
+            //                        comment: guid,
+            //                        value: this._startProcessDate.toJSON() });
+            // parameterValues.push({ name: "PROCESS_STOP",
+            //                        comment: guid,
+            //                        value: stopProcessDate.toJSON() });
 
-            parameterValues.push({ name: "Q1/Q3",
-                                   comment: guid,
-                                   value: "Q1" });
+            // parameterValues.push({ name: "Q1/Q3",
+            //                        comment: guid,
+            //                        value: "Q1" });
 
-            parameterValues.push({ name: "QUANTITY",
-                                   comment: guid,
-                                   value: `${this._oReceiptParameters.quantity}` });
+            // parameterValues.push({ name: "QUANTITY",
+            //                        comment: guid,
+            //                        value: `${this._oReceiptParameters.quantity}` });
 
-            parameterValues.push({ name: "UOM",
-                                   comment: guid,
-                                   value: this._oOrder.getInternalUom() }); //value: this._oReceiptParameters.unitOfMeasure
+            // parameterValues.push({ name: "UOM",
+            //                        comment: guid,
+            //                        value: this._oOrder.getInternalUom() }); //value: this._oReceiptParameters.unitOfMeasure
 
-            parameterValues.push({ name: "MATERIAL",
-                                   comment: guid,
-                                   value: this._oReceiptParameters.material });
+            // parameterValues.push({ name: "MATERIAL",
+            //                        comment: guid,
+            //                        value: this._oReceiptParameters.material });
 
-            parameterValues.push({ name: "ITEM_NO",
-                                   comment: guid,
-                                   value: "0001" });
+            // parameterValues.push({ name: "ITEM_NO",
+            //                        comment: guid,
+            //                        value: "0001" });
                                    
 
-            if(this._oReceiptParameters.handlingUnit){
-                parameterValues.push({ name: "HU",
-                    comment: guid,
-                    value: this._oReceiptParameters.handlingUnit });
-            }else{
-                parameterValues.push({ name: "HU",
-                    comment: guid,
-                    value: "" });
-            }
+            // if(this._oReceiptParameters.handlingUnit){
+            //     parameterValues.push({ name: "HU",
+            //         comment: guid,
+            //         value: this._oReceiptParameters.handlingUnit });
+            // }else{
+            //     parameterValues.push({ name: "HU",
+            //         comment: guid,
+            //         value: "" });
+            // }
                                    
-            parameterValues.push({ name: "Q3_CODE",
-                                   comment: guid,
-                                   value: "" });
+            // parameterValues.push({ name: "Q3_CODE",
+            //                        comment: guid,
+            //                        value: "" });
 
-            parameterValues.push({ name: "NC_CODE",
-                                   comment: guid,
-                                   value: "" });
+            // parameterValues.push({ name: "NC_CODE",
+            //                        comment: guid,
+            //                        value: "" });
 
-            parameterValues.push({ name: "NC_CODE_DESCRIPTION",
-                                   comment: guid,
-                                   value: "" });
+            // parameterValues.push({ name: "NC_CODE_DESCRIPTION",
+            //                        comment: guid,
+            //                        value: "" });
 
-            parameterValues.push({ name: "USER",
-                                   comment: guid,
-                                   value: this._oController.getUserId() });
+            // parameterValues.push({ name: "USER",
+            //                        comment: guid,
+            //                        value: this._oController.getUserId() });
 
-            parameterValues.push({ name: "CANCELLED",
-                                   comment: guid,
-                                   value: false });
+            // parameterValues.push({ name: "CANCELLED",
+            //                        comment: guid,
+            //                        value: false });
 
             let issuesCreated = issueManager.getCreatedIssues();
+            let issueAsString = "";
             for(const issue of issuesCreated){
-                let issueAsString = Object.entries(issue)
+                issueAsString = Object.entries(issue)
                                         .map(([key, value]) => `${key}:${value}`)
                                         .join('||');
 
-                parameterValues.push({ name: `CONSUMPTION`,
-                                       comment: guid,
-                                       value: issueAsString });
+                // parameterValues.push({ name: `CONSUMPTION`,
+                //                        comment: guid,
+                //                        value: issueAsString });
             }
 
             
 
 
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
-            let oRequestParameters = {
-                plant: this._oReceiptParameters.plant,
-                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
-                         version: "A" },
-                operation: { operation: this._oReceiptParameters.operationActivity,
-                              version: "ERP001" },
-                parameterValues: parameterValues,
-                stepId: this._oReceiptParameters.stepId,
-                workCenter: this._oReceiptParameters.workCenter,
-                resource: this._oReceiptParameters.resource,
-                sfcs: [ this._oReceiptParameters.sfc ]
-            };
+            // let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            // let oRequestParameters = {
+            //     plant: this._oReceiptParameters.plant,
+            //     group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+            //              version: "A" },
+            //     operation: { operation: this._oReceiptParameters.operationActivity,
+            //                   version: "ERP001" },
+            //     parameterValues: parameterValues,
+            //     stepId: this._oReceiptParameters.stepId,
+            //     workCenter: this._oReceiptParameters.workCenter,
+            //     resource: this._oReceiptParameters.resource,
+            //     sfcs: [ this._oReceiptParameters.sfc ]
+            // };
 
-            let that = this;
+            // let that = this;
 
-            return await new Promise((resolve,reject)=>{
-                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-                    async oResponseData => {
-                        if(!oResponseData||!oResponseData.success||(oResponseData.failedSfcs&&oResponseData.failedSfcs.length>0)){
-                            await that._saveDataCollection('', issueManager);
-                        }
+            // return await new Promise((resolve,reject)=>{
+            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+            //         async oResponseData => {
+            //             if(!oResponseData||!oResponseData.success||(oResponseData.failedSfcs&&oResponseData.failedSfcs.length>0)){
+            //                 await that._saveDataCollection('', issueManager);
+            //             }
 
-                        resolve();
-                    },
-                    async (oError, sHttpErrorMessage) => {
-                        if(repeatWrongSave){
-                            await that._saveDataCollection('', issueManager);
-                        }  
-                        resolve();                         
-                    }
-                );
-            });
+            //             resolve();
+            //         },
+            //         async (oError, sHttpErrorMessage) => {
+            //             if(repeatWrongSave){
+            //                 await that._saveDataCollection('', issueManager);
+            //             }  
+            //             resolve();                         
+            //         }
+            //     );
+            // });
+
+
+            await DataCollectionSaver.saveProductionDC(
+                this._oController,
+                {
+                    plant: this._oReceiptParameters.plant,
+                    sfc: this._oReceiptParameters.sfc,
+                    resource: this._oReceiptParameters.resource,
+                    operation: this._oReceiptParameters.operationActivity,
+                    productionProcessType: "Q1",
+                    q3Code: "",
+                    quantity: `${this._oReceiptParameters.quantity}`,
+                    uom: this._oOrder.getInternalUom(),
+                    material: this._oReceiptParameters.material,
+                    itemNo: "0001",
+                    salesOrder: "", 
+                    saledOrderItem: "",
+                    hu: this._oReceiptParameters.handlingUnit ? this._oReceiptParameters.handlingUnit : "",
+                    cancelled: false,
+                    user: this._oController.getUserId(),
+                    consumption: issueAsString,
+                    dateCreated: date.toJSON(),
+                    processStart: this._startProcessDate.toJSON(),
+                    processStop: stopProcessDate.toJSON(),
+                    ncCode: "",
+                    ncCodeDescription: "",
+                    guid: guid
+                }
+
+            );
+
+
         },
         _checkConfirmTolerance: async function(palleteQuanRange){
             return await new Promise((resolve,reject)=>{

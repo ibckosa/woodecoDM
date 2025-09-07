@@ -130,6 +130,7 @@ sap.ui.define([
             let  sfcCardCustomVisibility = this._getVisibilityStructure();
             let oTotalOrderQuan = 0;
             let oDoneOrderQuan = 0;
+            let totalReceipts = 0;
 
             try{
                 var oSfcCardCustom =  { optimizationNumber: "",
@@ -179,7 +180,7 @@ sap.ui.define([
                 // let oSfcsInstances = await this._getSfcsInstances(oController, oPlant, oSfcs);
 
 
-                let dataCollections = await SfcDataCollectionReader.readCollections(oController, oPlant, oSfcs, oFirstSelection.getSfcData().getOperation(), false, true, oFirstSelection.getSfcData().getRouting(), oFirstSelection.getSfcData().getRoutingVersion());
+                let dataCollections = await SfcDataCollectionReader.readCollections(oController, oPlant, oSfcs, oFirstSelection.getSfcData().getOperation(), true, true, oFirstSelection.getSfcData().getRouting(), oFirstSelection.getSfcData().getRoutingVersion());
                 oTotalOrderQuan = oOrderData.productionQuantity;
                 
                 // for(const sfcInstance of oSfcsInstances){
@@ -189,9 +190,13 @@ sap.ui.define([
                 // if(oFirstStep.operation.operation === oFirstSelection.getSfcData().getOperation()){
                 //     oTotalOrderQuan = oOrderData.productionQuantity;
                 // }
+                
                 for(const dataCollection of dataCollections){
                     if(dataCollection.QUANTITY&&dataCollection["Q1/Q3"] === "Q1"){
-                        oDoneOrderQuan = oDoneOrderQuan + parseInt(dataCollection.QUANTITY);
+                        if(dataCollection.CANCELLED === "false"){
+                            oDoneOrderQuan = oDoneOrderQuan + parseInt(dataCollection.QUANTITY);
+                        }
+                        totalReceipts = totalReceipts + 1;
                     }
                 }
                 
@@ -291,10 +296,11 @@ sap.ui.define([
 
             let oModel = new JSONModel(oPodSelectionModel.customData);
             try{
+                OrderReceiptsFromProgressIndicator.setOrderProgress(oOrder, oDoneOrderQuan, oTotalOrderQuan, oModel, totalReceipts);
                 oController.getView().setModel(oModel, "customData");
                 oController.getPodController().getView().setModel(oModel, "customData");
                 this.getCoreExtension().getPluginToolbar().setModel(oModel, "customData");
-                OrderReceiptsFromProgressIndicator.setOrderProgress(oOrder, oDoneOrderQuan, oTotalOrderQuan, oModel);
+                
             }catch(oError){}
 
         },
@@ -313,6 +319,8 @@ sap.ui.define([
                     }
 
                 }
+            }else{
+                oReturn = this._getVisibilityStructure(true);
             }
             return oReturn;
 
@@ -321,32 +329,32 @@ sap.ui.define([
             let oPromises = oSfcs.map(sfc => SfcRepository.ReadSfcBypassBuffer(oController, oPlant, sfc) );
             return await Promise.all(oPromises);
         },
-        _getVisibilityStructure: function(){
-            return { optimizationNumber: false,
-                   recipeNumber: false,
-                   blockNumber: false,
-                   customerName: false,
-                   artFam: false,
-                   thickness: false,
-                   length: false,
-                   width: false,
-                   remarksButton: false,
-                   crossCompany: false,
-                   blatMaterialTop: false,
-                   blatMaterialDown: false,
-                   blatThicknessTop: false,
-                   blatThicknessDown: false,
-                   salesTextPL: false,
-                   salesTextEN: false,
-                   salesTextDE: false,
-                   artfamCom: false,
-                   artfamEle: false,
-                   artfamGrp: false,
-                   artfamRohlpE: false,
-                   artfamRohlpatte: false,
-                   ruType: false,
-                   progressIndicatorValue: false,
-                   decors: false };
+        _getVisibilityStructure: function(visibilityValue=false){
+            return { optimizationNumber: visibilityValue,
+                   recipeNumber: visibilityValue,
+                   blockNumber: visibilityValue,
+                   customerName: visibilityValue,
+                   artFam: visibilityValue,
+                   thickness: visibilityValue,
+                   length: visibilityValue,
+                   width: visibilityValue,
+                   remarksButton: visibilityValue,
+                   crossCompany: visibilityValue,
+                   blatMaterialTop: visibilityValue,
+                   blatMaterialDown: visibilityValue,
+                   blatThicknessTop: visibilityValue,
+                   blatThicknessDown: visibilityValue,
+                   salesTextPL: visibilityValue,
+                   salesTextEN: visibilityValue,
+                   salesTextDE: visibilityValue,
+                   artfamCom: visibilityValue,
+                   artfamEle: visibilityValue,
+                   artfamGrp: visibilityValue,
+                   artfamRohlpE: visibilityValue,
+                   artfamRohlpatte: visibilityValue,
+                   ruType: visibilityValue,
+                   progressIndicatorValue: visibilityValue,
+                   decors: visibilityValue };
         }
     })
 });

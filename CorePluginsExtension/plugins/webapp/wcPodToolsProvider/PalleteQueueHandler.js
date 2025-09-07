@@ -58,7 +58,7 @@ sap.ui.define([
                 if (!this._oDialogLog) {
                     let oVBox = new VBox({ alignItems: "Center", height: "45rem", width: "100rem" });
                     let oTableLog = this._getTableLog();
-                    let oActionButtons = this._getActionButtons();
+                    let oActionButtons = await this._getActionButtons();
                     oVBox.addItem(oTableLog);
                     oVBox.addItem(oActionButtons);
                     this._oDialogLog = new Dialog({
@@ -87,7 +87,7 @@ sap.ui.define([
                         ]
                     });
                 }
-                let oLogModel = await this._getDialogData();
+                await this._getDialogData();
                 let oTitle = this._getDialogTitle();
                 this._oDialogLog.setTitle(oTitle);
                 this._oDialogLog.open();
@@ -163,18 +163,54 @@ sap.ui.define([
 
             return oPanel;
         },
-        _getActionButtons: function () {
+        _getActionButtons: async function () {
             let oButtonsVisible = { reservation: true,
                                     endReservation: true,
                                     return: true,
                                     returnNpw: true,
                                     additionIssue: true  };
+
+            let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
+            let consumptionButtons = oResource.getConsumptionButtons();
+            if(consumptionButtons){
+                oButtonsVisible = { reservation: false,
+                                    endReservation: false,
+                                    return: false,
+                                    returnNpw: false,
+                                    additionIssue: false,
+                                    issue: false  };
+                let consumptionButtonsSplitted = consumptionButtons.split(",");
+
+                for(const button of consumptionButtonsSplitted){
+                    switch(button){
+                        case '1':
+                            oButtonsVisible.reservation = true;
+                            break;
+                        case '2':
+                            oButtonsVisible.endReservation = true;
+                            break;
+                        case '3':
+                            oButtonsVisible.return = true;
+                            break;
+                        case '4':
+                            oButtonsVisible.returnNpw = true;
+                            break;
+                        case '5':
+                            oButtonsVisible.additionIssue = true;
+                            break;
+                        case '6':
+                            oButtonsVisible.issue = true;
+                            break;
+                    }
+                }
+            }
+
             if(this._oMode === "RESOURCE"){
                 oButtonsVisible.reservation = false;
                 oButtonsVisible.endReservation = false;
                 oButtonsVisible.additionIssue = false;
+                oButtonsVisible.issue = false;
             }
-
 
             let oHBoxBtn = new HBox({});
             let oButtonReservation = new Button({
@@ -216,7 +252,7 @@ sap.ui.define([
                 text: this._textHandler.getText("labels.loghu.button.additionalMHuIssue"),
                 width: "15rem",
                 press: this.onButtonAdditionMHuIssue.bind(this),
-                visible: oButtonsVisible.additionIssue
+                visible: oButtonsVisible.issue
             });
             oButtonReservation.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
             oButtonEndReservation.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
@@ -233,10 +269,14 @@ sap.ui.define([
             return oHBoxBtn;
         },
         _getDialogData: async function () {
-
-            let oPalleteQueue = new PalleteQueue(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource, this._oHandlerData.workCenter);
+            let oPalleteQueue = new PalleteQueue(this._oPluginViewController, this._oHandlerData.plant, this._oHandlerData.resource, this._oHandlerData.workCenter);
             if(this._oMode === "COMPONENT"){
-                oPalleteQueue.setReadForOrderPosition(this._oHandlerData.order, this._oHandlerData.sequence,this._oHandlerData.material, this._oHandlerData.storageLocation);
+                oPalleteQueue.setReadForOrderPosition(this._oHandlerData.order, this._oHandlerData.sequence, this._oHandlerData.material, this._oHandlerData.storageLocation);
+                if(this._oHandlerData.salesSegmentRequired){
+                    oPalleteQueue.setSalesSegment(this._oHandlerData.salesOrder, this._oHandlerData.salesOrderItem);
+                }
+                
+                oPalleteQueue.setQueueUom(this._oHandlerData.uom);
             }
 
             let oLogData = { items: [] };
@@ -294,7 +334,7 @@ sap.ui.define([
                         item.erpResourceId = oResource.getResourceErpId();
                         await oPallete.palleteReturn(item, oZweiEndpoint);
                         await oPallete.reducePalleteQuan(item, item.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
-                        await this._executeLabelPrint(item, oPrinter, item.quantity);
+                        await this._executeLabelPrint(item, oPrinter, item.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN);
                         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     }
                 }catch(oError){this._oErrorHandler.handleError(oError);}
@@ -325,7 +365,7 @@ sap.ui.define([
                     await oPallete.palleteReturnNpw(oItem, oZweiEndpoint, oDialogReturn.quantity);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturnNpw"),true,true);
                     await oPallete.reducePalleteQuan(oItem, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc );
-                    await this._executeLabelPrint(oItem, oPrinter, oDialogReturn.quantity);
+                    await this._executeLabelPrint(oItem, oPrinter, oDialogReturn.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN_NPW);
                     setTimeout( async ()=> {                    await this._getDialogData();
                         this._oDialogLog.setBusy(false);},1500);
                 }else{
@@ -364,7 +404,7 @@ sap.ui.define([
                 for(const item of oSelectedItems){
                     try{
                         let oPallete  = new Palette(this._oPluginViewController);
-                        await oPallete.additionalIssue(item, item.quantity, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity);
+                        await oPallete.additionalIssue(item, item.quantity, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity, this._oHandlerData.sequence);
                         this._addIssuedQuantity(item.quantity);
                         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteAdditionalIssue"),true,true);
                     }catch(oError){
@@ -504,11 +544,14 @@ sap.ui.define([
 
             });
         },
-        _executeLabelPrint: async function(oItem, printer, quantity){
+        _executeLabelPrint: async function(oItem, printer, quantity, printType){
             let oPrintingDetails = {};
             
             if(oItem.scrapingMaterial){
                 oPrintingDetails.material = oItem.scrapingMaterial;
+                oPrintingDetails.oldMaterial = oItem.materialId;
+                let oldMaterial = await MaterialRepository.getMaterialInstance(this._oPluginViewController, oItem.plant, oItem.materialId);
+                oPrintingDetails.oldMaterialCustomValues = oldMaterial.getCustomValues();
             }else{
                 oPrintingDetails.material = oItem.materialId;
             }
@@ -529,6 +572,7 @@ sap.ui.define([
             oPrintingDetails.operation = "";
             oPrintingDetails.document = 'DM_INFO';
             oPrintingDetails.printingCopies = 1;
+            oPrintingDetails.printType = printType;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oPluginViewController, oPrintingDetails);
             await oSfcReceiptPrint.print();

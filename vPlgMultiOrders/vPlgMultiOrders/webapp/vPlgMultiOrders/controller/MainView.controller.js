@@ -10,8 +10,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcQ23",
     "sap/ui/core/Fragment",
-    "sap/m/library"
-], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader, SfcMOReceipt, ResourceRepository, SfcQ23, Fragment, mobileLibrary) {
+    "sap/m/library",
+    "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader"
+], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader, SfcMOReceipt, ResourceRepository, SfcQ23, Fragment, mobileLibrary, NonconformanceReader) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders.controller.MainView", {
@@ -142,6 +143,18 @@ sap.ui.define([
                     let oViewModel = this.getView().getModel("viewModel");
                     oViewModel.setProperty("/selectedOrder", null);
                 }
+                let nonConformancesCodeReader = new NonconformanceReader(this, { plant: this.getPodController().getUserPlant(),
+                                                                                 operation_activity: oFirstSelection.getSfcData().getOperation(),
+                                                                                 resource: this._oResource,
+                                                                                 excludeStorned: true  } );
+
+                let nonconformances  = await nonConformancesCodeReader.readNonconformances();
+                let totalRegisteredQ23 = 0;
+                for(const nonconformance of nonconformances){
+                    totalRegisteredQ23 = totalRegisteredQ23 + nonconformance.quantity;
+                }
+                this._totalRegisteredQ23 = totalRegisteredQ23;
+
                 await this._setFieldVisibility();
                 this.getView().setBusy(false);
             } catch (error) {
@@ -187,6 +200,8 @@ sap.ui.define([
                     materialVersion: aSelectionFirstRow.getSfcData().getMaterialVersion(),
                     quantity: parseInt(this.byId("inputReceiptQuantity").getValue()),
                     palletesNumber: parseInt(this.byId("inputPalleteQuan").getValue()),
+                    receiptCount: selectedOrder.selectedOrder.executedReceipts,
+                    plannedPalletes:  selectedOrder.selectedOrder.plannedReceipts,
                     packageNumber: parseInt(this.byId("inputPackageQuan").getValue()),
                     maxQuantity: selectedOrder.selectedOrder.maxQuantity,
                     maxLeftQuantity: selectedOrder.selectedOrder.maxLeftQuantity,
@@ -260,12 +275,13 @@ sap.ui.define([
                                         itemNumberErp: selectedOrder.selectedOrder.itemNumberErp,
                                         material: selectedOrder.selectedOrder.materialNumber,
                                         routing: aSelectionFirstRow.getSfcData().getRouting(),
-                                        routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion()  };
+                                        routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion(),
+                                        totalRegisteredQ23: this._totalRegisteredQ23  };
 
 
                 let oSfcQ23 = new SfcQ23(this, q23Parameters);
                 await oSfcQ23.executeMO();
-
+                this._totalRegisteredQ23 = this._totalRegisteredQ23 + q23Parameters.quantity;
 
 
                 this.getView().setBusy(false);
@@ -443,6 +459,8 @@ sap.ui.define([
                     this._setPrintQuantity(oResource.getQ1LabelCopies());
                     this._resourceNumber === oResourceNumber;
                 }
+
+                this.byId("inputReceiptQuantity").setEditable(true);
                 if(oFunctionalLocation==="1"){
                     this.byId("inputPackageQuan").setVisible(true);
                     this.byId("inputPackageQuanLabel").setVisible(true);
@@ -464,8 +482,14 @@ sap.ui.define([
 
                     this.byId("inputPalleteQuanLabel").setVisible(true);
                     this.byId("inputPalleteQuan").setVisible(true);
+                }else if(oFunctionalLocation==="4"){
+                    this.byId("inputReceiptQuantity").setEditable(false);
+                    this.byId("inputPackageQuan").setVisible(false);
+                    this.byId("inputPackageQuanLabel").setVisible(false);
+
+                    this.byId("inputPalleteQuanLabel").setVisible(false);
+                    this.byId("inputPalleteQuan").setVisible(false);
                 }else{
-                    let oModelData = this.getView().getModel().getData();
                     this.byId("inputPackageQuan").setVisible(false);
                     this.byId("inputPackageQuanLabel").setVisible(false);
 

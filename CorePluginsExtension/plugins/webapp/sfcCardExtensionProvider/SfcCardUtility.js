@@ -6,11 +6,13 @@ sap.ui.define([
     "sap/ui/layout/VerticalLayout",
     "sap/m/MessageBox",
     "sap/m/ProgressIndicator",
-    "ibc/dm/plugins/wcPodToolsProvider/Material"
-], function (BaseObject, Button, Label, MessageToast, VerticalLayout, MessageBox, ProgressIndicator, Material) {
+    "ibc/dm/plugins/wcPodToolsProvider/Material",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+], function (BaseObject, Button, Label, MessageToast, VerticalLayout, MessageBox, ProgressIndicator, Material, TextHandler) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.sfcCardExtensionProvider.SfcCardUtility", {
         constructor: function () {
+            this._textHandler = new TextHandler();
         },
 
         setPluginEventExtension: function(oExtension){
@@ -58,27 +60,45 @@ sap.ui.define([
         },
 
         loadHeaderInformation: function(bShowHelp, bShowSupplier){
-            this.setLocalI18nModel();
+           // this.setLocalI18nModel();
 
             let oInformationContainer = this.getCoreExtension().getPluginInformationContainer();
             let oToolbarContainer = this.getCoreExtension().getPluginToolbar();
-            
-            // Multiple SFC Card's can be defined, but only one extension, so
-            // this will make sure new controls are created and added to the current displayed
-            // SFC Card plugin
+
+            // oToolbarContainer.addEventDelegate({
+            //     onAfterRendering: function() {
+            //         debugger;
+            //         let oToolbarContainer = this.getCoreExtension().getPluginToolbar();
+            //         let oActionButton = null;
+            //         if (oToolbarContainer && this.oChildControls[oToolbarContainer.getId()]) {
+            //             oActionButton = this.oChildControls[oToolbarContainer.getId()];
+            //         }
+            //         if (oToolbarContainer && !oActionButton) {
+            //             this.addActionButton(oToolbarContainer);
+            //         }
+            //     }
+            // }, this);
+            // debugger;
+
             if (!this.oChildControls) {
                 this.oChildControls = {};
             }
-            if (bShowHelp) {
+
+            
+
+            // this.addActionButton(oToolbarContainer);
+            // this.addInformationControls(oInformationContainer);
+            if (true) {
                 let oActionButton = null;
                 if (oToolbarContainer && this.oChildControls[oToolbarContainer.getId()]) {
                     oActionButton = this.oChildControls[oToolbarContainer.getId()];
+                    debugger;
                 }
                 if (oToolbarContainer && !oActionButton) {
                     this.addActionButton(oToolbarContainer);
                 }
             }
-            if (bShowSupplier) {
+            if (true) {
                 let oInformationControl = null;
                 if (oInformationContainer && this.oChildControls[oInformationContainer.getId()]) {
                     oInformationControl = this.oChildControls[oInformationContainer.getId()];
@@ -90,17 +110,21 @@ sap.ui.define([
         },
 
         addActionButton: function(oToolbar) {
-            let that = this;
-            let oActionButton = new Button({
-                type: "Emphasized",
-                text: "Help",
-                press: [that.onHelpPress, that]
+            // let that = this;
+            // let oActionButton = new Button({
+            //     type: "Emphasized",
+            //     text: "Help",
+            //     press: [that.onHelpPress, that]
+            // });
+
+
+
+            let oInformationControl = new VerticalLayout({
+                visible: true,// "{customData>/sfcCardCustomVisibility/progressIndicatorValue}"
             });
-
-
-
-            var oToolbarMethods = this.getMethodsOf(oToolbar);
-            var oExtenisonMethods = this.getMethodsOf(this.getCoreExtension());
+            oInformationControl.addStyleClass("sapUiNoContentPadding");
+            oInformationControl.addStyleClass("sapUiMediumMarginEnd");
+            oInformationControl.addStyleClass("sapUiSmallMarginBottom");
 
 
             var oProgressIndicator = new ProgressIndicator({
@@ -108,23 +132,51 @@ sap.ui.define([
                 showValue: true,
                 displayOnly: true,
                 width: "15rem",
-                visible: "{customData>/sfcCardCustomVisibility/progressIndicatorValue}",
+                visible: true,// "{customData>/sfcCardCustomVisibility/progressIndicatorValue}",
                 percentValue: "{customData>/sfcCardCustom/percentProgress}",
                 displayValue: "{customData>/sfcCardCustom/progressIndicatorValue}"
             });
 
-            if (oToolbar.addAction&&1===2) {
-                oToolbar.addAction(oActionButton);
-            } else if (oToolbar.addContent) {
-                oToolbar.addContent(oProgressIndicator);
+            oInformationControl.addContent(oProgressIndicator);
+
+            if (oToolbar.addContent) {
+                oToolbar.addContent(oInformationControl);
             }
-            this.oChildControls[oToolbar.getId()] = oProgressIndicator;
+            this.oChildControls[oToolbar.getId()] = oInformationControl;
+
+            this._checkContentAdded();
+
         },
 		onHelpPress: function (evt) {
 			MessageToast.show("Custom Help button pressed");
 		},
 
+        _checkContentAdded: function(i = 0){
+            let that = this;
+            if(i===5){
+                return;
+            }
+            setTimeout(function() {
+                // delay to allow core view to render before modifying
+                i = i + 1;
+                try{
+                    let oToolbar = that.getCoreExtension().getPluginToolbar();
+                    let content = oToolbar.getContent();
+                    if(content.length < 1){
+                        let progressBar = that.oChildControls[oToolbar.getId()];
+                        if(progressBar){
+                            oToolbar.addContent(progressBar);
+                        }
+                    }
+                }catch(error){}
+
+
+                that._checkContentAdded(i);
+            }, 1000);
+        },
+
         addInformationControls: function(oInformationContainer) {
+            
             this._addInformationTextField(oInformationContainer, "optimizationNumber");
             this._addInformationTextField(oInformationContainer, "recipeNumber");
             this._addInformationTextField(oInformationContainer, "blockNumber");
@@ -150,8 +202,9 @@ sap.ui.define([
 
             this._addInformationButton(oInformationContainer, "remarksButton");
             this._addInformationButton(oInformationContainer, "salesTextPL");
-
             this._addDekorButton(oInformationContainer);
+
+            
 
         },
         _addInformationTextField: function(oInformationContainer, fieldName){
@@ -164,10 +217,9 @@ sap.ui.define([
             oInformationControl.addStyleClass("sapUiSmallMarginBottom");
 
             try {
-                var oText = this.getController().getPodController().getView().getModel("i18n_local").getResourceBundle().getText(fieldName);
-           
+                var oText = this._textHandler.getText(`labels.sfcCard.${fieldName}`);    
             } catch (error) {
-                oText = sLabelId;
+                oText = fieldName;
             }
 
            let oLabel = new Label({
@@ -194,10 +246,10 @@ sap.ui.define([
             oInformationControl.addStyleClass("sapUiSmallMarginBottom");
 
             try {
-                var oText = this.getController().getPodController().getView().getModel("i18n_local").getResourceBundle().getText(fieldName);
+                var oText = this._textHandler.getText(`labels.sfcCard.${fieldName}`);
            
             } catch (error) {
-                oText = sLabelId;
+                oText = fieldName;
             }
             var that = this;
             var oButton = new Button({
@@ -235,11 +287,26 @@ sap.ui.define([
             oInformationContainer.addItem(oInformationControl);
             this.oChildControls[oInformationContainer.getId()] = oInformationControl;
         },
+        checkPluginContent:  function(){
+            let oToolbarContainer = this.getCoreExtension().getPluginToolbar();
+            let content = oToolbarContainer.getContent();
+            if(!content||content.length === 0){
+                let oActionButton = null;
+                if (this.oChildControls[oToolbarContainer.getId()]) {
+                    oActionButton = this.oChildControls[oToolbarContainer.getId()];
+                    oToolbarContainer.addContent(oActionButton);
+                }
+            }
+        },
         onDekorButton: async function(oEvent){
+
             let oModelData = this.getController().getView().getModel("customData").getData();
             //let oGraphicToDisplay = oModelData.sfcCardCustom.decors;
             let oGraphicToDisplay = await Material.getGraphicLinkFromCustomData(oModelData.sfcCardCustom.decors, this.getController());
-            if(oGraphicToDisplay.length < 1) return;
+            if(oGraphicToDisplay.length < 1){
+                MessageBox.information(this._textHandler.getText("labels.graphic.noDecors"));
+                return;
+            }
 
             const aImageBoxes = oGraphicToDisplay.map(oGraphic => {
                 let Swidth;
@@ -289,7 +356,6 @@ sap.ui.define([
                 });
             });
 
-            // FlexBox jako kontener dla VBoxów z obrazkami i podpisami
             const oFlexBox = new sap.m.FlexBox({
                 items: aImageBoxes,
                 direction: "Row",
@@ -297,10 +363,9 @@ sap.ui.define([
                 justifyContent: "Center"
             });
 
-            // Dialog (popup)
             const oDialog = new sap.m.Dialog({
                 title: "Podgląd grafik",
-                contentWidth: "50vw", // Szerokość okna dialogowego
+                contentWidth: "50vw", 
                 contentHeight: "auto",
                 content: [oFlexBox],
                 beginButton: new sap.m.Button({

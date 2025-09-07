@@ -40,14 +40,7 @@ sap.ui.define([
 
         onBeforeRendering: function(oEvent){
             if (!this._bInitialized) {
-                let oConfiguration = this.getController().getConfiguration();
-                if (oConfiguration) {
-                    if (typeof oConfiguration.logToConsole !== "undefined") {
-                        this._oExtensionUtilities.setLogToConsole(oConfiguration.logToConsole);
-                    } else {
-                        this._oExtensionUtilities.setLogToConsole(false);
-                    }
-                }
+                debugger;
                 this._oSfcCardUtility.getPluginEventExtension().updateCustomData();
                 this._bInitialized = true;
             }
@@ -55,41 +48,29 @@ sap.ui.define([
             if (this.getController()) {
                 sPluginId = this.getController().getPluginId();
             }
-            let sIdInfo = "Plugin ID = '" + sPluginId + "', instance id = " + this._sInstanceId;
-            this._oExtensionUtilities.logMessage("LifecycleExtension.onBeforeRendering: SFC Card extension - " + sIdInfo);
         },
 
         onBeforeRenderingPlugin: function(oEvent){
-            this._oExtensionUtilities.logMessage("LifecycleExtension.onBeforeRenderingPlugin: SFC Card extension");
         },
 
         onAfterRendering: function(oEvent){
-            this._oExtensionUtilities.logMessage("LifecycleExtension.onAfterRendering: SFC Card extension");
             if (this._bRendered) {
                 // already rendered, exit
+                this._oSfcCardUtility.checkPluginContent();
                 return;
             }
             this._bRendered = true;
-            let bShowHelp = this._oSfcCardUtility.getConfigurationValue("showHelp");
-            if (typeof bShowHelp !== "boolean") {
-                bShowHelp = true;
-            }
-            let bShowSupplier = this._oSfcCardUtility.getConfigurationValue("showSupplier");
-            if (typeof bShowSupplier !== "boolean") {
-                bShowSupplier = true;
-            }
-            if (!bShowHelp && !bShowSupplier) {
-                return;
-            }
-            let that = this;
+            debugger;
+            var that = this;
+            // that._oSfcCardUtility.loadHeaderInformation(true, true);
+            // that._oSfcCardUtility.loadHeaderInformation(true, true);
             setTimeout(function() {
                 // delay to allow core view to render before modifying
-                that._oSfcCardUtility.loadHeaderInformation(bShowHelp, bShowSupplier);
-            }, 2000);
+                that._oSfcCardUtility.loadHeaderInformation(true, true);
+            }, 2500);
         },
 
         onExit: function(oEvent){
-            this._oExtensionUtilities.logMessage("LifecycleExtension.onExit: SFC Card extension");
         },
     })
 });

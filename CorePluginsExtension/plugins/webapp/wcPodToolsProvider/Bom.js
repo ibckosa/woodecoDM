@@ -62,6 +62,32 @@ sap.ui.define([
             }catch(oError){}
 
             return result;
+        },
+        getComponentUom: function(componentSequence){
+            let result = "";
+            try{
+               let bomComponent = this._oDetails.components.find( component => {return component.sequence === componentSequence;});
+               if(bomComponent){
+                    result = bomComponent.unitOfMeasure;
+               }
+            }catch(oError){}
+
+            return result;
+        },
+        getSalesSegmentRequired: function(componentSequence){
+            let result = false;
+            try{
+               let bomComponent = this._oDetails.components.find( component => {return component.sequence === componentSequence;});
+               if(bomComponent&&bomComponent.customValues){
+                    let stockSegment = bomComponent.customValues.find( customValue=>{ return customValue.attribute==="STOCK_SEGMENT"});
+                    if(stockSegment&&stockSegment.value==="E"){
+                        result = true;
+                    }
+               }
+            }catch(oError){}
+
+            return result;
         }
+
     });
 });

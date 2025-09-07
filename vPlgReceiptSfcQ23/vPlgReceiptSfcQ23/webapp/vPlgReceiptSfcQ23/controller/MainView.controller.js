@@ -1,5 +1,4 @@
 sap.ui.define([
-    'jquery.sap.global',
 	"sap/dm/dme/podfoundation/controller/PluginViewController",
 	"sap/ui/model/json/JSONModel",
     "sap/m/Dialog",
@@ -14,8 +13,11 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/Sfc",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader"
-], function (jQuery, PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader, Sfc, TextHandler, OrderRepository, NonconformanceReader) {
+    "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader",
+    "ibc/dm/plugins/wcPodToolsProvider/PiqQ23",
+    "ibc/dm/plugins/wcPodToolsProvider/ConfirmDialog",
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
+], function (PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader, Sfc, TextHandler, OrderRepository, NonconformanceReader, PiqQ23, ConfirmDialog, DataCollectionSaver) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView", {
@@ -116,6 +118,7 @@ sap.ui.define([
                 }
                 this._oWorkCenter = oPodSelectionModel.workCenter;
                 this._oResource = oPodSelectionModel.resource.resource;
+                let resourceInstance = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), this._oResource);
 
                 //var aSelection = this.getPodSelectionModel().getSelections()[0];
                 let oCodesTab = await NcCodesReader.readCodes(this, this.getPodController().getUserPlant(), this._oWorkCenter, this._oResource);
@@ -128,6 +131,7 @@ sap.ui.define([
                 let nonconformances  = await nonConformancesCodeReader.readNonconformances();
                 for(const codeLine of oCodesTab){
                     codeLine.conconformanceQuantity = 0;
+                    codeLine.quantity = '';
                     let nonconformancesFiltered = nonconformances.filter(nonconformance=>{ return nonconformance.code === codeLine.code });
                     for(const nonconformance of nonconformancesFiltered){
                         codeLine.conconformanceQuantity = codeLine.conconformanceQuantity + nonconformance.quantity;
@@ -137,6 +141,9 @@ sap.ui.define([
                 var oModelData = { items: oCodesTab };
                 var oModel = new JSONModel(oModelData);
                 oView.setModel(oModel);
+
+                let q2Scheme = resourceInstance.getQ2Scheme();
+                this._setAvailableQ23(q2Scheme==="PIQ");
             }catch(error){ return; }
 
 
@@ -262,11 +269,11 @@ sap.ui.define([
                 let oResource = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), this._oResource);
                 let oExecuteIssue =  oResource.getConsumptionMode(true)==="AUTOMATIC";
                 oSelectedItem.quantity = parseInt(oSelectedItem.quantity);
-                await this._executeChecksBeforeScrap(oSelectedItem, oSfcDetails);
+                await this._executeChecksBeforeScrap(oSelectedItem, oSfcDetails, oResource);
                 let oScrapQuantity = parseInt(oSelectedItem.quantity);
                 let oComment = await this._getComment(oSelectedItem.dataType);
                 debugger;
-                let oIssuesManager = new IssuesManager(this, this.getPodController().getUserPlant(), this._oWorkCenter, this._oResource, aSelection.getShopOrder().getShopOrder(), aSelection.getSfc().getSfc(), aSelection.getSfcData().getOperation(), oSelectedItem.quantity);
+                let oIssuesManager = new IssuesManager(this, this.getPodController().getUserPlant(), this._oWorkCenter, this._oResource, aSelection.getShopOrder().getShopOrder(), aSelection.getSfc().getSfc(), aSelection.getSfcData().getOperation(), oSelectedItem.quantity, this._oOrder.getCustomerOrder(), this._oOrder.getCustomerOrderItem(), "Q2", this._getRegisteredQ23());
                 if(oExecuteIssue){
                     await oIssuesManager.prepareIssues();
                 }
@@ -401,7 +408,7 @@ sap.ui.define([
             const sText = this._getTextFromError(oError);
             this.showErrorMessage(sText, true, true);
         },
-        _executeChecksBeforeScrap: async function(oSelectedItem, oSfcDetails){
+        _executeChecksBeforeScrap: async function(oSelectedItem, oSfcDetails, resourceInstance){
             if(oSelectedItem.quantity>oSfcDetails.sfcLeftQuantity){
                 this._oErrorHandler.throwError("error.q23.sfcNotEnoughQuantity");
             }
@@ -411,6 +418,16 @@ sap.ui.define([
             }
             else if(oSfcDetails.multiOperation && oSfcDetails.lastOperation && oSelectedItem.quantity>oSfcDetails.sfcQuantityInWork){
                 await Sfc.startSfcs(this, oSfcDetails.plant, [oSfcDetails.sfc], oSfcDetails.operation, this._oResource );
+            }
+
+            if(resourceInstance.getQ2Scheme() === "PIQ"){
+                let availableQuantity = this.byId("availableQ23").getValue();
+                if(oSelectedItem.quantity > availableQuantity){
+                    let confirmDialog = new ConfirmDialog();
+                    confirmDialog.setContentText("labels.q23.confrimPiqNotEnoughQuan");
+                    //confirmDialog.setTitleText();
+                    await confirmDialog.show();
+                }
             }
 
         },
@@ -565,88 +582,150 @@ sap.ui.define([
             let guid = crypto.randomUUID();
             let date = new Date();
             debugger;
-            parameterValues.push({ name: "GUID",
-                                   comment: guid,
-                                   value: guid });
-            parameterValues.push({ name: "DATE_CREATED",
-                                   comment: guid,
-                                   value: date.toJSON() });
-            parameterValues.push({ name: "Q1/Q3",
-                                   comment: guid,
-                                   value: "Q3" });
+            // parameterValues.push({ name: "GUID",
+            //                        comment: guid,
+            //                        value: guid });
+            // parameterValues.push({ name: "DATE_CREATED",
+            //                        comment: guid,
+            //                        value: date.toJSON() });
+            // parameterValues.push({ name: "Q1/Q3",
+            //                        comment: guid,
+            //                        value: "Q3" });
 
-            parameterValues.push({ name: "QUANTITY",
-                                   comment: guid,
-                                   value: `${quantity}` });
+            // parameterValues.push({ name: "QUANTITY",
+            //                        comment: guid,
+            //                        value: `${quantity}` });
 
-            parameterValues.push({ name: "UOM",
-                                   comment: guid,
-                                   value: this._oOrder.getInternalUom() });
+            // parameterValues.push({ name: "UOM",
+            //                        comment: guid,
+            //                        value: this._oOrder.getInternalUom() });
 
-            parameterValues.push({ name: "MATERIAL",
-                                   comment: guid,
-                                   value: this._oOrder.getHeaderMaterial() });                                   
+            // parameterValues.push({ name: "MATERIAL",
+            //                        comment: guid,
+            //                        value: this._oOrder.getHeaderMaterial() });                                   
                                    
-            parameterValues.push({ name: "Q3_CODE",
-                                   comment: guid,
-                                   value: code });
+            // parameterValues.push({ name: "Q3_CODE",
+            //                        comment: guid,
+            //                        value: code });
 
-            parameterValues.push({ name: "NC_CODE",
-                                   comment: guid,
-                                   value: ncCode });
+            // parameterValues.push({ name: "NC_CODE",
+            //                        comment: guid,
+            //                        value: ncCode });
 
-            parameterValues.push({ name: "NC_CODE_DESCRIPTION",
-                                   comment: guid,
-                                   value: ncCodeDescription });
+            // parameterValues.push({ name: "NC_CODE_DESCRIPTION",
+            //                        comment: guid,
+            //                        value: ncCodeDescription });
 
-            parameterValues.push({ name: "USER",
-                                   comment: guid,
-                                   value: this.getUserId() });
+            // parameterValues.push({ name: "USER",
+            //                        comment: guid,
+            //                        value: this.getUserId() });
 
-            parameterValues.push({ name: "CANCELLED",
-                                   comment: guid,
-                                   value: false });
+            // parameterValues.push({ name: "CANCELLED",
+            //                        comment: guid,
+            //                        value: false });
 
-            parameterValues.push({ name: "ITEM_NO",
-                                   comment: guid,
-                                   value: `0001` });
+            // parameterValues.push({ name: "ITEM_NO",
+            //                        comment: guid,
+            //                        value: `0001` });
 
             let issuesCreated = issueManager.getCreatedIssues();
+            let issueAsString = ""
             for(const issue of issuesCreated){
-                let issueAsString = Object.entries(issue)
+                issueAsString = Object.entries(issue)
                                         .map(([key, value]) => `${key}:${value}`)
                                         .join('||');
 
-                parameterValues.push({ name: `CONSUMPTION`,
-                                       comment: guid,
-                                       value: issueAsString });
+                // parameterValues.push({ name: `CONSUMPTION`,
+                //                        comment: guid,
+                //                        value: issueAsString });
             }
 
 
-            let sUrl = this.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
-            let oRequestParameters = {
-                plant: sfcDetails.plant,
-                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
-                         version: "A" },
-                operation: { operation: sfcDetails.step.operation.operation,
-                              version: sfcDetails.step.operation.version },
-                parameterValues: parameterValues,
-                workCenter: sfcDetails.workCenter,
-                resource: sfcDetails.resource,
-                sfcs: [ sfcDetails.sfc ]
-            };
+            // let sUrl = this.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            // let oRequestParameters = {
+            //     plant: sfcDetails.plant,
+            //     group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+            //              version: "A" },
+            //     operation: { operation: sfcDetails.step.operation.operation,
+            //                   version: sfcDetails.step.operation.version },
+            //     parameterValues: parameterValues,
+            //     workCenter: sfcDetails.workCenter,
+            //     resource: sfcDetails.resource,
+            //     sfcs: [ sfcDetails.sfc ]
+            // };
 
-            return await new Promise((resolve,reject)=>{
-                this.ajaxPostRequest(sUrl, oRequestParameters,
-                    oResponseData => {
-                        resolve();
-                    },
-                    (oError, sHttpErrorMessage) => {                        
-                        resolve();
-                    }
-                );
-            });
-        }  
+            // return await new Promise((resolve,reject)=>{
+            //     this.ajaxPostRequest(sUrl, oRequestParameters,
+            //         oResponseData => {
+            //             resolve();
+            //         },
+            //         (oError, sHttpErrorMessage) => {                        
+            //             resolve();
+            //         }
+            //     );
+            // });
 
+            await DataCollectionSaver.saveProductionDC(
+                this,
+                {
+                    plant: sfcDetails.plant,
+                    sfc: sfcDetails.sfc,
+                    resource: sfcDetails.resource,
+                    operation: sfcDetails.step.operation.operation,
+                    productionProcessType: "Q3",
+                    q3Code: code,
+                    quantity: `${quantity}`,
+                    uom: this._oOrder.getInternalUom(),
+                    material: this._oOrder.getHeaderMaterial(),
+                    itemNo: "0001",
+                    salesOrder: "", 
+                    saledOrderItem: "",
+                    hu: "",
+                    cancelled: false,
+                    user: this.getUserId(),
+                    consumption: issueAsString,
+                    dateCreated: date.toJSON(),
+                    processStart: "",
+                    processStop: "",
+                    ncCode: ncCode,
+                    ncCodeDescription: ncCodeDescription,
+                    guid: guid
+                }
+
+            );
+
+        },
+        _setAvailableQ23: async function(visible){
+            try{
+                let availableQ23Input = this.byId("availableQ23");
+
+                availableQ23Input.setVisible(visible);
+                availableQ23Input.setValue("Dostępne: 0");
+
+                if(visible){
+                    let aSelection = this.getPodSelectionModel().getSelections()[0];
+                    let piqQ23 = new PiqQ23(this, {  plant: this.getPodController().getUserPlant(),
+                                                     order: aSelection.getShopOrder().getShopOrder()
+                     });
+                    let q23FromPiq = await piqQ23.getQ23Available();
+                    let q23Registered = this._getRegisteredQ23();
+                    let quantityAvailable = q23FromPiq - q23Registered;
+                    availableQ23Input.setValue(`Dostępne: ${quantityAvailable}`);
+                    
+                }
+        
+            }catch(error){
+            }
+        },
+        _getRegisteredQ23: function(){
+            let result = 0;
+            let modelData = this.getView().getModel().getData();
+            if(modelData.items){
+                for(const item of modelData.items){
+                        result = result + item.conconformanceQuantity;
+                }
+            }
+            return result;  
+        }
 	});
 });

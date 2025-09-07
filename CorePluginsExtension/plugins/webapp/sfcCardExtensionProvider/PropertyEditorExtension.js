@@ -54,7 +54,8 @@ sap.ui.define([
                 this.addFieldConfiguration("FXKO", oPropertyFormContainer, oPropertyData);
                 this.addFieldConfiguration("FDSA", oPropertyFormContainer, oPropertyData);       
                 this.addFieldConfiguration("FPAK", oPropertyFormContainer, oPropertyData);   
-                this.addFieldConfiguration("FRSA", oPropertyFormContainer, oPropertyData);   
+                this.addFieldConfiguration("FRSA", oPropertyFormContainer, oPropertyData); 
+                this.addFieldConfiguration("FDTS", oPropertyFormContainer, oPropertyData);  
                 
                 this.addSmartEditConfiguration(oPropertyFormContainer, oPropertyData);
 
@@ -136,6 +137,11 @@ sap.ui.define([
                 oPropertyData.fieldsFRSA = "";
             }
 
+            if (typeof oPropertyData.fieldsFDTS === "undefined") {
+                oPropertyData.fieldsFDTS = "";
+            }
+
+
             if (typeof oPropertyData.smartEditUrl === "undefined") {
                 oPropertyData.smartEditUrl = "";
             }
@@ -199,6 +205,10 @@ sap.ui.define([
 
             if (typeof oPropertyData.fieldsFRSA === "undefined") {
                 oPropertyData.fieldsFRSA = "";
+            }
+
+            if (typeof oPropertyData.fieldsFDTS === "undefined") {
+                oPropertyData.fieldsFDTS = "";
             }
 
 

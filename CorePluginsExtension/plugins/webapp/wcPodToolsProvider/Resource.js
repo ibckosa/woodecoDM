@@ -105,6 +105,26 @@ sap.ui.define([
 
             return result;
         },
+        getConsumptionButtons: function(){
+            let result = "";
+            try{
+                let consumptionButtons = this._oDetails.customValues.find(customValue => { return customValue.attribute === "CONSUMPTION_BUTTONS"});
+                if(consumptionButtons){
+                    result = consumptionButtons.value;
+                }
+            }catch(oError){}
+            return result;
+        },
+        getQ2Scheme: function(){
+            let result = "";
+            try{
+                let q2Scheme = this._oDetails.customValues.find(customValue => { return customValue.attribute === "Q2_SCHEME"});
+                if(q2Scheme){
+                    result = q2Scheme.value;
+                }
+            }catch(oError){}
+            return result;
+        },
         getQ1LabelCopies: function(){
             let result = 0;
             try{

@@ -250,10 +250,10 @@ sap.ui.define([
 
             switch(this._oPlant){
                 case '4100':
-                    fieldName = 'SCRAP_INTERIM_GR';
+                    fieldName = 'SCRAP_INTERIM_GR1';
                     break;
                 case '4200':
-                    fieldName = 'SCRAP_INTERIM_GR1';
+                    fieldName = 'SCRAP_INTERIM_GR';
                     break;
                 case '4300':
                     fieldName = 'SCRAP_INTERIM_WI';
@@ -261,10 +261,48 @@ sap.ui.define([
             }
 
             let scrapMaterial = this._oDetails.customValues.find(customValue => { return customValue.attribute === fieldName });
-            if(!scrapMaterial){
+            if(!scrapMaterial||!scrapMaterial.value){
                 this._errorHandler.throwErrorPopup("error.q23.noScrapingMaterial");
             }
             return (parseInt(scrapMaterial.value)).toString();
+        },
+        getBaseUom: function(){
+            return this._oDetails.unitOfMeasure;
+        },
+        getAlternatesUom: function(){
+            return this._oDetails.alternateUnitsOfMeasure;
+        },
+        convertUom: function(quantityIn, uomIn, uomOut){
+            let result = quantityIn;
+            if(quantityIn&&uomIn&&uomOut){
+                if(uomIn !== uomOut){
+                    let huUomConverter = this._oDetails.alternateUnitsOfMeasure.find( alternateUom => { return uomIn === alternateUom.uom });
+                    if(huUomConverter){
+                        result = result * huUomConverter.denominator / huUomConverter.numerator;
+                        uomIn = uomOut;
+                    }
+
+                    let alternateConverter = this._oDetails.alternateUnitsOfMeasure.find( alternateUom => { return alternateUom.uom === uomOut});
+                    if(alternateConverter){
+                        uomIn = uomOut;
+                        result = result * alternateConverter.denominator / alternateConverter.numerator;
+                    }
+                }
+            }
+
+            return result;
+        },
+        getIndividualReq: function(){
+            let result = false;
+            
+            try{
+                let individualReq = this._oDetails.customValues.find(customValue => { return customValue.attribute === "INDIVIDUAL_REQ" });
+                if(individualReq){
+                    result = individualReq.value === "X";
+                }
+            }catch(error){}
+
+            return result;
         }
     });
 

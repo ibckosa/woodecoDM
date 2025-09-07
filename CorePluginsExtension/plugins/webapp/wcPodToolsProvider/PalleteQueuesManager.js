@@ -1,7 +1,7 @@
 sap.ui.define([
     "sap/ui/base/Object",
     "ibc/dm/plugins/wcPodToolsProvider/PalleteQueue",
-    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler"
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
 ], function (ObjectUI5, PalleteQueue, ErrorHandler) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.PalleteQueuesManager", {
@@ -10,7 +10,7 @@ sap.ui.define([
             this._oErrorHandler = new ErrorHandler(oController);
             this._oQueue = [];
         },
-        readPalleteQueue: async function(oPlant, oWorkCenter, oResource, oMaterial, storageLocation){
+        readPalleteQueue: async function(oPlant, oWorkCenter, oResource, oMaterial, storageLocation, salesOrder, salesOrderItem, uom, salesSegmentRequired){
 
             let oQueue = this._oQueue.find( queue => {return queue.plant === oPlant &&
                                                              queue.workCenter === oWorkCenter &&
@@ -18,7 +18,12 @@ sap.ui.define([
                                                              queue.material === oMaterial });
             if(!oQueue){
                 let oPalleteQueue = new PalleteQueue(this._oController, oPlant, oResource, oWorkCenter);
-                oPalleteQueue.setReadForQueueManager(oMaterial, storageLocation);
+                oPalleteQueue.setReadForQueueManager(oMaterial, storageLocation, salesOrder, salesOrderItem);
+                if(salesSegmentRequired){
+                    oPalleteQueue.setSalesSegment(salesOrder, salesOrderItem);
+                }
+                
+                oPalleteQueue.setQueueUom(uom);
     
                 this._oQueue.push({
                     plant: oPlant,

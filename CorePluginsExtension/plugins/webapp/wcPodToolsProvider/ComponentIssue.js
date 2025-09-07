@@ -24,13 +24,17 @@ sap.ui.define([
             //resource
             //uom
             //storageLocation
+            //salesOrder
+            //salesOrderItem
+            //salesSegmentRequired
             //palleteQueuesManager
             this._oErrorHandler = new ErrorHandler(this._oIssueData.controller);
         },
 
 
         prepareIssue: async function(){
-            await this._oIssueData.palleteQueuesManager.readPalleteQueue(this._oIssueData.plant, this._oIssueData.workCenter, this._oIssueData.resource, this._oIssueData.material, this._oIssueData.storageLocation);
+            await this._oIssueData.palleteQueuesManager.readPalleteQueue(this._oIssueData.plant, this._oIssueData.workCenter, this._oIssueData.resource, this._oIssueData.material, this._oIssueData.storageLocation, 
+                                                                         this._oIssueData.salesOrder, this._oIssueData.salesOrderItem, this._oIssueData.uom, this._oIssueData.salesSegmentRequired );
             this._oPalletes = await this._oIssueData.palleteQueuesManager.getPalletesForIssue( this._oIssueData.plant, 
                                                                                               this._oIssueData.workCenter, 
                                                                                               this._oIssueData.resource, 

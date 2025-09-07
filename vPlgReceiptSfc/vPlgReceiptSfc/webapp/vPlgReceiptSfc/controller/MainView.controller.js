@@ -226,7 +226,7 @@ sap.ui.define([
             let oPackingCode = oOrderInstance.getPackingCode();
 
             if(oPackingCode){
-                let oPartOfPackingCode = oPackingCode.substring(7,10);
+                let oPartOfPackingCode = oPackingCode.substring(6,10);
                 if(!isNaN(oPartOfPackingCode)){
                     oCustomquan.isSetted = true;
                     oCustomquan.value = Number(oPartOfPackingCode); 
@@ -309,6 +309,7 @@ sap.ui.define([
                     this._resourceNumber === oResourceNumber;
                 }
 
+                this.byId("inputReceiptQuantity").setEditable(true);
                 if(oFunctionalLocation==="1"){
                     this.byId("inputPackageQuan").setVisible(false);
                     this.byId("inputPackageQuanLabel").setVisible(false);
@@ -332,7 +333,22 @@ sap.ui.define([
 
                     this.byId("inputPalleteQuanLabel").setVisible(false);
                     this.byId("inputPalleteQuan").setVisible(false);
-                }else{
+                }else if(oFunctionalLocation==="4"){
+
+                    let oModelData = this.getView().getModel().getData();
+                    this.byId("inputPackageQuan").setVisible(false);
+                    this.byId("inputPackageQuanLabel").setVisible(false);
+
+                    this.byId("inputPalleteQuanLabel").setVisible(false);
+                    this.byId("inputPalleteQuan").setVisible(false);
+                    this.byId("inputReceiptQuantity").setEditable(false);
+                    if(oModelData.isCustomQuan){
+                        this.byId("inputReceiptQuantityLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityLabelPallet"));
+                    }else{
+                        this.byId("inputReceiptQuantityLabel").setText(this._oTextHandler.getText("labels.q1.inputQuantityLabel"));
+                    }
+                }
+                else{
                     let oModelData = this.getView().getModel().getData();
                     this.byId("inputPackageQuan").setVisible(false);
                     this.byId("inputPackageQuanLabel").setVisible(false);

@@ -8,8 +8,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/PalleteQueueHandler",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/BomRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository"
-], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, PodUtility, Column, Text, PalleteQueueHandler, TextHandler, BomRepository, OrderRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository"
+], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, PodUtility, Column, Text, PalleteQueueHandler, TextHandler, BomRepository, OrderRepository, MaterialRepository) {
     "use strict";
 
     return PluginControllerExtension.extend("ibc.dm.plugins.componentListExtensionProvider.PluginEventExtension", {
@@ -436,12 +437,14 @@ sap.ui.define([
         } catch (error) {      
         }            
         },
-        _onPaletteQueuePress: function(oEvent){
+        _onPaletteQueuePress: async function(oEvent){
             let oLine = oEvent.getSource().getBindingContext().getObject();
             debugger;
             try{
+                
                 let oPodSelectionModel = this.getController().getPodSelectionModel();
                 let oSelection = oPodSelectionModel.getSelections()[0];
+                let order = await OrderRepository.readOrder(this.getController(), this.getController().getPodController().getUserPlant(), oSelection.shopOrder.shopOrder);
                 let oHandlerData = { plant: this.getController().getPodController().getUserPlant(),
                                      workCenter: oPodSelectionModel.workCenter,
                                      resource: oPodSelectionModel.resource.resource,
@@ -453,7 +456,11 @@ sap.ui.define([
                                      operationActivity: oSelection.getSfcData().getOperation(),
                                      bomComponentRef: oLine.bomComponentRef,
                                      sequence: oLine.componentSequence,
-                                     order: oSelection.shopOrder.shopOrder };
+                                     order: oSelection.shopOrder.shopOrder,
+                                     salesOrder: order.getCustomerOrder(),
+                                     salesOrderItem: order.getCustomerOrderItem(),
+                                     salesSegmentRequired: oLine.salesSegmentRequired,
+                                     uom: oLine.zuom };
                 
                 this._oPalleteQueueHandler.setHandlerData(oHandlerData);
                 this._oPalleteQueueHandler.displayPaletteQueue(this.getController(),"COMPONENT");
@@ -561,21 +568,28 @@ sap.ui.define([
                             issuedQuantity = Math.round((issuedQuantity + issue.quantityInBaseUnit.value)*1000)/1000;
                         }
                     }
+                    var itemCompSeq = item.getBindingContext().getObject().componentSequence;
+                    let materialInstance = await MaterialRepository.getMaterialInstance(that.getController(), that.getController().getPodController().getUserPlant(), itemData.component.material );
+                    issuedQuantity = materialInstance.convertUom(issuedQuantity, materialInstance.getBaseUom() , bomInstance.getComponentUom(itemCompSeq));
+
                     oMdl.setProperty(item.getBindingContextPath()+"/zIssuedQuantity", issuedQuantity);
                     
 
 
-                    var itemCompSeq = item.getBindingContext().getObject().componentSequence;
+                    
                     
 
                     var oBomComponent = bomComponents.find((line) => line.sequence == itemCompSeq );
 
                     if(oTable.getColumns().length > item.getCells().length&&oBomComponent){
-                        item.insertCell(new Text({ text: oBomComponent.componentQuantityCommercialUom }), item.getCells().length - 1);
+                        //item.insertCell(new Text({ text: oBomComponent.componentQuantityCommercialUom }), item.getCells().length - 1);
+                        item.insertCell(new Text({ text: "{zuom}" }), item.getCells().length - 1);
                         item.insertCell(new Text({ text: "{zIssuedQuantity}" }), item.getCells().length - 1);
                     }
                     if(oBomComponent){
                         oMdl.setProperty(item.getBindingContextPath()+"/zstorageLocation", oBomComponent.storageLocation);
+                        oMdl.setProperty(item.getBindingContextPath()+"/zuom", bomInstance.getComponentUom(itemCompSeq) );//oBomComponent.componentQuantityCommercialUom
+                        oMdl.setProperty(item.getBindingContextPath()+"/salesSegmentRequired", bomInstance.getSalesSegmentRequired(itemCompSeq) );
                     }
                     
                     if( typeof item.getBindingContext().getObject().erpBackflushing !== "boolean"  ){

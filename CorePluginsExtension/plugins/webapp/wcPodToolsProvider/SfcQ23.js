@@ -9,8 +9,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "ibc/dm/plugins/wcPodToolsProvider/Sfc",
-    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager"
-], function (ObjectUI5, ErrorHandler, AjaxUtil, TextHandler, Dialog, mobileLibrary, ResourceRepository, OrderRepository, SfcRepository, Sfc, IssuesManager
+    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
+], function (ObjectUI5, ErrorHandler, AjaxUtil, TextHandler, Dialog, mobileLibrary, ResourceRepository, OrderRepository, SfcRepository, Sfc, IssuesManager, DataCollectionSaver
 ) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcQ23", {
@@ -39,6 +40,7 @@ sap.ui.define([
             //uom
             //routing
             //routingVersion
+            //totalRegisteredQ23
 
         },
 
@@ -56,7 +58,7 @@ sap.ui.define([
             let oComment = await this._getComment(this._oParameters.isCommentRequired);
 
             let oIssuesManager = new IssuesManager(this._oController, this._oParameters.plant, this._oParameters.workCenter, this._oParameters.resource, 
-                this._oParameters.order, this._oParameters.sfc, this._oParameters.operationActivity, this._oParameters.quantity);
+                this._oParameters.order, this._oParameters.sfc, this._oParameters.operationActivity, this._oParameters.quantity, this._oOrder.getCustomerOrder(), this._oOrder.getCustomerOrderItem(), "Q2", this._oParameters.totalRegisteredQ23 );
             if(automaticIssues){
                 await oIssuesManager.prepareIssues();
             } 
@@ -272,33 +274,74 @@ sap.ui.define([
                                    comment: guid,
                                    value: `${this._oParameters.itemNumberErp}` });
 
-                                   
+            let issuesCreated = issueManager.getCreatedIssues();
+            let issueAsString  = "";
+            for(const issue of issuesCreated){
+                issueAsString = Object.entries(issue)
+                                        .map(([key, value]) => `${key}:${value}`)
+                                        .join('||');
+
+                parameterValues.push({ name: `CONSUMPTION`,
+                                       comment: guid,
+                                       value: issueAsString });
+            }                  
 
 
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
-            let oRequestParameters = {
-                plant: this._oParameters.plant,
-                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
-                         version: "A" },
-                operation: { operation: this._oParameters.operationActivity,
-                              version: "ERP001" },
-                parameterValues: parameterValues,
-                //stepId: this._oReceiptParameters.stepId,
-                workCenter: this._oParameters.workCenter,
-                resource: this._oParameters.resource,
-                sfcs: [ this._oParameters.sfc ]
-            };
+            // let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            // let oRequestParameters = {
+            //     plant: this._oParameters.plant,
+            //     group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+            //              version: "A" },
+            //     operation: { operation: this._oParameters.operationActivity,
+            //                   version: "ERP001" },
+            //     parameterValues: parameterValues,
+            //     //stepId: this._oReceiptParameters.stepId,
+            //     workCenter: this._oParameters.workCenter,
+            //     resource: this._oParameters.resource,
+            //     sfcs: [ this._oParameters.sfc ]
+            // };
 
-            return await new Promise((resolve,reject)=>{
-                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-                    oResponseData => {
-                        resolve();
-                    },
-                    (oError, sHttpErrorMessage) => {                        
-                        resolve();
-                    }
-                );
-            });
+            // return await new Promise((resolve,reject)=>{
+            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+            //         oResponseData => {
+            //             resolve();
+            //         },
+            //         (oError, sHttpErrorMessage) => {                        
+            //             resolve();
+            //         }
+            //     );
+            // });
+
+
+            await DataCollectionSaver.saveProductionDC(
+                this._oController,
+                {
+                    plant: this._oParameters.plant,
+                    sfc: this._oParameters.sfc,
+                    resource: this._oParameters.resource,
+                    operation: this._oParameters.operationActivity,
+                    productionProcessType: "Q3",
+                    q3Code: this._oParameters.oeeCode,
+                    quantity: `${this._oParameters.quantity}`,
+                    uom: this._oOrder.getInternalUom(),
+                    material: this._oParameters.material,
+                    itemNo: this._oParameters.itemNumberErp,
+                    salesOrder: this._oParameters.salesOrder, 
+                    saledOrderItem: this._oParameters.salesOrderItem ,
+                    hu: "",
+                    cancelled: false,
+                    user: this._oController.getUserId(),
+                    consumption: issueAsString,
+                    dateCreated: date.toJSON(),
+                    processStart: "",
+                    processStop: "",
+                    ncCode: this._oParameters.nonconformanceCode,
+                    ncCodeDescription: "",
+                    guid: guid
+                }
+
+            );
+
         }
 
     });

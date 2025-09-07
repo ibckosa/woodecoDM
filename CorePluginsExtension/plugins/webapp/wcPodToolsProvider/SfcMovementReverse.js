@@ -312,6 +312,7 @@ sap.ui.define([
         _getSapDate: function(sDateTime){
             if (!sDateTime) return "";
             var oDate = new Date(sDateTime);
+            oDate.setHours(oDate.getHours() - 6);
             if (isNaN(oDate)) return "";
             var year = oDate.getFullYear();
             var month = String(oDate.getMonth() + 1).padStart(2, '0');

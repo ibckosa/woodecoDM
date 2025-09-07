@@ -51,7 +51,7 @@ sap.ui.define([
                     content: [oVBox]
                 });
             }
-            this._oInput.setValue("0");
+            this._oInput.setValue("");
             this._oLabelHu.setText(`${oLine.handlingUnit}`);
             this._oUom = oLine.uom;
             this._oLabelHuQuan.setText(`${oLine.quantity} ${oLine.uom}`);

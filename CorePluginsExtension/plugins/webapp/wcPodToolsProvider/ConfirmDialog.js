@@ -7,10 +7,11 @@ sap.ui.define([
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.ConfirmDialog", {
         constructor: function(){
             this._textHandler = new TextHandler();
+            this._content = "";
+            this._title  = "";
         },
         setContentText: function(textid, ...args){
             this._content = this._textHandler.getText(textid, ...args);
-            
         },
         setTitleText: function(textid, ...args){
             this._title = this._textHandler.getText(textid, ...args);

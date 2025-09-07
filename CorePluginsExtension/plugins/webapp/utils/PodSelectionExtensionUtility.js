@@ -671,6 +671,7 @@ sap.ui.define([
                 for(let oLine of oSelectedLines){
                     try{
                         let order = await OrderRepository.readOrder(this._oSelController, oLine.plant, oLine.orderNumber);
+                        oLine.oldMaterial = oLine.materialId;
                         oLine.materialId = order.getScrapingMaterial(oLine.itemNumber);
                         await this._closeNonconformance(oLine);
                         oLine.HU = await this._generateHuNumber(oLine);
@@ -982,6 +983,12 @@ sap.ui.define([
             }else{
                 oPrintingDetails.material = oItem.materialId;
             }
+
+            if(oItem.oldMaterial){
+                let oOldMaterial = await MaterialRepository.getMaterialInstance(this._oSelController, oItem.plant, oItem.oldMaterial);
+                oPrintingDetails.oldMaterialCustomValues = oOldMaterial.getCustomValues();
+                oPrintingDetails.oldMaterial = oItem.oldMaterial;
+            }
             
             oPrintingDetails.HU = oItem.HU;
             oPrintingDetails.orderLineCustomValues = oOrder.getOrderLineCustomValues(oItem.itemNumber);
@@ -992,6 +999,7 @@ sap.ui.define([
             oPrintingDetails.operation = oItem.stepId;
             oPrintingDetails.document = 'WOODECO1';
             oPrintingDetails.printingCopies = 1;
+            oPrintingDetails.printType = SfcReceiptPrint.PRINT_Q2_RETURN;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oSelController, oPrintingDetails);
             await oSfcReceiptPrint.print();

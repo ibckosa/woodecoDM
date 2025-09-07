@@ -13,8 +13,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcReceiptPrint",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
     "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
-    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository"
-], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator, ResourceRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
+], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator, ResourceRepository, DataCollectionSaver) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceipt", {
         constructor: function(oController, oReceiptParameters){
@@ -103,8 +104,11 @@ sap.ui.define([
                     oIssuesManager.changeSfcNumber(this._oReceiptParameters.sfc);
                     await oIssuesManager.executeIssues();
                 }
+                OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
+                this._oReceiptParameters.receiptCount = this._oReceiptParameters.receiptCount + 1;
                 await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);                        
                 await this._printLabel(_oPrintingEndpoint);
+
             }
 
             this._refreshPod();
@@ -338,6 +342,11 @@ sap.ui.define([
             oPrintingDetails.document = 'DM_A4';
             oPrintingDetails.quantity = this._oReceiptParameters.quantity;
             oPrintingDetails.printingCopies = this._oReceiptParameters.printingCopies;
+            oPrintingDetails.printType = SfcReceiptPrint.PRINT_Q1;
+            oPrintingDetails.inputOrder = this._oOrder.getInputOrder();
+            oPrintingDetails.inputOrderDate = this._oOrder.getInputOrderDate();
+            oPrintingDetails.plannedPalletes = this._oReceiptParameters.plannedPalletes;
+            oPrintingDetails.receiptCount = this._oReceiptParameters.receiptCount;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oController, oPrintingDetails);
             await oSfcReceiptPrint.print();
@@ -384,112 +393,142 @@ sap.ui.define([
             let date = new Date();
             debugger;
 
-            parameterValues.push({ name: "GUID",
-                                   comment: guid,
-                                   value: guid });
+            // parameterValues.push({ name: "GUID",
+            //                        comment: guid,
+            //                        value: guid });
 
-            parameterValues.push({ name: "DATE_CREATED",
-                                   comment: guid,
-                                   value: date.toJSON() });
+            // parameterValues.push({ name: "DATE_CREATED",
+            //                        comment: guid,
+            //                        value: date.toJSON() });
 
-            parameterValues.push({ name: "Q1/Q3",
-                                   comment: guid,
-                                   value: "Q1" });
+            // parameterValues.push({ name: "Q1/Q3",
+            //                        comment: guid,
+            //                        value: "Q1" });
 
-            parameterValues.push({ name: "QUANTITY",
-                                   comment: guid,
-                                   value: `${this._oReceiptParameters.quantity}` });
+            // parameterValues.push({ name: "QUANTITY",
+            //                        comment: guid,
+            //                        value: `${this._oReceiptParameters.quantity}` });
 
-            parameterValues.push({ name: "UOM",
-                                   comment: guid,
-                                   value: this._oReceiptParameters.unitOfMeasure });
+            // parameterValues.push({ name: "UOM",
+            //                        comment: guid,
+            //                        value: this._oReceiptParameters.unitOfMeasure });
 
-            parameterValues.push({ name: "MATERIAL",
-                                   comment: guid,
-                                   value: this._oReceiptParameters.material });
+            // parameterValues.push({ name: "MATERIAL",
+            //                        comment: guid,
+            //                        value: this._oReceiptParameters.material });
 
-            parameterValues.push({ name: "ITEM_NO",
-                                   comment: guid,
-                                   value: `${this._oReceiptParameters.itemNumberErp}` });
+            // parameterValues.push({ name: "ITEM_NO",
+            //                        comment: guid,
+            //                        value: `${this._oReceiptParameters.itemNumberErp}` });
                                    
 
-            if(this._oReceiptParameters.handlingUnit){
-                parameterValues.push({
-                    name: "HU",
-                    comment: guid,
-                    value: this._oReceiptParameters.handlingUnit });
-            }else{
-                parameterValues.push({ 
-                    name: "HU",
-                    comment: guid,
-                    value: "" });
-            }
+            // if(this._oReceiptParameters.handlingUnit){
+            //     parameterValues.push({
+            //         name: "HU",
+            //         comment: guid,
+            //         value: this._oReceiptParameters.handlingUnit });
+            // }else{
+            //     parameterValues.push({ 
+            //         name: "HU",
+            //         comment: guid,
+            //         value: "" });
+            // }
 
                                    
-            parameterValues.push({ name: "SALES_ORDER",
-                                   comment: guid,
-                                   value: this._oReceiptParameters.salesOrder });
+            // parameterValues.push({ name: "SALES_ORDER",
+            //                        comment: guid,
+            //                        value: this._oReceiptParameters.salesOrder });
 
-            parameterValues.push({ name: "SALES_ORDER_ITEM",
-                                   comment: guid,
-                                   value: this._oReceiptParameters.salesOrderItem });
+            // parameterValues.push({ name: "SALES_ORDER_ITEM",
+            //                        comment: guid,
+            //                        value: this._oReceiptParameters.salesOrderItem });
 
-            parameterValues.push({ name: "USER",
-                                   comment: guid,
-                                   value: this._oController.getUserId() });
+            // parameterValues.push({ name: "USER",
+            //                        comment: guid,
+            //                        value: this._oController.getUserId() });
 
-            parameterValues.push({ name: "Q3_CODE",
-                                   comment: guid,
-                                   value: "" });
+            // parameterValues.push({ name: "Q3_CODE",
+            //                        comment: guid,
+            //                        value: "" });
 
-            parameterValues.push({ name: "NC_CODE",
-                                   comment: guid,
-                                   value: "" });
+            // parameterValues.push({ name: "NC_CODE",
+            //                        comment: guid,
+            //                        value: "" });
 
-            parameterValues.push({ name: "NC_CODE_DESCRIPTION",
-                                   comment: guid,
-                                   value: "" });
+            // parameterValues.push({ name: "NC_CODE_DESCRIPTION",
+            //                        comment: guid,
+            //                        value: "" });
 
-            parameterValues.push({ name: "CANCELLED",
-                                   comment: guid,
-                                   value: false });
+            // parameterValues.push({ name: "CANCELLED",
+            //                        comment: guid,
+            //                        value: false });
 
             let issuesCreated = issueManager.getCreatedIssues();
+            let issueAsString = "";
             for(const issue of issuesCreated){
-                let issueAsString = Object.entries(issue)
+                issueAsString = Object.entries(issue)
                                         .map(([key, value]) => `${key}:${value}`)
                                         .join('||');
 
-                parameterValues.push({ name: `CONSUMPTION`,
-                                       comment: guid,
-                                       value: issueAsString });
+                // parameterValues.push({ name: `CONSUMPTION`,
+                //                        comment: guid,
+                //                        value: issueAsString });
             }
             
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
-            let oRequestParameters = {
-                plant: this._oReceiptParameters.plant,
-                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
-                         version: "A" },
-                operation: { operation: this._oReceiptParameters.operationActivity,
-                              version: "ERP001" },
-                parameterValues: parameterValues,
-                stepId: this._oReceiptParameters.stepId,
-                workCenter: this._oReceiptParameters.workCenter,
-                resource: this._oReceiptParameters.resource,
-                sfcs: [ this._oReceiptParameters.sfc ]
-            };
+            // let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            // let oRequestParameters = {
+            //     plant: this._oReceiptParameters.plant,
+            //     group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+            //              version: "A" },
+            //     operation: { operation: this._oReceiptParameters.operationActivity,
+            //                   version: "ERP001" },
+            //     parameterValues: parameterValues,
+            //     stepId: this._oReceiptParameters.stepId,
+            //     workCenter: this._oReceiptParameters.workCenter,
+            //     resource: this._oReceiptParameters.resource,
+            //     sfcs: [ this._oReceiptParameters.sfc ]
+            // };
 
-            return await new Promise((resolve,reject)=>{
-                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-                    oResponseData => {
-                        resolve();
-                    },
-                    (oError, sHttpErrorMessage) => {                        
-                        resolve();
-                    }
-                );
-            });
-        },
+            // return await new Promise((resolve,reject)=>{
+            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+            //         oResponseData => {
+            //             resolve();
+            //         },
+            //         (oError, sHttpErrorMessage) => {                        
+            //             resolve();
+            //         }
+            //     );
+            // });
+
+            await DataCollectionSaver.saveProductionDC(
+                this._oController,
+                {
+                    plant: this._oReceiptParameters.plant,
+                    sfc: this._oReceiptParameters.sfc,
+                    resource: this._oReceiptParameters.resource,
+                    operation: this._oReceiptParameters.operationActivity,
+                    productionProcessType: "Q1",
+                    q3Code: "",
+                    quantity: `${this._oReceiptParameters.quantity}`,
+                    uom: this._oReceiptParameters.unitOfMeasure,
+                    material: this._oReceiptParameters.material,
+                    itemNo: `${this._oReceiptParameters.itemNumberErp}`,
+                    salesOrder: this._oReceiptParameters.salesOrder, 
+                    saledOrderItem: this._oReceiptParameters.salesOrderItem,
+                    hu: this._oReceiptParameters.handlingUnit ? this._oReceiptParameters.handlingUnit : "",
+                    cancelled: false,
+                    user: this._oController.getUserId(),
+                    consumption: issueAsString,
+                    dateCreated: date.toJSON(),
+                    processStart: "",
+                    processStop: "",
+                    ncCode: "",
+                    ncCodeDescription: "",
+                    guid: guid
+                }
+
+            );
+        }
 
     });
 });

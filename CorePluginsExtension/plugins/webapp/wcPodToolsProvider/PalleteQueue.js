@@ -2,7 +2,7 @@ sap.ui.define([
     "sap/ui/base/Object",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
     "ibc/dm/plugins/wcPodToolsProvider/WorkCenter"
-], function (Object,MaterialRepository,WorkCenter) {
+], function (Object,MaterialRepository, WorkCenter) {
     "use strict";
     return Object.extend("ibc.dm.plugins.wcPodToolsProvider.PalleteQueue", {
         constructor: function(oController, oPlant, oResourceNumber, oWorkCenter ){
@@ -23,6 +23,20 @@ sap.ui.define([
             };
 
         },
+        setQueueUom: function(uom){
+            this._queueUom = uom;
+        },
+        setSalesOrderSegment: function(salesOrderNumber, salesOrderItemNumber){
+            this._salesOrderNumber = salesOrderNumber;
+            this._salesOrderItemNumber = salesOrderItemNumber;
+
+        },
+        setSalesSegment: function(salesOrderNumber, salesOrderItemNumber){
+            this._salesSegmentSetted = true;
+            this._salesOrderNumber = salesOrderNumber;
+            this._salesOrderItemNumber = salesOrderItemNumber;
+
+        },
         setReadForQueueManager: function(oMaterial, storageLocation){
             this._isReadForQueueManager = true;
 
@@ -41,7 +55,6 @@ sap.ui.define([
             let oRequestParameters = await this._getRequestParameters();
             let oPalletes = await this._readPalletesApiCall(oRequestParameters);
 
-
             if(this._isReadForOrderPosition){
                 oReturnQueue = await this._getQueueForPosition(oPalletes);
             }else if(this._isReadForQueueManager){
@@ -50,10 +63,69 @@ sap.ui.define([
                 oReturnQueue = await this._getQueueForResource(oPalletes);
             }
 
+            if(this._oAdditionalData && this._oAdditionalData.material){
+                oReturnQueue = await this._convertToQueueUom(oReturnQueue);
+                oReturnQueue = await this._filterSalesSegment(oReturnQueue);
+            }
 
             return oReturnQueue;
-
         },
+        _filterSalesSegment: async function(queue){
+            if(this._salesSegmentSetted){
+                queue = queue.filter(line=>{return line.salesOrderNumber === this._salesOrderNumber &&
+                                                   line.salesOrderItemNumber === this._salesOrderItemNumber });
+            }
+
+
+
+            // let materialInstance = await MaterialRepository.getMaterialInstance(this._oAdditionalData, this._oPlant, this._oAdditionalData.material);
+            // let materialIndividualReq = materialInstance.getIndividualReq();
+            // if(materialIndividualReq){
+            //     let salesOrderNumber = "";
+            //     let salesOrderItemNumber = "";
+            //     if(this._salesOrderNumber){
+            //         salesOrderNumber = this._salesOrderNumber;
+            //     }
+
+            //     if(this._salesOrderItemNumber){
+            //         salesOrderItemNumber = this._salesOrderItemNumber;
+            //     }
+
+
+            //     queue = queue.filter(line=>{return line.salesOrderNumber === salesOrderNumber &&
+            //                                        line.salesOrderItemNumber === salesOrderItemNumber });
+
+            // }
+            return queue;
+        },
+
+        _convertToQueueUom: async function(queue){
+
+            if(this._queueUom){
+                let materialInstance = await MaterialRepository.getMaterialInstance(this._oAdditionalData, this._oPlant, this._oAdditionalData.material);
+                let alternatesUom = materialInstance.getAlternatesUom();
+                if(alternatesUom){
+                    for(const queueLine of queue){
+                        if(queueLine.uom !== this._queueUom){
+
+                            let huUomConverter = alternatesUom.find( alternateUom => { return queueLine.uom === alternateUom.uom });
+                            if(huUomConverter){
+                                queueLine.quantity = queueLine.quantity * huUomConverter.denominator / huUomConverter.numerator;
+                                queueLine.uom = this._queueUom;
+                            }
+
+                            let alternateConverter = alternatesUom.find( alternateUom => { return alternateUom.uom === this._queueUom});
+                            if(alternateConverter){
+                                queueLine.uom = this._queueUom;
+                                queueLine.quantity = queueLine.quantity * alternateConverter.denominator / alternateConverter.numerator;
+                            }
+                        }
+                    }
+                }
+            }
+            return queue;
+        },
+
         _readPalletesApiCall: async function(oRequestParamteres){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventories";
 
@@ -119,7 +191,9 @@ sap.ui.define([
                             palleteDetails: pallete,
                             erpResourceId: "",
                             generatedHu: "",
-                            packingMaterial: oMaterial.getPackagingMaterial()
+                            packingMaterial: oMaterial.getPackagingMaterial(),
+                            salesOrderNumber: this._getSalesOrderNumber(pallete),
+                            salesOrderItemNumber: this._getSalesOrderItemNumber(pallete)
                         });
                     }else{
                         if(oReservation.dataAttribute === oResevationNumber){
@@ -146,7 +220,9 @@ sap.ui.define([
                                     palleteDetails: pallete,
                                     erpResourceId: "",
                                     generatedHu: "",
-                                    packingMaterial: oMaterial.getPackagingMaterial()
+                                    packingMaterial: oMaterial.getPackagingMaterial(),
+                                    salesOrderNumber: this._getSalesOrderNumber(pallete),
+                                    salesOrderItemNumber: this._getSalesOrderItemNumber(pallete)
                                 });
                             }else{
                                 oConsumedPalletes.push({
@@ -170,7 +246,9 @@ sap.ui.define([
                                     palleteDetails: pallete,
                                     erpResourceId: "",
                                     generatedHu: "",
-                                    packingMaterial: oMaterial.getPackagingMaterial()
+                                    packingMaterial: oMaterial.getPackagingMaterial(),
+                                    salesOrderNumber: this._getSalesOrderNumber(pallete),
+                                    salesOrderItemNumber: this._getSalesOrderItemNumber(pallete)
                                 });
                             }
                         }
@@ -218,7 +296,9 @@ sap.ui.define([
                         palleteDetails: pallete,
                         erpResourceId: "",
                         generatedHu: "",
-                        packingMaterial: oMaterial.getPackagingMaterial()
+                        packingMaterial: oMaterial.getPackagingMaterial(),
+                        salesOrderNumber: this._getSalesOrderNumber(pallete),
+                        salesOrderItemNumber: this._getSalesOrderItemNumber(pallete),
                     });
                 }
             }
@@ -263,7 +343,9 @@ sap.ui.define([
                             palleteDetails: pallete,
                             erpResourceId: "",
                             generatedHu: "",
-                            packingMaterial: oMaterial.getPackagingMaterial()
+                            packingMaterial: oMaterial.getPackagingMaterial(),
+                            salesOrderNumber: this._getSalesOrderNumber(pallete),
+                            salesOrderItemNumber: this._getSalesOrderItemNumber(pallete)
                         });
                     }else{
                             if(!oConsumed||oConsumed.dataAttribute===null||!oConsumed.dataAttribute)
@@ -290,7 +372,9 @@ sap.ui.define([
                                     palleteDetails: pallete,
                                     erpResourceId: "",
                                     generatedHu: "",
-                                    packingMaterial: oMaterial.getPackagingMaterial()
+                                    packingMaterial: oMaterial.getPackagingMaterial(),
+                                    salesOrderNumber: this._getSalesOrderNumber(pallete),
+                                    salesOrderItemNumber: this._getSalesOrderItemNumber(pallete)
                                 });
                             }else{
                                 oConsumedPalletes.push({
@@ -315,7 +399,9 @@ sap.ui.define([
                                     palleteDetails: pallete,
                                     erpResourceId: "",
                                     generatedHu: "",
-                                    packingMaterial: oMaterial.getPackagingMaterial()
+                                    packingMaterial: oMaterial.getPackagingMaterial(),
+                                    salesOrderNumber: this._getSalesOrderNumber(pallete),
+                                    salesOrderItemNumber: this._getSalesOrderItemNumber(pallete)
                                 });
                             }
                     }
@@ -330,7 +416,23 @@ sap.ui.define([
             oReturn = [...oConsumedPalletes,...oReservedPalletes,...oNonReservedPalletes];
 
             return oReturn;
+        },
+        _getSalesOrderNumber: function(pallete){
+            let result = "";
+            let palleteOrderNumber = pallete.assemblyData.find(oData=>{ return oData.dataField === "SALES_ORDER"});
+            if(palleteOrderNumber&&palleteOrderNumber.dataAttribute){
+                result = palleteOrderNumber.dataAttribute;
+            }
+            return result;
+        },
+        _getSalesOrderItemNumber: function(pallete){
+            let result = "";
+            let palleteOrderItemNumber = pallete.assemblyData.find(oData=>{ return oData.dataField === "SALES_ORDER_ITEM"});
+            if(palleteOrderItemNumber&&palleteOrderItemNumber.dataAttribute){
+                result = palleteOrderItemNumber.dataAttribute;
+            }
+            return result;
         }
-        
+                
     });
 });

@@ -5,7 +5,7 @@ sap.ui.define([
 ], function (ObjectUI5, jQuery) {
 "use strict";
 
-    let oSfc = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceiptPrint", {
+    let printer = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceiptPrint", {
         constructor: function(oController, oPrintDetails){
             this._oController = oController;
             this._oPrintDetails = oPrintDetails;
@@ -20,73 +20,75 @@ sap.ui.define([
         },
 
         print: async function(){
-            debugger;
-            try{
-                let windowTemp = window;
-                let windowCanv = window.bwipjs;
-            }catch(oError){
-                debugger;
-            }
-            let oPrintingInterface = this._getPrintingInterface();
-            const today = new Date();
-            const day = String(today.getDate()).padStart(2, '0');
-            const month = String(today.getMonth() + 1).padStart(2, '0'); // Miesiące są indeksowane od 0
-            const year = today.getFullYear();
-            const prodDate = `${day}.${month}.${year}`;
-
             if(this._oPrintDetails.printingCopies<1){
                 return;
             }
 
-            this._oPrintDetails.materialCustomValues.forEach(customValue => {
-                if (this._oPrintingInterface.hasOwnProperty(customValue.attribute)) {
-                    this._oPrintingInterface[customValue.attribute] = customValue.value;
-                }
-            });
-
-            this._oPrintDetails.orderLineCustomValues.forEach(customValue => {
-                if (this._oPrintingInterface.hasOwnProperty(customValue.field_name)) {
-                    this._oPrintingInterface[customValue.field_name] = customValue.field_value;
-                }
-            });
-
-            this._oPrintingInterface.PROD_DATE = prodDate;
-            this._oPrintingInterface.MATERIAL = this._oPrintDetails.material;
-            this._oPrintingInterface.HU = this._oPrintDetails.HU;
-            this._oPrintingInterface.plant = this._oPrintDetails.plant;
-            this._oPrintingInterface.order = this._oPrintDetails.order;
-            this._oPrintingInterface.resource = this._oPrintDetails.resource.replace(/^.*?_/, '');
-            this._oPrintingInterface.workCenter = this._oPrintDetails.workCenter;
-            this._oPrintingInterface.sfc = this._oPrintDetails.sfc;
-            this._oPrintingInterface.printer =  this._oPrintDetails.printer;
-            this._oPrintingInterface.document = this._getDocument(); //this._oPrintDetails.document;
-            this._oPrintingInterface.QUANTITY = parseInt(this._oPrintDetails.quantity);
-            this._oPrintingInterface.OPERATION = `${parseInt(this._oPrintDetails.operation)}`;
-
-            if(!this._oPrintingInterface.HU){
-                this._oPrintingInterface.HU = this._oPrintingInterface.sfc;
-            }
-
-            if(this._oPrintingInterface.PEG_VBELN){
-                try{
-                    this._oPrintingInterface.PEG_VBELN = `${parseInt(this._oPrintingInterface.PEG_VBELN)}`;
-                }catch(error){}
-            }
-
-            if(this._oPrintingInterface.PEG_POSNR){
-                try{
-                    this._oPrintingInterface.PEG_POSNR = `${parseInt(this._oPrintingInterface.PEG_POSNR)}`;
-                }catch(error){}
-            }
-
-            if(this._oPrintingInterface.PEG_ZZMTO==="MTO2"){
-                this._oPrintingInterface.PEG_VBELN = this._oPrintingInterface.PEG_POSNR = this._oPrintingInterface.PEG_KDMAT = this._oPrintingInterface.PEG_NAME1 = this._oPrintingInterface.PEG_BSTNK = "";
-            }
+            this._getPrintingInterface();
 
             
-            this._getSalesText();
-            this._convertDescription();
-            this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
+
+            // const today = new Date();
+            // const day = String(today.getDate()).padStart(2, '0');
+            // const month = String(today.getMonth() + 1).padStart(2, '0'); // Miesiące są indeksowane od 0
+            // const year = today.getFullYear();
+            // const prodDate = `${day}.${month}.${year}`;
+
+            // if(this._oPrintDetails.printingCopies<1){
+            //     return;
+            // }
+
+            // this._oPrintDetails.materialCustomValues.forEach(customValue => {
+            //     if (this._oPrintingInterface.hasOwnProperty(customValue.attribute)) {
+            //         this._oPrintingInterface[customValue.attribute] = customValue.value;
+            //     }
+            // });
+
+            // this._oPrintDetails.orderLineCustomValues.forEach(customValue => {
+            //     if (this._oPrintingInterface.hasOwnProperty(customValue.field_name)) {
+            //         this._oPrintingInterface[customValue.field_name] = customValue.field_value;
+            //     }
+            // });
+
+            // this._oPrintingInterface.PROD_DATE = prodDate;
+            // this._oPrintingInterface.MATERIAL = this._oPrintDetails.material;
+            // this._oPrintingInterface.HU = this._oPrintDetails.HU;
+            // this._oPrintingInterface.plant = this._oPrintDetails.plant;
+            // this._oPrintingInterface.order = this._oPrintDetails.order;
+            // this._oPrintingInterface.resource = this._oPrintDetails.resource.replace(/^.*?_/, '');
+            // this._oPrintingInterface.workCenter = this._oPrintDetails.workCenter;
+            // this._oPrintingInterface.sfc = this._oPrintDetails.sfc;
+            // this._oPrintingInterface.printer =  this._oPrintDetails.printer;
+            // this._oPrintingInterface.document = this._getDocument(); //this._oPrintDetails.document;
+            // this._oPrintingInterface.QUANTITY = parseInt(this._oPrintDetails.quantity);
+            // this._oPrintingInterface.OPERATION = `${parseInt(this._oPrintDetails.operation)}`;
+            // this._oPrintingInterface.INPUT_ORDER = this._oPrintDetails.inputOrder;
+            // this._oPrintingInterface.INPUT_ORDER_DATE = this._oPrintDetails.inputOrderDate;
+
+            // if(!this._oPrintingInterface.HU){
+            //     this._oPrintingInterface.HU = this._oPrintingInterface.sfc;
+            // }
+
+            // if(this._oPrintingInterface.PEG_VBELN){
+            //     try{
+            //         this._oPrintingInterface.PEG_VBELN = `${parseInt(this._oPrintingInterface.PEG_VBELN)}`;
+            //     }catch(error){}
+            // }
+
+            // if(this._oPrintingInterface.PEG_POSNR){
+            //     try{
+            //         this._oPrintingInterface.PEG_POSNR = `${parseInt(this._oPrintingInterface.PEG_POSNR)}`;
+            //     }catch(error){}
+            // }
+
+            // if(this._oPrintingInterface.PEG_ZZMTO==="MTO2"){
+            //     this._oPrintingInterface.PEG_VBELN = this._oPrintingInterface.PEG_POSNR = this._oPrintingInterface.PEG_KDMAT = this._oPrintingInterface.PEG_NAME1 = this._oPrintingInterface.PEG_BSTNK = "";
+            // }
+
+            
+            // this._getSalesText();
+            // this._convertDescription();
+            // this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
 
             // let oPromises=[];
             // for(let i=0; i<this._oPrintDetails.printingCopies; i++){
@@ -150,10 +152,278 @@ sap.ui.define([
                 ORDER: "",
                 PROD_DATE: "",
                 DESCRIPTION: "",
+                INPUT_ORDER: "",
+                INPUT_ORDER_DATE: "",
+                EWU_BARCODE: "",
+                EWU_TEXT: "",
                 sync: true
             };
 
+            switch(this._oPrintDetails.printType) {
+                case ibc.dm.plugins.wcPodToolsProvider.SfcReceiptPrint.PRINT_Q2_RETURN:
+                    this._getInterfaceQ2Return();
+                    break;
+                case ibc.dm.plugins.wcPodToolsProvider.SfcReceiptPrint.PRINT_Q1:
+                    this._getInterfaceQ1();
+                    break;
+                case ibc.dm.plugins.wcPodToolsProvider.SfcReceiptPrint.PRINT_INPUT_RETURN:
+                    this._getInterfaceInputReturn();
+                    break;
+                case ibc.dm.plugins.wcPodToolsProvider.SfcReceiptPrint.PRINT_INPUT_RETURN_NPW:
+                    this._getInterfaceInputReturnNpw();
+                    break;
+                default: 
+                    this._getInterfaceQ1();
+            }
+
+
         },
+        _getProdDate: function(){
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0'); 
+            const year = today.getFullYear();
+            const prodDate = `${day}.${month}.${year}`;
+
+            return prodDate;
+        },
+
+        _getInterfaceQ2Return: function(){
+            const prodDate = this._getProdDate();
+
+            this._oPrintDetails.materialCustomValues.forEach(customValue => {
+                if (this._oPrintingInterface.hasOwnProperty(customValue.attribute)) {
+                    this._oPrintingInterface[customValue.attribute] = customValue.value;
+                }
+            });
+            
+            this._oPrintDetails.orderLineCustomValues.forEach(customValue => {
+                if (this._oPrintingInterface.hasOwnProperty(customValue.field_name)) {
+                    this._oPrintingInterface[customValue.field_name] = customValue.field_value;
+                }
+            });
+
+
+
+            this._oPrintingInterface.THICKNESS = "";
+            if(this._oPrintDetails.oldMaterialCustomValues){
+                let oldMaterialDI = this._oPrintDetails.oldMaterialCustomValues.find(value=>{return value.attribute === "THICKNESS"});
+                if(oldMaterialDI){
+                    this._oPrintingInterface.THICKNESS = oldMaterialDI.value;
+                }
+
+            }
+
+            this._oPrintingInterface.PEG_VBELN = this._oPrintingInterface.PEG_POSNR = this._oPrintingInterface.PEG_NAME1 = this._oPrintingInterface.PEG_BSTNK = "";
+            this._oPrintingInterface.PEG_KDMAT = this._oPrintDetails.oldMaterial;
+
+            this._oPrintingInterface.PROD_DATE = prodDate;
+            this._oPrintingInterface.MATERIAL = this._oPrintDetails.material;
+            this._oPrintingInterface.HU = this._oPrintDetails.HU;
+            this._oPrintingInterface.plant = this._oPrintDetails.plant;
+            this._oPrintingInterface.order = this._oPrintDetails.order;
+            this._oPrintingInterface.resource = this._oPrintDetails.resource.replace(/^.*?_/, '');
+            this._oPrintingInterface.workCenter = this._oPrintDetails.workCenter;
+            this._oPrintingInterface.sfc = this._oPrintDetails.sfc;
+            this._oPrintingInterface.printer =  this._oPrintDetails.printer;
+            this._oPrintingInterface.document = this._getDocument(); 
+            this._oPrintingInterface.QUANTITY = parseInt(this._oPrintDetails.quantity);
+            this._oPrintingInterface.OPERATION = `${parseInt(this._oPrintDetails.operation)}`;
+            this._oPrintingInterface.INPUT_ORDER = this._oPrintDetails.inputOrder;
+            this._oPrintingInterface.INPUT_ORDER_DATE = this._oPrintDetails.inputOrderDate;
+
+            if(!this._oPrintingInterface.HU){
+                this._oPrintingInterface.HU = this._oPrintingInterface.sfc;
+            }
+
+            if(this._oPrintingInterface.PEG_VBELN){
+                try{
+                    this._oPrintingInterface.PEG_VBELN = `${parseInt(this._oPrintingInterface.PEG_VBELN)}`;
+                }catch(error){}
+            }
+
+            if(this._oPrintingInterface.PEG_POSNR){
+                try{
+                    this._oPrintingInterface.PEG_POSNR = `${parseInt(this._oPrintingInterface.PEG_POSNR)}`;
+                }catch(error){}
+            }
+
+
+            
+            this._getSalesText();
+            this._convertDescription();
+            this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
+        },
+
+        _getInterfaceQ1: function(){
+            const prodDate = this._getProdDate();
+
+            this._oPrintDetails.materialCustomValues.forEach(customValue => {
+                if (this._oPrintingInterface.hasOwnProperty(customValue.attribute)) {
+                    this._oPrintingInterface[customValue.attribute] = customValue.value;
+                }
+            });
+
+            this._oPrintDetails.orderLineCustomValues.forEach(customValue => {
+                if (this._oPrintingInterface.hasOwnProperty(customValue.field_name)) {
+                    this._oPrintingInterface[customValue.field_name] = customValue.field_value;
+                }
+            });
+
+
+            this._oPrintingInterface.PROD_DATE = prodDate;
+            this._oPrintingInterface.MATERIAL = this._oPrintDetails.material;
+            this._oPrintingInterface.HU = this._oPrintDetails.HU;
+            this._oPrintingInterface.plant = this._oPrintDetails.plant;
+            this._oPrintingInterface.order = this._oPrintDetails.order;
+            this._oPrintingInterface.resource = this._oPrintDetails.resource.replace(/^.*?_/, '');
+            this._oPrintingInterface.workCenter = this._oPrintDetails.workCenter;
+            this._oPrintingInterface.sfc = this._oPrintDetails.sfc;
+            this._oPrintingInterface.printer =  this._oPrintDetails.printer;
+            this._oPrintingInterface.document = this._getDocument(); 
+            this._oPrintingInterface.QUANTITY = parseInt(this._oPrintDetails.quantity);
+            this._oPrintingInterface.OPERATION = `${parseInt(this._oPrintDetails.operation)}`;
+            this._oPrintingInterface.INPUT_ORDER = this._oPrintDetails.inputOrder;
+            this._oPrintingInterface.INPUT_ORDER_DATE = this._oPrintDetails.inputOrderDate;
+
+            if(!this._oPrintingInterface.HU){
+                this._oPrintingInterface.HU = this._oPrintingInterface.sfc;
+            }
+
+            if(this._oPrintingInterface.PEG_VBELN){
+                try{
+                    this._oPrintingInterface.PEG_VBELN = `${parseInt(this._oPrintingInterface.PEG_VBELN)}`;
+                }catch(error){}
+            }
+
+            if(this._oPrintingInterface.PEG_POSNR){
+                try{
+                    this._oPrintingInterface.PEG_POSNR = `${parseInt(this._oPrintingInterface.PEG_POSNR)}`;
+                }catch(error){}
+            }
+
+            if(this._oPrintingInterface.PEG_ZZMTO==="MTO2"){
+                this._oPrintingInterface.PEG_VBELN = this._oPrintingInterface.PEG_POSNR = this._oPrintingInterface.PEG_KDMAT = this._oPrintingInterface.PEG_NAME1 = this._oPrintingInterface.PEG_BSTNK = "";
+            }
+
+            
+            this._getSalesText();
+            this._convertDescription();
+            this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
+        },
+
+        _getInterfaceInputReturn: function(){
+            const prodDate = this._getProdDate();
+
+            this._oPrintDetails.materialCustomValues.forEach(customValue => {
+                if (this._oPrintingInterface.hasOwnProperty(customValue.attribute)) {
+                    this._oPrintingInterface[customValue.attribute] = customValue.value;
+                }
+            });
+
+            // this._oPrintDetails.orderLineCustomValues.forEach(customValue => {
+            //     if (this._oPrintingInterface.hasOwnProperty(customValue.field_name)) {
+            //         this._oPrintingInterface[customValue.field_name] = customValue.field_value;
+            //     }
+            // });
+
+            this._oPrintingInterface.PROD_DATE = prodDate;
+            this._oPrintingInterface.MATERIAL = this._oPrintDetails.material;
+            this._oPrintingInterface.HU = this._oPrintDetails.HU;
+            this._oPrintingInterface.plant = this._oPrintDetails.plant;
+            //this._oPrintingInterface.order = this._oPrintDetails.order;
+            this._oPrintingInterface.resource = this._oPrintDetails.resource.replace(/^.*?_/, '');
+            this._oPrintingInterface.workCenter = this._oPrintDetails.workCenter;
+            this._oPrintingInterface.sfc = this._oPrintDetails.sfc;
+            this._oPrintingInterface.printer =  this._oPrintDetails.printer;
+            this._oPrintingInterface.document = this._getDocument(); 
+            this._oPrintingInterface.QUANTITY = parseInt(this._oPrintDetails.quantity);
+            //this._oPrintingInterface.OPERATION = `${parseInt(this._oPrintDetails.operation)}`;
+            this._oPrintingInterface.INPUT_ORDER = this._oPrintDetails.inputOrder;
+            this._oPrintingInterface.INPUT_ORDER_DATE = this._oPrintDetails.inputOrderDate;
+            if(!this._oPrintingInterface.HU){
+                this._oPrintingInterface.HU = this._oPrintingInterface.sfc;
+            }
+
+            if(this._oPrintingInterface.PEG_VBELN){
+                try{
+                    this._oPrintingInterface.PEG_VBELN = `${parseInt(this._oPrintingInterface.PEG_VBELN)}`;
+                }catch(error){}
+            }
+
+            if(this._oPrintingInterface.PEG_POSNR){
+                try{
+                    this._oPrintingInterface.PEG_POSNR = `${parseInt(this._oPrintingInterface.PEG_POSNR)}`;
+                }catch(error){}
+            }
+
+            if(this._oPrintingInterface.PEG_ZZMTO==="MTO2"){
+                this._oPrintingInterface.PEG_VBELN = this._oPrintingInterface.PEG_POSNR = this._oPrintingInterface.PEG_KDMAT = this._oPrintingInterface.PEG_NAME1 = this._oPrintingInterface.PEG_BSTNK = "";
+            }
+
+            
+            this._getSalesText();
+            this._convertDescription();
+            this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
+        },
+
+        _getInterfaceInputReturnNpw: function(){
+            const prodDate = this._getProdDate();
+
+            this._oPrintDetails.materialCustomValues.forEach(customValue => {
+                if (this._oPrintingInterface.hasOwnProperty(customValue.attribute)) {
+                    this._oPrintingInterface[customValue.attribute] = customValue.value;
+                }
+            });
+            
+
+            // this._oPrintDetails.orderLineCustomValues.forEach(customValue => {
+            //     if (this._oPrintingInterface.hasOwnProperty(customValue.field_name)) {
+            //         this._oPrintingInterface[customValue.field_name] = customValue.field_value;
+            //     }
+            // });
+
+            this._oPrintingInterface.PROD_DATE = prodDate;
+            this._oPrintingInterface.MATERIAL = this._oPrintDetails.material;
+            this._oPrintingInterface.HU = this._oPrintDetails.HU;
+            this._oPrintingInterface.plant = this._oPrintDetails.plant;
+            //this._oPrintingInterface.order = this._oPrintDetails.order;
+            this._oPrintingInterface.resource = this._oPrintDetails.resource.replace(/^.*?_/, '');
+            this._oPrintingInterface.workCenter = this._oPrintDetails.workCenter;
+            this._oPrintingInterface.sfc = this._oPrintDetails.sfc;
+            this._oPrintingInterface.printer =  this._oPrintDetails.printer;
+            this._oPrintingInterface.document = this._getDocument(); 
+            this._oPrintingInterface.QUANTITY = parseInt(this._oPrintDetails.quantity);
+            this._oPrintingInterface.OPERATION = `${parseInt(this._oPrintDetails.operation)}`;
+            this._oPrintingInterface.INPUT_ORDER = this._oPrintDetails.inputOrder;
+            this._oPrintingInterface.INPUT_ORDER_DATE = this._oPrintDetails.inputOrderDate;
+            this._oPrintingInterface.PEG_KDMAT = this._oPrintDetails.oldMaterial;
+            if(!this._oPrintingInterface.HU){
+                this._oPrintingInterface.HU = this._oPrintingInterface.sfc;
+            }
+
+            if(this._oPrintingInterface.PEG_VBELN){
+                try{
+                    this._oPrintingInterface.PEG_VBELN = `${parseInt(this._oPrintingInterface.PEG_VBELN)}`;
+                }catch(error){}
+            }
+
+            if(this._oPrintingInterface.PEG_POSNR){
+                try{
+                    this._oPrintingInterface.PEG_POSNR = `${parseInt(this._oPrintingInterface.PEG_POSNR)}`;
+                }catch(error){}
+            }
+
+            if(this._oPrintingInterface.PEG_ZZMTO==="MTO2"){
+                this._oPrintingInterface.PEG_VBELN = this._oPrintingInterface.PEG_POSNR = this._oPrintingInterface.PEG_KDMAT = this._oPrintingInterface.PEG_NAME1 = this._oPrintingInterface.PEG_BSTNK = "";
+            }
+
+            
+            this._getSalesText();
+            this._convertDescription();
+            this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
+        },
+
         _getSalesText: function(){
             let _oSalesTextName = "SALES_TEXT";
 
@@ -257,7 +527,9 @@ sap.ui.define([
                                                                 "OPERATION": this._oPrintingInterface.OPERATION,
                                                                 "DESCRIPTION": this._oPrintingInterface.DESCRIPTION,
                                                                 "ZZVERP": this._oPrintingInterface.ZZVERP,
-                                                                "GS1_BARCODE": this._getGS1Barcode()
+                                                                "GS1_BARCODE": this._getGS1Barcode(),
+                                                                "EWU_BARCODE": this._oPrintingInterface.EWU_BARCODE,
+                                                                "EWU_TEXT": this._oPrintingInterface.EWU_TEXT,
                                                              }  },
                 "document": this._oPrintingInterface.document,
                 "formatParameters": { "fileName": fileName },
@@ -266,50 +538,208 @@ sap.ui.define([
                 "transportParameters": { "numberOfCopies": this._oPrintDetails.printingCopies,
                                           "profile": "Defaults"  }
             };
+            result.dataAcquisitionParameters.custom_data.GS1_TEXT = this._gs1Text;
+            //this._getGS1Barcode();
             return result;
         },
         
 
-       pBwip: function () {
-            const sUrl = "https://github.com/metafloor/bwip-js/blob/master/src/bwipp.js";
-            return new Promise(function (resolve, reject) {
-                debugger;
-                if (window.bwipjs && typeof window.bwipjs.toCanvas === "function") {
-                    resolve(window.bwipjs);
-                } else {
-                    jQuery.sap.includeScript(sUrl, "bwipjs", function () {
-                        console.log('Po załadowaniu BWIP:', window.bwipjs);
-                        console.log('Typ toCanvas:', typeof window.bwipjs?.toCanvas);
-                        if (window.bwipjs && typeof window.bwipjs.toCanvas === "function") {
-                            resolve(window.bwipjs);
-                        } else {
-                            reject("Nie udało się załadować bwip-js lub brak toCanvas.");
-                        }
-                    }, function () {
-                        reject("Błąd ładowania skryptu: " + sUrl);
-                    });
+        _getGS1Barcode: function () {
+            var result = "";
+
+            let fieldsToAdd = this._getGsFields();
+
+            for(const field of fieldsToAdd){
+                let functionName = `_GET_${field}`;
+                if( typeof this[functionName] === "function"){
+                    let gsSegment = this[functionName]();
+                    result = result + gsSegment;
                 }
-            });
+            }
+
+            return result;
+        },
+        _getGsFields: function(){
+            let result = [];
+
+            if(this._oPrintDetails.orderLineCustomValues){
+                let gsCodesConfiguration = this._oPrintDetails.orderLineCustomValues.find(value=>{ return value.field_name === "GS1_BARCODE"; });
+                if(gsCodesConfiguration){
+                    result = gsCodesConfiguration.field_value.split("$&");
+                }
+            }
+
+            return result;
+        },
+        _GET_GS1_3115: function(){
+            let result = "";
+            try{
+                let laFormatted = this._formatLaBr(this._oPrintingInterface.LA);
+                result = `(3115)${laFormatted}`
+                this._addToGs1Text(`LENGTH (m) (3115) ${laFormatted}`);
+            }catch(error){
+
+            }
+            return result;
+        },  
+        _GET_GS1_3125: function(){
+            let result = "";
+            try{
+                let brFormatted = this._formatLaBr(this._oPrintingInterface.BR);
+                result = `(3125)${brFormatted}`
+                this._addToGs1Text(`WIDTH (m) (3125) ${brFormatted}`);
+            }catch(error){}
+            return result;
         }, 
+        _GET_GS1_91: function(){
+            //paleta 1 z 10
+            let result = `(91)${this._oPrintDetails.receiptCount}/${this._oPrintDetails.plannedPalletes}`;
+            this._addToGs1Text(`INTERNAL (91) ${this._oPrintDetails.receiptCount}/${this._oPrintDetails.plannedPalletes}`);
+            //this._addToGs1Text();
+            return result;
+        }, 
+        _GET_GS1_92: function(){
+            //Data z inputu zlecenia
+            let result = `(92)${this._oPrintingInterface.INPUT_ORDER_DATE}`;
+            this._addToGs1Text(`INTERNAL (92) ${this._oPrintingInterface.INPUT_ORDER_DATE}`);
+            return result;
+        }, 
+        _GET_GS1_251: function(){
+            let result = "";
+            try{
+                result = `(251)${this._oPrintingInterface.INPUT_ORDER}`;
+                this._addToGs1Text(`REF. TO SOURCE (251) ${this._oPrintingInterface.INPUT_ORDER}`);
+            }catch(oError){}
+            return result;
+        }, 
+        _GET_GS1_01: function(){
+            if(this._oPrintingInterface.EAN11){
+                let result = `(01)${this._oPrintingInterface.EAN11}`;
+                this._addToGs1Text(`GTIN (01) ${this._oPrintingInterface.EAN11}`);
+                return result;
+            }
+            return '';
 
-        _getGS1Barcode: async function () {
+        }, 
+        _GET_GS1_240: function(){
+            let result = `(240)${this._oPrintingInterface.MATERIAL}`;
+            this._addToGs1Text(`ADDITIONAL ID (240) ${this._oPrintingInterface.MATERIAL}`);
+            return result;
+        }, 
+        _GET_GS1_400: function(){
+            let result = "";
+            try{
+                if(this._oPrintingInterface.PEG_BSTNK){
+                    result = `(400)${this._oPrintingInterface.PEG_BSTNK}`;
+                    this._addToGs1Text(`ORDER NO.(400) zam ${this._oPrintingInterface.PEG_BSTNK}`);
+                }
+            }catch(oError){}
+            return result;
+        }, 
+        _GET_GS1_00: function(){
+            let result = "";
+            const prefixMap = {
+                "4100": "1",
+                "4200": "2",
+                "4300": "3"
+            };
+            try{
+                const huTrimmed = this._oPrintingInterface.HU.slice(5);
+                const plantDigit = prefixMap[this._oPrintingInterface.plant] || "9";
+                let gs00 = `${plantDigit}5906709${plantDigit}${huTrimmed}`;
+                let checkDigit = this._generateCheckDigit(gs00);
+                result = `(00)${gs00}${checkDigit}`;
+                this._addToGs1Text(`SSCC (00) ${gs00}${checkDigit}`);
+            }catch(error){}
+            return result;
+        }, 
+        _GET_GS1_11: function(){
+            let result = "";
+            try{
+                let [day, month, year] = this._oPrintingInterface.PROD_DATE.split(".");
+                year = year.slice(-2);
+                result = `(11)${year}${month}${day}`;
+                this._addToGs1Text(`PROD DATE (11) ${year}${month}${day}`);
+            }catch(oError){}
+            
+            return result;
+        }, 
+        _GET_GS1_22: function(){
+            if(this._oPrintingInterface.PEG_VBELN){
+                let result = `(22)${this._oPrintingInterface.PEG_VBELN}/${this._oPrintingInterface.PEG_POSNR}`;
+                this._addToGs1Text(`CPV (22) ${this._oPrintingInterface.PEG_VBELN}/${this._oPrintingInterface.PEG_POSNR}`);
+                return result;
+            }
+            return '';
 
-            return this.pBwip().then(function (bwipjs) {
-                const oCanvas = document.createElement("canvas");
-                bwipjs.toCanvas(oCanvas, {
-                    bcid: "gs1datamatrix",
-                    text: "(01)01234567890128(11)250716",
-                    parsefnc: true,
-                    scale: 6,
-                    includetext: false
-                });
-        
-                const sDataUrl = oCanvas.toDataURL("image/png");
-                const sBase64 = sDataUrl.split(",")[1];
-                return sBase64;
+        }, 
+        _GET_GS1_10: function(){
+            let result = "";
+            try{
+                result = `(10)${this._oPrintingInterface.order}/${this._oPrintingInterface.OPERATION}`;
+                this._addToGs1Text(`BATCH/LOT (10) ${this._oPrintingInterface.order}/${this._oPrintingInterface.OPERATION}`);
+            }catch(error){}
+            return result;
+        }, 
+        _GET_GS1_21: function(){
+            let result = `(21)${this._oPrintingInterface.HU}`;
+            this._addToGs1Text(`SERIAL (21) ${this._oPrintingInterface.HU}`);
+            return result;
+        }, 
+        _GET_GS1_30: function(){
+            let result = `(30)${this._oPrintingInterface.QUANTITY}`;
+            this._addToGs1Text(`VAR. COUNT (30) ${this._oPrintingInterface.QUANTITY}`);
+            return result;
+        }, 
+        _GET_GS1_241: function(){
+            if(this._oPrintingInterface.PEG_KDMAT){
+                let result = `(241)${this._oPrintingInterface.PEG_KDMAT}`;
+                this._addToGs1Text(`CUST. PART NO. (241)\n${this._oPrintingInterface.PEG_KDMAT}`);
+                return result;
+            }
+
+            return '';
+
+        },
+        _addToGs1Text: function(text){
+            if(!this._gs1Text){
+                this._gs1Text = text;
+            }else{
+                this._gs1Text = `${this._gs1Text}\n${text}`;
+            }
+
+        },
+        _generateCheckDigit: function(input){
+            let array = input.split('').reverse();
+
+            let total = 0;
+            let i = 1;
+            array.forEach(number => {
+                number = parseInt(number);
+                if (i % 2 === 0) {
+                    total = total + number;
+                }
+                else
+                {
+                    total = total + (number * 3);
+                }
+                i++;
             });
-        }    
-    });
+            return (Math.ceil(total / 10) * 10) - total;   
+        },
+        _formatLaBr: function(input){
+            let result = input.padStart(4, '0');
+            result = result.padEnd(6, '0');
 
-    return oSfc;
+            return result;
+        }
+        
+    });
+        printer.PRINT_Q2_RETURN = "Q2_RETURN";
+        printer.PRINT_Q1 = "Q1_PRINT";
+        printer.PRINT_INPUT_RETURN = "INPUT_RETURN";
+        printer.PRINT_INPUT_RETURN_NPW = "INPUT_RETURN_NPW";
+    
+
+    return printer;
 });

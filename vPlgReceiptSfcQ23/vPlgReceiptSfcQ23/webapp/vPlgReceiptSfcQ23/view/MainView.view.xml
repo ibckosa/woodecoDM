@@ -23,9 +23,9 @@
                         <Text id="QuantityConformanceColumn"  visible = "true" text="Zgłoszone"/>
                     </Column>
                     <Column width="10rem">
-                        <Text id="QuantityColumn"  visible = "true"/>
+                        <Input id="availableQ23" value="Dostępne: 0" editable="false" width="13rem" class="inputFontQ23" textAlign="Center"/>
                     </Column>
-                    <Column width="12rem">
+                    <Column width="6rem">
                         <Text id="ButtonCol"  />
                     </Column>
                 </columns>
@@ -33,8 +33,8 @@
                     <ColumnListItem vAlign="Middle" >
                         <cells>
                             <Text text="{codeDescription}" width="50rem" class="fontTextQ23"/>
-                            <Input value="{conconformanceQuantity}" editable="false" width="5rem" class="inputFont" textAlign="Center"/>
-                            <Input value="{quantity}" editable="true" width="10rem" class="inputFont" textAlign="Center"/>
+                            <Input value="{conconformanceQuantity}" editable="false" width="5rem" class="inputFontQ23" textAlign="Center"/>
+                            <Input value="{quantity}" editable="true" width="10rem" class="inputFontQ23" textAlign="Center"/>
                             <Button icon="sap-icon://accept" id="wasteButton" press="onWasteButton" class="bigButtonQ23 bigButtonIcon sapUiSmallMarginEnd" width="6rem"/>
                         </cells>
                     </ColumnListItem>
