@@ -275,12 +275,13 @@ sap.ui.define([
                                    value: `${this._oParameters.itemNumberErp}` });
 
             let issuesCreated = issueManager.getCreatedIssues();
-            let issueAsString  = "";
+            let issuesAsString  = [];
+            //let issueAsString  = "";
             for(const issue of issuesCreated){
-                issueAsString = Object.entries(issue)
+                let issueAsString = Object.entries(issue)
                                         .map(([key, value]) => `${key}:${value}`)
                                         .join('||');
-
+                issuesAsString.push(issueAsString);
                 parameterValues.push({ name: `CONSUMPTION`,
                                        comment: guid,
                                        value: issueAsString });
@@ -331,7 +332,7 @@ sap.ui.define([
                     hu: "",
                     cancelled: false,
                     user: this._oController.getUserId(),
-                    consumption: issueAsString,
+                    consumption: issuesAsString,
                     dateCreated: date.toJSON(),
                     processStart: "",
                     processStop: "",

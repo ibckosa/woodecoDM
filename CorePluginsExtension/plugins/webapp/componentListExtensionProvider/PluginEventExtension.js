@@ -477,8 +477,9 @@ sap.ui.define([
             
 
             let firstApiCallResults = await this._callApiGetIssue(plant, material, materialVersion, orderNumber);
+            debugger;
             if(firstApiCallResults.totalPages&&firstApiCallResults.totalPages>1){
-                for(let i=1;i++;i<firstApiCallResults.totalPages){
+                for(let i=1;i<firstApiCallResults.totalPages;i++){
                     additionalApiCalls.push(this._callApiGetIssue(plant, material, materialVersion, orderNumber,i));
                 }
             }

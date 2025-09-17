@@ -325,7 +325,7 @@ sap.ui.define([
             let oTable = new Table({
                 growing: false,
                 sticky: ["ColumnHeaders", "HeaderToolbar"],
-                width: "110rem",
+                width: "98rem",
                 //growingThreshold: 14,
                 inset: false,
                 headerToolbar: oToolbar,
@@ -498,6 +498,7 @@ sap.ui.define([
                                                                                              start_date: oStartDate.toJSON(),
                                                                                              end_date: oEndDate.toJSON(),
                                                                                              resource: this._oResource,
+                                                                                             workCenter: this._oWorkCenter,
                                                                                              excludeStorned: true  } );
 
             let oNonconformances  = await nonConformancesCodeReader.readNonconformances();
@@ -533,7 +534,7 @@ sap.ui.define([
                     uom: oOrderDetails.productionUnitOfMeasure,
                     createdAt: nonconformance.createdDateTime,
                     nonconformanceId: nonconformance.id,
-                    ncDescription: nonconformance.code.description,
+                    ncDescription: nonconformance.codeDescription,
                     sfc: nonconformance.sfc,
                     stepId: nonconformance.routingStepId,
                     storageLocation: oOrderDetails.putawayStorageLocation,

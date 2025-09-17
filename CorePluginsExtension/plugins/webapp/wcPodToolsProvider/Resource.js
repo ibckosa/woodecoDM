@@ -130,8 +130,8 @@ sap.ui.define([
             try{
                 let q1LabelCopies = this._oDetails.customValues.find(customValue => { return customValue.attribute === "Q1_LABEL_COPIES"});
                 result = parseInt(q1LabelCopies.value);
-                if(result>4){
-                    result = 4;
+                if(result>5){
+                    result = 5;
                 }
             }catch(oError){}
 

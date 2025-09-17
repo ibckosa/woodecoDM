@@ -300,8 +300,6 @@ sap.ui.define([
                 let oPodSelectionModel = this.getPodSelectionModel();
                 let oResourceNumber = oPodSelectionModel.resource.resource;
 
-
-                debugger;
                 let oResource = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), oResourceNumber);
                 let oFunctionalLocation = oResource.getQ1Scheme();
                 if(!this._resourceNumber||this._resourceNumber!==oResourceNumber){

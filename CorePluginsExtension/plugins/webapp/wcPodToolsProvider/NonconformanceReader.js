@@ -1,7 +1,8 @@
 sap.ui.define([
     "sap/ui/base/Object",
-    "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader"
-], function (ObjectUI5, SfcDataCollectionReader) {
+    "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader",
+    "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader"
+], function (ObjectUI5, SfcDataCollectionReader, NcCodesReader) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.NonconformanceReader", {
         constructor: function(controller, parameters){
@@ -14,6 +15,7 @@ sap.ui.define([
             /// operation_activity:string
             /// sfc:string
             /// resource:string
+            /// workCenter: string
             /// routing:string
             /// routingStepId:string
             /// excludeStorned:boolean
@@ -23,7 +25,13 @@ sap.ui.define([
             if(this._parameters.excludeStorned){
                 nonConformances = await this._filterStornedNonconformances(nonConformances);
             }
-
+            let codesForResource = await NcCodesReader.readCodes(this._controller, this._parameters.plant, this._parameters.workCenter, this._parameters.resource);
+            for(const nonConformance of nonConformances){
+                let codeDetails = codesForResource.find( code => { return code.code === nonConformance.code });
+                if(codeDetails){
+                    nonConformance.codeDescription = codeDetails.codeDescription;
+                }
+            }
             return nonConformances;
         },
         _getNonconformancesFromApi: async function(){

@@ -469,7 +469,7 @@ sap.ui.define([
                     hu: "",
                     cancelled: false,
                     user: this._oController.getUserId(),
-                    consumption: consumptionValue,
+                    consumption: [ consumptionValue ],
                     dateCreated: date.toJSON(),
                     processStart: '',
                     processStop: '',

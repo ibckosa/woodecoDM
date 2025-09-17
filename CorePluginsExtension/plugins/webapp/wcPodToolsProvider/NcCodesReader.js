@@ -100,7 +100,7 @@ sap.ui.define([
 
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "nonconformancecode/v1/nonconformancecodes";
             let oRequestParameters = { plant: oCode.plant,
-                                        code: oCode.code, };
+                                       code: oCode.code };
 
            return new Promise((resolve,reject)=>{
                 this._oController.ajaxGetRequest(sUrl, oRequestParameters,

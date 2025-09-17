@@ -11,7 +11,7 @@ sap.ui.define([
 
         let firstApiCallResults = await this._callApiGetIssue(controller, plant, order, materialNumber, materialVersion);
         if(firstApiCallResults.totalPages&&firstApiCallResults.totalPages>1){
-            for(let i=1;i++;i<firstApiCallResults.totalPages){
+            for(let i=1;i<firstApiCallResults.totalPages; i++){
                 additionalApiCalls.push(this._callApiGetIssue(controller, plant, order, materialNumber, materialVersion, i));
             }
         }

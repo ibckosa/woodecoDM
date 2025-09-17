@@ -629,11 +629,12 @@ sap.ui.define([
             //                        value: `0001` });
 
             let issuesCreated = issueManager.getCreatedIssues();
-            let issueAsString = ""
+            let issuesAsString = [];
             for(const issue of issuesCreated){
-                issueAsString = Object.entries(issue)
+                let issueAsString = Object.entries(issue)
                                         .map(([key, value]) => `${key}:${value}`)
                                         .join('||');
+                issuesAsString.push(issueAsString);
 
                 // parameterValues.push({ name: `CONSUMPTION`,
                 //                        comment: guid,
@@ -683,7 +684,7 @@ sap.ui.define([
                     hu: "",
                     cancelled: false,
                     user: this.getUserId(),
-                    consumption: issueAsString,
+                    consumption: issuesAsString,
                     dateCreated: date.toJSON(),
                     processStart: "",
                     processStop: "",

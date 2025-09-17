@@ -28,7 +28,7 @@ sap.ui.define([
                 let sfcDtDataCollections = await this._getDataCollections();
 
                 if(!sfcDtDataCollections||sfcDtDataCollections.length === 0){
-                    this._throwError("error.piq.anyDtToUpdate");
+                    this._errorHandler.throwError("error.piq.anyDtToUpdate");
                 }
 
 
@@ -49,29 +49,29 @@ sap.ui.define([
                 try{
                     for(const dataCollection of sfcDtDataCollections){
                         messages.push({ messageType: "I",
-                                        messageValue: this._textHandler.getText(information.piq.dtUpdateAttempt) });
+                                        messageValue: this._textHandler.getText("information.piq.dtUpdateAttempt", dataCollection.sfcNumber) });
 
-                        if(!dataCollection.READINGS.CODE){ this._throwError("error.piq.noCodeDt"); }
+                        if(!dataCollection.READINGS.CODE){ this._errorHandler.throwError("error.piq.noCodeDt"); }
 
                         let oeeCode = oeeCodes.find(code => {return code.resource === dataCollection.READINGS.RESOURCE && code.code === dataCollection.READINGS.CODE });
 
                         if(!oeeCode){
-                            this._throwError("error.piq.noOeeCodeDt");
+                            this._errorHandler.throwError("error.piq.noOeeCodeDt");
                         }else if(!oeeCode.reasonCodeId || oeeCode.reasonCodeId ===""){
-                            this._throwError("error.piq.noReasonCode");
+                            this._errorHandler.throwError("error.piq.noReasonCode");
                         }
 
                         let sfc = await SfcRepository.getInstance(this._controller, this._parameters.plant, dataCollection.sfcNumber);
                         await this._updateDt(dataCollection, oeeCode&&oeeCode.reasonCodeId);
                         await this._saveNewStartTime(dataCollection);
                         messages.push({ messageType: "S",
-                                        messageValue: this._textHandler.getTExt("success.piq.downTimeUpdated",dataCollection.sfcNumber) });
+                                        messageValue: this._textHandler.getTExt("success.piq.downTimeUpdated", dataCollection.sfcNumber) });
         
                         let days = this._calculateDaysSince(dataCollection.created);
                         if(days>=3){
                             await sfc.invalidate(); 
                             messages.push({ messageType: "S",
-                                            messageValue: this._textHandler.getTExt("success.piq.downTimeClosed",dataCollection.sfcNumber) });
+                                            messageValue: this._textHandler.getTExt("success.piq.downTimeClosed", dataCollection.sfcNumber) });
                         }
                     }
                 }catch(error){
