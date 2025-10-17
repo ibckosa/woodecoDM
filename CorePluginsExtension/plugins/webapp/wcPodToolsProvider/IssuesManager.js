@@ -12,6 +12,7 @@ sap.ui.define([
         constructor: function(oController, oPlant, oWorkCenter, oResource, oOrderNumber, oSfc, oOperationActivity, oQuantity, salesOrder, salesOrderItem, mode="Q1", q2Quantity=0){
             this._checkConstrutorPamateres(oController, oPlant, oWorkCenter, oResource, oOrderNumber, oSfc, oOperationActivity, oQuantity);
             this._createdIssues = [];
+            this._errors = [];
             this._componentsIssue = [];
             this._sfcComponents = [];
             this._sfcPlannedComponents = [];
@@ -45,8 +46,13 @@ sap.ui.define([
             for(const componentIssue of this._componentsIssue){
                 await componentIssue.executeIssue();
                 let createdIssues = componentIssue.getCreatedIssues();
+                let errors = componentIssue.getErrors();
                 for(const issue of createdIssues){
                     this._createdIssues.push(issue);
+                }
+
+                for(const error of errors){
+                    this._errors.push(error);
                 }
 
                 //this._createdIssues.concat(componentIssue.getCreatedIssues());
@@ -57,7 +63,7 @@ sap.ui.define([
             let oSfcComponents = await SfcComponentsReader.readComponents(this._oController, this._oSfc, this._oOperationActivity );
             let oSfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oPlant, this._oSfc);
             let oBom = await BomRepository.getInstance(this._oController, this._oPlant, oSfc.getBom().bom, oSfc.getBom().type);
-            let orderInstance = await OrderRepository.readOrder(this._oController, this._oPlant, this._oOrderNumber)
+            let orderInstance = await OrderRepository.readOrder(this._oController, this._oPlant, this._oOrderNumber);
             //await oSfc.readData();
             let oBomComponents = oBom.getComponents();
             let q2SplittedComponents = orderInstance.getSplittedComponents();
@@ -141,6 +147,9 @@ sap.ui.define([
         },
         getCreatedIssues: function(){
             return this._createdIssues;
+        },
+        getErrors: function(){
+            return this._errors;
         }
 
 

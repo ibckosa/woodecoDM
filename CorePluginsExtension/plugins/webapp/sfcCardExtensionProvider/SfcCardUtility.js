@@ -199,6 +199,7 @@ sap.ui.define([
             this._addInformationTextField(oInformationContainer, "artfamRohlpatte");
             this._addInformationTextField(oInformationContainer, "ruType");
 
+            this._addInformationTextField(oInformationContainer, "quantityPerPallet", true);
 
             this._addInformationButton(oInformationContainer, "remarksButton");
             this._addInformationButton(oInformationContainer, "salesTextPL");
@@ -207,7 +208,7 @@ sap.ui.define([
             
 
         },
-        _addInformationTextField: function(oInformationContainer, fieldName){
+        _addInformationTextField: function(oInformationContainer, fieldName, asFormattedText=false){
             let oInformationControl = new VerticalLayout({
                // visible: "{customData>/sfcCardCustomVisibility/"+fieldName+"}"
                 visible: "{= ${customData>/sfcCardCustom/"+fieldName+"} !== '' && ${customData>/sfcCardCustom/"+fieldName+"} !== undefined  && ${customData>/sfcCardCustomVisibility/"+fieldName+"} }"
@@ -216,21 +217,23 @@ sap.ui.define([
             oInformationControl.addStyleClass("sapUiMediumMarginEnd");
             oInformationControl.addStyleClass("sapUiSmallMarginBottom");
 
-            try {
-                var oText = this._textHandler.getText(`labels.sfcCard.${fieldName}`);    
-            } catch (error) {
-                oText = fieldName;
+            var oText = this._textHandler.getText(`labels.sfcCard.${fieldName}`);  
+            let oLabel = new Label({
+                text: oText,
+            });
+            oInformationControl.addContent(oLabel);
+            if(asFormattedText){
+                debugger;
+                let formattedText = new sap.m.FormattedText({ htmlText: "{customData>/sfcCardCustom/"+fieldName+"}" }); 
+                oInformationControl.addContent(formattedText);
+            }else{
+                let oLabelData = new Label({
+                    text: "{customData>/sfcCardCustom/"+fieldName+"}"
+                });
+                oInformationControl.addContent(oLabelData);
             }
+            oInformationContainer.addItem(oInformationControl);
 
-           let oLabel = new Label({
-               text: oText,
-           });
-           let oLabelData = new Label({
-               text: "{customData>/sfcCardCustom/"+fieldName+"}"
-           });
-           oInformationControl.addContent(oLabel);
-           oInformationControl.addContent(oLabelData);
-           oInformationContainer.addItem(oInformationControl);
 
             this.oChildControls[oInformationContainer.getId()] = oInformationControl;
 

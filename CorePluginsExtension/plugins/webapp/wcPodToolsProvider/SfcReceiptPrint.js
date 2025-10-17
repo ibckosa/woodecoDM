@@ -20,7 +20,7 @@ sap.ui.define([
         },
 
         print: async function(){
-            if(this._oPrintDetails.printingCopies<1){
+            if(!this._oPrintDetails.printingCopies||this._oPrintDetails.printingCopies<1){
                 return;
             }
 
@@ -144,6 +144,7 @@ sap.ui.define([
                 PEG_BSTNK: "",
                 PEG_KDMAT: "",
                 ZERT_TXT: "",
+                ZERT: "",
                 PEG_SPRAS: "",
                 ZZVERP_TXT: "",
                 ZZVERP: "",
@@ -510,6 +511,7 @@ sap.ui.define([
                                                                 "PEG_BSTNK": this._oPrintingInterface.PEG_BSTNK,
                                                                 "PEG_KDMAT": this._oPrintingInterface.PEG_KDMAT,
                                                                 "ZERT_TXT": this._oPrintingInterface.ZERT_TXT,
+                                                                "ZERT": this._oPrintingInterface.ZERT,
                                                                 "PEG_SPRAS": this._oPrintingInterface.PEG_SPRAS,
                                                                 "ZZVERP_TXT": this._oPrintingInterface.ZZVERP_TXT,
                                                                 "NORM": this._oPrintingInterface.NORM,
@@ -521,7 +523,7 @@ sap.ui.define([
                                                                 "workCenter" : this._oPrintingInterface.workCenter,
                                                                 "resource": this._oPrintingInterface.resource,
                                                                 "QUANTITY": this._oPrintingInterface.QUANTITY,
-                                                                "EAN11": this._oPrintingInterface.EAN11,
+                                                                "EAN11": this._oPrintingInterface.EAN11 ? parseInt(this._oPrintingInterface.EAN11).toString() : this._oPrintingInterface.EAN11,
                                                                 "SALES_TEXT": this._oPrintingInterface.SALES_TEXT,
                                                                 "BR": this._oPrintingInterface.BR,
                                                                 "OPERATION": this._oPrintingInterface.OPERATION,

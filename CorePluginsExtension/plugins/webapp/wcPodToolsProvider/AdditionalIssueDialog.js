@@ -73,8 +73,11 @@ sap.ui.define([
         return oHBoxBtn;
     };
     ReturnNpwDialog.onButtonOk = function (oEvent) {
+        let value = this._oInput.getValue();
+        value = parseFloat(value.replace(",", ".")); 
         this._oDialogNpw.close();
-        this._resolveQuanNpwDialog(this._oInput.getValue());
+        
+        this._resolveQuanNpwDialog(value);
     };
     ReturnNpwDialog.onButtonCancel = function (oEvent) {
         this._oDialogNpw.close();
@@ -91,13 +94,13 @@ sap.ui.define([
             let oInput = oEvent.getSource();
             let sValue = oEvent.getParameter("value");
 
-            sValue = sValue.replace(/[^\d.]/g, '');
-            if (sValue.startsWith(".")) {
+            sValue = sValue.replace(/[^\d,]/g, '');
+            if (sValue.startsWith(",")) {
                 sValue = "0" + sValue;  // ".5" -> "0.5"
             }
-            let firstDot = sValue.indexOf(".");
+            let firstDot = sValue.indexOf(",");
             if (firstDot !== -1) {
-                let secondDot = sValue.indexOf(".", firstDot + 1);
+                let secondDot = sValue.indexOf(",", firstDot + 1);
                 if (secondDot !== -1) {
                     sValue = sValue.substring(0, secondDot) + sValue.substring(secondDot + 1);
                 }
@@ -105,13 +108,12 @@ sap.ui.define([
             if (firstDot !== -1) {
                 let decimalPart = sValue.slice(firstDot + 1);
                 if (decimalPart.length > 3) {
-                    sValue = sValue.slice(0, firstDot + 1 + 3);  // utnij do 3 cyfr po kropce
+                    sValue = sValue.slice(0, firstDot + 1 + 3); 
                 }
             }
-            if (sValue === "" || sValue === ".") {
+            if (sValue === "" || sValue === ",") {
                 sValue = "0";
             }
-            // Zaktualizuj wartość pola, jeśli została zmieniona
             if (sValue !== oEvent.getParameter("value")) {
                 oInput.setValue(sValue);
             }

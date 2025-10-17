@@ -1,0 +1,15 @@
+{
+	"components": [
+		{
+			"id": "vPlgComponents",
+			"type": "VIEW_PLUGIN",
+			"allowMultipleInstances": false,
+			"name": "ibc.dm.vPlgComponents.vPlgComponents",
+			"propertyEditor": "ibc.dm.vPlgComponents.vPlgComponents.builder.PropertyEditor",
+			"i18n": "ibc.dm.vPlgComponents.vPlgComponents.i18n.i18n",
+            "productionProcessEnabled": true,
+           "productionProcessTitle": "vPlgComponents",
+			"supportedPodTypes": ["WORK_CENTER","OPERATION","ORDER"]
+		}   
+	]
+}

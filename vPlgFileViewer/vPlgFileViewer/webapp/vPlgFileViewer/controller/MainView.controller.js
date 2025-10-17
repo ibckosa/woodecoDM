@@ -49,19 +49,19 @@ sap.ui.define([
         },
         _loadData: async function () {
             try {
-            var oPodSelectionModel = this.getPodSelectionModel();
-            var aSelections = oPodSelectionModel.getSelections();  
-            const oController = this;
-            var oFirstSelection = aSelections[0]; // pierwszy element tablicy
-            var oSfcNumber = oFirstSelection.getSfc().getSfc();
-            var oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
+                var oPodSelectionModel = this.getPodSelectionModel();
+                var aSelections = oPodSelectionModel.getSelections();  
+                const oController = this;
+                var oFirstSelection = aSelections[0];
+                var oSfcNumber = oFirstSelection.getSfc().getSfc();
+                var oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
         
    
                 const aLinks = await LinkReader.readLinks(oController, oOrderNumber);
                 const oModel = new JSONModel({ links: aLinks });
                 this.getView().setModel(oModel, "linkModel");
             } catch (error) {
-                this._oErrorHandler.handleError(error);
+                //this._oErrorHandler.handleError(error);
             }
         },
 /*        

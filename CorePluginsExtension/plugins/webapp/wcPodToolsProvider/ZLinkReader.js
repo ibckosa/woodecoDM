@@ -48,7 +48,8 @@ sap.ui.define([
                                                                                 value.field_name === "MKM_CYL_R3" ||
                                                                                 value.field_name === "MKM_CYL_R4" ||
                                                                                 value.field_name === "MKM_ELE_LK1" ||
-                                                                                value.field_name === "MKM_ELE_LK2"; });
+                                                                                value.field_name === "MKM_ELE_LK2" ||
+                                                                                value.field_name === "MKM_ELE_LK1_LK2"; });
     
                 for(const lineValue of oLineValuesFiltered){
                     oReturn.push({

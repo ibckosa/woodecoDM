@@ -9,6 +9,7 @@ sap.ui.define([
         constructor: function(oIssueData){
             this._oIssueData = oIssueData;
             this._createdIssues = [];
+            this._errors = [];
             this._executeControllerChecks();
             //controller
             //sfc
@@ -51,7 +52,6 @@ sap.ui.define([
             if(oQuanToIssue>0){this._oErrorHandler.throwError("error.issue.notEnoughStock", this._oIssueData.material, this._oIssueData.workCenter, this._oIssueData.resource)};
         },
         executeIssue: async function(){
-           
             let oPalletesToIssue = this._oPalletes.filter( pallete => { return pallete.quantity > 0 });
             for(const pallete of oPalletesToIssue){
                 let oPallete = new Pallete(this._oIssueData.controller);
@@ -62,8 +62,8 @@ sap.ui.define([
                     pallete.quantity = 0;
                 }else{
                     oQuanToIssueFromPallete = this._oIssueData.quantity;
+                    pallete.quantity = pallete.quantity - this._oIssueData.quantity;
                     this._oIssueData.quantity = 0
-                    pallete.quantity = pallete.quantity  - this._oIssueData.quantity;
                 }
                 if(pallete.isNewReservation===true){
                     await oPallete.palleteReservationAndConsumption(pallete, this._oIssueData.plant, this._oIssueData.orderNumber, this._oIssueData.sequence, true, true);
@@ -71,18 +71,20 @@ sap.ui.define([
                     await oPallete.palleteReservationAndConsumption(pallete, this._oIssueData.plant, this._oIssueData.orderNumber, this._oIssueData.sequence, false, true);
                 }
                 let oIssueResponse = await this._issue(pallete, oQuanToIssueFromPallete);
-                this._createdIssues.push({  
-                    txnId: oIssueResponse.txnId,
-                    stepId: oIssueResponse.stepId,
-                    order: this._oIssueData.orderNumber,
-                    operation: this._oIssueData.operation,
-                    quantity: oQuanToIssueFromPallete,
-                    uom: pallete.uom,
-                    handlingUnit: pallete.handlingUnit,
-                    storageLocation: pallete.storageLocation,
-                    material: this._oIssueData.material,
-                    sfc: this._oIssueData.sfc
-                });
+                if(oIssueResponse&&oIssueResponse.txnId){
+                    this._createdIssues.push({  
+                        txnId: oIssueResponse.txnId,
+                        stepId: oIssueResponse.stepId,
+                        order: this._oIssueData.orderNumber,
+                        operation: this._oIssueData.operation,
+                        quantity: oQuanToIssueFromPallete,
+                        uom: pallete.uom,
+                        handlingUnit: pallete.handlingUnit,
+                        storageLocation: pallete.storageLocation,
+                        material: this._oIssueData.material,
+                        sfc: this._oIssueData.sfc
+                    });
+                }
 
                 if(this._oIssueData.quantity<=0){
                     break;
@@ -93,19 +95,19 @@ sap.ui.define([
             if(oLine.uom==='ST'){
                 oQuantity = Math.ceil(oQuantity);
             }else{
-                oQuantity = Math.round( oQuantity * 1000 ) / 1000;  
+                oQuantity = Math.round( oQuantity * 1000 ) / 1000; 
             }
             let oRequestParameters = {
-                "shopOrder": this._oIssueData.orderNumber,///numer zlecenia
-                "batchId": this._oIssueData.sfc, ///SFC
-                "operationActivity": this._oIssueData.operation,//operation activity
+                "shopOrder": this._oIssueData.orderNumber,
+                "batchId": this._oIssueData.sfc,
+                "operationActivity": this._oIssueData.operation,
                 "bomComponentRef": this._oIssueData.bomRef,
                 "material": this._oIssueData.material,
                 "batchNumber": null,
                 "shopOrderLocationRef": null,
                 "workCenter": this._oIssueData.workCenter,
-                "inventory": oLine.inventoryId, //inventory id
-                "isBomComponent": true, //true or false
+                "inventory": oLine.inventoryId, 
+                "isBomComponent": true,
                 "quantity": {
                     "value": oQuantity,
                     "unitOfMeasure": {
@@ -117,7 +119,7 @@ sap.ui.define([
                         "denominator": null,
                     }
                 },
-                "useFullHandlingUnit": false, //true or false
+                "useFullHandlingUnit": false,
                 "handlingUnitNumber": oLine.handlingUnit,
                 "storageLocation": oLine.storageLocation,
                 "isInventoryManaged": true,
@@ -132,10 +134,14 @@ sap.ui.define([
             return await new Promise((resolve,reject)=>{
                 this._oIssueData.controller.ajaxPostRequest(sUrl, oRequestParameters,
                     (oResponseData) => {
+                        if(!oResponseData.txnId){
+                            this._errors.push({errorMessage: "Nie zwrócono txnID"});
+                        }
                         resolve(oResponseData);
                     },
                     (oError, sHttpErrorMessage) => {
-                        reject(oError);
+                        this._errors.push({errorMessage: `${oRequestParameters.handlingUnitNumber}${this._oErrorHandler.getTextFromError(oError)}`});
+                        resolve();
                     }   
                 );
             });
@@ -165,6 +171,9 @@ sap.ui.define([
         },
         getCreatedIssues: function(){
             return this._createdIssues;
+        },
+        getErrors: function(){
+            return this._errors;
         }
     });
 });

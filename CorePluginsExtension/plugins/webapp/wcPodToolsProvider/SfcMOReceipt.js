@@ -3,9 +3,8 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
     "ibc/dm/plugins/wcPodToolsProvider/HuGenerator",
-    "sap/dm/dme/model/AjaxUtil",
+    "ibc/dm/plugins/wcPodToolsProvider/IssuesManagerV2",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/Sfc",
     "sap/m/Dialog",
@@ -15,7 +14,7 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
     "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
-], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, IssuesManager, HuGenerator, AjaxUtil, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator, ResourceRepository, DataCollectionSaver) {
+], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, HuGenerator, IssuesManagerV2, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator, ResourceRepository, DataCollectionSaver) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceipt", {
         constructor: function(oController, oReceiptParameters){
@@ -77,19 +76,23 @@ sap.ui.define([
 
             let sourceSfc = this._oReceiptParameters.sfc;
 
-            if(automaticIssues&&this._oReceiptParameters.palletesNumber>1){
-                let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
-                                                    this._oReceiptParameters.order, this._oReceiptParameters.sfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.totalQuantity);
-                await oIssuesManager.prepareIssues();
+            let issueManager;
+            if(automaticIssues){
+                issueManager = new IssuesManagerV2(this._oController, { sfcNumber: this._oReceiptParameters.sfc,
+                                                                        orderNumber: this._oReceiptParameters.order,
+                                                                        operation: this._oReceiptParameters.operationActivity,
+                                                                        plant: this._oReceiptParameters.plant,
+                                                                        workCenter: this._oReceiptParameters.workCenter,
+                                                                        resource: this._oReceiptParameters.resource,
+                                                                        salesOrder: this._oOrder.getCustomerOrder(),
+                                                                        salesOrderItem: this._oOrder.getCustomerOrderItem(),
+                                                                        mode: "Q1" });
+                await issueManager.initializeManager();
+                await issueManager.checkQuantityAvailable(this._oReceiptParameters.totalQuantity);
             }
 
-            for(let i=0; i<this._oReceiptParameters.palletesNumber;i++){
-                let oIssuesManager = new IssuesManager(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.workCenter, this._oReceiptParameters.resource, 
-                    this._oReceiptParameters.order, sourceSfc, this._oReceiptParameters.operationActivity, this._oReceiptParameters.quantity);
-                if(automaticIssues){
-                    await oIssuesManager.prepareIssues();
-                } 
 
+            for(let i=0; i<this._oReceiptParameters.palletesNumber;i++){
                 this._oReceiptParameters.sfc = await Sfc.splitSfc(this._oController, this._oReceiptParameters.plant, sourceSfc , this._oReceiptParameters.quantity, true);
                 let sfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc, this._oReceiptParameters.routing, this._oReceiptParameters.routingVersion );
                 await sfc.complete(this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource);
@@ -101,14 +104,16 @@ sap.ui.define([
                 }
 
                 if(automaticIssues){
-                    oIssuesManager.changeSfcNumber(this._oReceiptParameters.sfc);
-                    await oIssuesManager.executeIssues();
+                    await issueManager.executeIssues(this._oReceiptParameters.quantity,this._oReceiptParameters.sfc );
                 }
                 OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
                 this._oReceiptParameters.receiptCount = this._oReceiptParameters.receiptCount + 1;
-                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', oIssuesManager);                        
+                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', issueManager);                        
                 await this._printLabel(_oPrintingEndpoint);
 
+                if(automaticIssues){
+                    await this.sleep(4000);
+                }
             }
 
             this._refreshPod();
@@ -119,10 +124,10 @@ sap.ui.define([
                 this._oErrorHandler.throwError("errorSfcNotInWork");
             }
 
-            if(this._oReceiptParameters.printer===""){
-                this._oErrorHandler.throwError("error.printing.noPrinter");
+            let maxPalletesPerReceipt = this._oResource.getMaxPalletesPerReceipt();
+            if(maxPalletesPerReceipt < this._oReceiptParameters.palletesNumber){
+                this._oErrorHandler.throwErrorPopup("error.q1.maxPalleteQuan", maxPalletesPerReceipt);
             }
-
 
             if(this._oOrder.getOARequired()){
                 let orderInput = this._oOrder.getInputOrder();
@@ -463,19 +468,23 @@ sap.ui.define([
             //                        comment: guid,
             //                        value: false });
 
-            let issuesCreated = issueManager.getCreatedIssues();
+            
             //let issueAsString = "";
             let issuesAsString = [];
-            for(const issue of issuesCreated){
-                let issueAsString = Object.entries(issue)
-                                        .map(([key, value]) => `${key}:${value}`)
-                                        .join('||');
-                issuesAsString.push(issueAsString);
+            if(issueManager){
+                let issuesCreated = issueManager.getCreatedIssues();
+                for(const issue of issuesCreated){
+                    let issueAsString = Object.entries(issue)
+                                            .map(([key, value]) => `${key}:${value}`)
+                                            .join('||');
+                    issuesAsString.push(issueAsString);
 
-                // parameterValues.push({ name: `CONSUMPTION`,
-                //                        comment: guid,
-                //                        value: issueAsString });
+                    // parameterValues.push({ name: `CONSUMPTION`,
+                    //                        comment: guid,
+                    //                        value: issueAsString });
+                }
             }
+
             
             // let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
             // let oRequestParameters = {
@@ -530,6 +539,9 @@ sap.ui.define([
                 }
 
             );
+        },
+        sleep: async function(ms){
+        return new Promise(resolve => setTimeout(resolve, ms));
         }
 
     });

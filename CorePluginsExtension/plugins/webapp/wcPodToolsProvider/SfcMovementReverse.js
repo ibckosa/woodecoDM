@@ -77,6 +77,7 @@ sap.ui.define([
             }
 
             await this._saveReversedDataCollection();
+            await this._callGrCancellactionAlert();
 
             this._updateProgressBar();
         },
@@ -529,6 +530,30 @@ sap.ui.define([
         },
         _updateProgressBar: function(){
             OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._orderNumber, - this._parameters.QUANTITY);
+        },
+        _callGrCancellactionAlert: async function(){
+            let request = { plant: this._plant, 
+                            hu: this._parameters.HU,
+                            material: this._parameters.MATERIAL,
+                            order: this._orderNumber,
+                            resource: this._resource,
+                            sfc: this._parameters.SFC_NUMBER,
+                            user: this._controller.getUserId() };
+            
+
+
+            let url = this._controller.getPublicApiRestDataSourceUri() + "/pe/api/v1/process/processDefinitions/start?key=REG_e30a5451-87c2-4c0f-9611-4d1eb072a13b";
+
+            return await new Promise((resolve,reject)=>{
+                this._controller.ajaxPostRequest(url, request,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        resolve();
+                    }
+                );
+            });
         }
     });
 });

@@ -34,5 +34,22 @@ sap.ui.define([
         await oBom.readData();
         return oBom;
     };
+    oBomRepository.readBomSfcInternalApi = async function(controller, plant, sfc, operation){
+        let url = controller.getAssemblyDataSourceUri() + "sfc/components/find";
+        let parameters = { sfcs: [sfc],
+                           operations: [operation] }
+            return await new Promise((resolve,reject)=>{
+        controller.ajaxPostRequest(url, parameters,
+            (oResponseData) => {
+                resolve(oResponseData);
+            },
+            (oError, sHttpErrorMessage) => {
+                resolve([]);
+            }   
+            );
+        });
+    };
+
+
     return oBomRepository;
 });

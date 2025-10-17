@@ -81,6 +81,17 @@ sap.ui.define([
                                         }catch(error){
                                             debugger;
                                         }
+
+                                        try{
+                                            let model = this._oPluginViewController.getView().getModel("componentsModel");
+                                            let modelData = this._oPluginViewController.getView().getModel("componentsModel").getData();
+                                            let component = modelData.items.find( line=>{ return line.componentSequence === this._oHandlerData.sequence } );
+                                            component.issuedQuantity = Math.round( (component.issuedQuantity + this._getIssuedQuantity() ) * 1000)/1000;
+                                            model.setData(modelData);
+                                            this._oPluginViewController.getView().setModel(model, "componentsModel")
+                                        }catch(error){
+                                            debugger;
+                                        }
                                     this._resolveLogDialog();
                                 }.bind(this)
                             })
@@ -96,14 +107,15 @@ sap.ui.define([
         _getColumns: function(){
             let oReturn = [];
             if(this._oMode === "RESOURCE"){
-                oReturn.push(new Column({ header: new Text({ text: "" }) }));
+                oReturn.push(new Column({ header: new Text({ text: "" }), width: "3rem" }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.material") }) }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.materialDesc") }) }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.handlingUnit") }) }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.quantity") }) }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.reservation") }) }));
 
             }else{
-                oReturn.push(new Column({ header: new Text({ text: "" }) }));
+                oReturn.push(new Column({ header: new Text({ text: "" }) , width: "3rem"  }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.handlingUnit") }) }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.quantity") }) }));
                 //oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("Materiał") }) }));
@@ -119,6 +131,7 @@ sap.ui.define([
                 oReturn.push( new Text({ text: "{materialDesc}" }) )
                 oReturn.push( new Text({ text: "{handlingUnit}" }) )
                 oReturn.push( new Text({ text: "{quantity}" }) )
+                oReturn.push( new Text({ text: "{reservation}" }) )
             }else{
                 oReturn.push( new CheckBox({ selected: "{lineSelected}" }) );
                 oReturn.push( new Text({ text: "{handlingUnit}" }) );
@@ -132,6 +145,8 @@ sap.ui.define([
         _getTableLog: function () {
             let oPanel = new Panel({ height: "38rem", width: "100rem" });
             let oColumns = this._getColumns();
+
+            let searchField = new sap.m.SearchField({placeholder: "Szukaj po materiale", search: this.onMaterialSearch.bind(this) });
 
 
             let oTable = new Table({
@@ -154,8 +169,15 @@ sap.ui.define([
                     // })
                 }
             });
-
-            let oDynamicPage = new DynamicPage({ height: "40rem", width: "112rem", content: [oTable], fitContent: true });
+            this._table = oTable;
+            let oVBox = new VBox();
+            if(this._oMode ==="RESOURCE"){
+                oVBox.addItem(searchField);
+            }
+            
+            oVBox.addItem(oTable);
+            let oDynamicPage = new DynamicPage({ height: "40rem", width: "112rem", content: [oVBox], fitContent: true });
+            //let oDynamicPage = new DynamicPage({ height: "40rem", width: "112rem", content: [oTable], fitContent: true });
             // oPanel.addStyleClass("sapUiTinyMargin");
             oDynamicPage.addStyleClass("sapUiNoContentPadding");
             //oTable.addStyleClass("sapUiTinyMargin");
@@ -474,10 +496,11 @@ sap.ui.define([
             return oZweiEndpoint;
         },
         _getPrintingEndpoint: function(){
-            let oPrintingEndpoint = this._oPluginViewController.getConfigurationValue("printerEndPoint");
-            if(!oPrintingEndpoint||oPrintingEndpoint===""){
-                this._oErrorHandler.throwError("error.printing.noEndpoint");
-            }
+            // let oPrintingEndpoint = this._oPluginViewController.getConfigurationValue("printerEndPoint");
+            // if(!oPrintingEndpoint||oPrintingEndpoint===""){
+            //     this._oErrorHandler.throwError("error.printing.noEndpoint");
+            // }
+            let oPrintingEndpoint = "";
 
             return oPrintingEndpoint;
         },
@@ -599,6 +622,17 @@ sap.ui.define([
             }
 
             return this._issuedQuantity;
+        },
+        onMaterialSearch: function(oEvent){
+            const sQuery = oEvent.getParameter("newValue") ?? oEvent.getParameter("query") ?? "";
+            const oBinding = this._table.getBinding("items");
+            const searchFilters = sQuery ? [ new sap.ui.model.Filter("materialId", sap.ui.model.FilterOperator.Contains, sQuery), ]: [];
+            const aFilters = [];
+            if (searchFilters.length) {
+                aFilters.push(new sap.ui.model.Filter({ filters: searchFilters, and: false }));
+            }
+            oBinding.filter(aFilters, "Application");
+
         }
 
     })

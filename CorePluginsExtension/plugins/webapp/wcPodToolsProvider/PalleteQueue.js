@@ -102,7 +102,7 @@ sap.ui.define([
         _convertToQueueUom: async function(queue){
 
             if(this._queueUom){
-                let materialInstance = await MaterialRepository.getMaterialInstance(this._oAdditionalData, this._oPlant, this._oAdditionalData.material);
+                let materialInstance = await MaterialRepository.getMaterialInstance(this._oController, this._oPlant, this._oAdditionalData.material);
                 let alternatesUom = materialInstance.getAlternatesUom();
                 if(alternatesUom){
                     for(const queueLine of queue){
@@ -269,15 +269,22 @@ sap.ui.define([
             let oReturn = [];
             for(const pallete of oPalletes){
                 let oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oPlant, pallete.material);
+                let reservationValue = ""
+                let consumptionStarted = false;
                 try{     
                     let oReservation = pallete.assemblyData.find(oData=>{ return oData.dataField === "RES_ITEM"});
                     if(!oReservation ||oReservation.dataAttribute===null||!oReservation.dataAttribute){
-                        throw '';
+                        
                     }
+                    else{
+                        reservationValue = oReservation.dataAttribute;
+                        consumptionStarted = true;
+                    }
+                    throw '';
                 }catch(oErr){
                     oReturn.push({
                         lineSelected: false,
-                        consumptionStarted: false,
+                        consumptionStarted: consumptionStarted,
                         handlingUnit: pallete.handlingUnit,
                         inventoryId:  pallete.inventoryId,
                         plant:  this._oPlant,
@@ -289,7 +296,7 @@ sap.ui.define([
                         materialDesc: oMaterial.getDescription(),
                         quantity: pallete.quantityOnHand.value,
                         uom: pallete.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
-                        reservation: "",
+                        reservation: reservationValue,
                         storageLocation: pallete.storageLocation,
                         createdDateTime: pallete.createdDateTime,
                         modifiedDateTime: pallete.modifiedDateTime,
@@ -432,7 +439,8 @@ sap.ui.define([
                 result = palleteOrderItemNumber.dataAttribute;
             }
             return result;
-        }
+        },
+
                 
     });
 });

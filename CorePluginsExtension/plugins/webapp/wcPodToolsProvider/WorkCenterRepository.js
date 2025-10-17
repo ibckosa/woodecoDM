@@ -16,7 +16,7 @@ sap.ui.define([
         let oWorkCenterRepo = this._oWorkCenters.find(workCenter=>{ return workCenter.plant === oPlant && workCenter.workCenterNumber === oWorkCenterNumber  });
         if(!oWorkCenterRepo){
             oWorkCenter = await this.readWorkCenterApi(oController, oPlant, oWorkCenterNumber);
-            oWorkCenter._oWorkCenters.push({
+            this._oWorkCenters.push({
              plant: oPlant,
              workCenterNumber: oWorkCenter,
              instance: oWorkCenter

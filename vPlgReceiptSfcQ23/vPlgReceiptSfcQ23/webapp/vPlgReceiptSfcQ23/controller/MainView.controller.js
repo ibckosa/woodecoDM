@@ -7,7 +7,7 @@ sap.ui.define([
     "sap/m/TextArea",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
+    "ibc/dm/plugins/wcPodToolsProvider/IssuesManagerV2",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
     "ibc/dm/plugins/wcPodToolsProvider/NcCodesReader",
     "ibc/dm/plugins/wcPodToolsProvider/Sfc",
@@ -17,7 +17,8 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/PiqQ23",
     "ibc/dm/plugins/wcPodToolsProvider/ConfirmDialog",
     "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
-], function (PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManager, ResourceRepository, NcCodesReader, Sfc, TextHandler, OrderRepository, NonconformanceReader, PiqQ23, ConfirmDialog, DataCollectionSaver) {
+], function (PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManagerV2, ResourceRepository, NcCodesReader, Sfc, TextHandler, 
+             OrderRepository, NonconformanceReader, PiqQ23, ConfirmDialog, DataCollectionSaver) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView", {
@@ -26,9 +27,6 @@ sap.ui.define([
             this._oErrorHandler = new ErrorHandler(this);
             this._oTextHandler = new TextHandler();
 		},
-
-
-
 
         onAfterRendering: function(){
         },
@@ -103,10 +101,7 @@ sap.ui.define([
 
         loadData: async function(){
             var oView = this.getView();
-            var oConfiguration = this.getConfiguration();
-            var bNotificationsEnabled = true;
             var oPodSelectionModel = this.getPodSelectionModel();
-            var sPodType = oPodSelectionModel.getPodType();
 
             try{
                 let aSelection = this.getPodSelectionModel().getSelections()[0];
@@ -272,15 +267,29 @@ sap.ui.define([
                 await this._executeChecksBeforeScrap(oSelectedItem, oSfcDetails, oResource);
                 let oScrapQuantity = parseInt(oSelectedItem.quantity);
                 let oComment = await this._getComment(oSelectedItem.dataType);
-                debugger;
-                let oIssuesManager = new IssuesManager(this, this.getPodController().getUserPlant(), this._oWorkCenter, this._oResource, aSelection.getShopOrder().getShopOrder(), aSelection.getSfc().getSfc(), aSelection.getSfcData().getOperation(), oSelectedItem.quantity, this._oOrder.getCustomerOrder(), this._oOrder.getCustomerOrderItem(), "Q2", this._getRegisteredQ23());
+
+                let issueManager;
                 if(oExecuteIssue){
-                    await oIssuesManager.prepareIssues();
+                    issueManager = new IssuesManagerV2(this, {  sfcNumber: aSelection.getSfc().getSfc(),
+                                                                orderNumber: aSelection.getShopOrder().getShopOrder(),
+                                                                operation: aSelection.getSfcData().getOperation(),
+                                                                plant: this.getPodController().getUserPlant(),
+                                                                workCenter: this._oWorkCenter,
+                                                                resource: this._oResource,
+                                                                salesOrder: this._oOrder.getCustomerOrder(),
+                                                                salesOrderItem: this._oOrder.getCustomerOrderItem(),
+                                                                mode: "Q2",
+                                                                q2Quantity: this._getRegisteredQ23()});
+                    await issueManager.initializeManager();
+                    await issueManager.checkQuantityAvailable(oScrapQuantity);
                 }
-                if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
+
+
+
+
+                if(oSfcDetails.sfcLeftQuantity>oScrapQuantity || !oSfcDetails.multiOperation || !oSfcDetails.lastOperation){
                     let oNewSfc = await this._executeSfcSplit(oScrapQuantity, oSfcDetails, (!oSfcDetails.multiOperation || !oSfcDetails.lastOperation));
                     oSfcDetails.sfc = oNewSfc;
-                    oIssuesManager.changeSfcNumber(oNewSfc);
                 }
                 let oNonconformanceId = await this._logNonconformance(oScrapQuantity,oSfcDetails, oSelectedItem.code, oComment);
                 if(oResource.getNcCodeType() === "Q3"){
@@ -288,25 +297,31 @@ sap.ui.define([
                 }
                 await this._executeSfcScrap(oScrapQuantity,oSfcDetails, oSelectedItem.resourceReasonCode);
                 if(oExecuteIssue){
-                    await oIssuesManager.executeIssues();
+                    await issueManager.executeIssues(oScrapQuantity, oSfcDetails.sfc);
                 }
 
-                await this._saveDataCollection(oScrapQuantity, oSfcDetails, oSelectedItem.oeeCode, oIssuesManager, oSelectedItem.code, oSelectedItem.codeDescription);
+                await this._saveDataCollection(oScrapQuantity, oSfcDetails, oSelectedItem.oeeCode, issueManager, oSelectedItem.code, oSelectedItem.codeDescription);
                 this._showMessageSuccess("success.ProccessFinished");
                 //oEvent.getSource().getBindingContext().setProperty("/quantity", "0");
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
-                    this.getPodSelectionModel().setInputValue(oSfcFirst);
-                    this.publish("_onQuantityChangeIncomingEvent", { sendToAllPages: true });    
-                    this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+                    await this.loadData();
                 }else{
-                    this.getPodSelectionModel().setInputValue("");
-                    this.getPodSelectionModel().clearSelections();
-    
-                    this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
-                    this.onClosePress();
-                    this.navigateToMainPage();
+                    if(oSfcDetails.multiOperation&&oSfcDetails.lastOperation){
+                        this.getPodSelectionModel().setInputValue("");
+                        this.getPodSelectionModel().clearSelections();
+        
+                        this.publish("PodSelectionChangeEvent", { sendToAllPages: true });
+                        this.onClosePress();
+                        this.navigateToMainPage();
+                    }else{
+                        await this.loadData()
+                    }
                 }
-            }catch(error){ this._oErrorHandler.handleError(error)}
+            }catch(error){ 
+                if(!error.displayType){
+                    error.displayType = "POPUP";
+                }
+                this._oErrorHandler.handleError(error)}
         },
         _getSelectedItems: function(){
             return this.getView().getModel().getData().items.filter((item)=>parseInt(item.quantity) > 0);
@@ -409,13 +424,17 @@ sap.ui.define([
             this.showErrorMessage(sText, true, true);
         },
         _executeChecksBeforeScrap: async function(oSelectedItem, oSfcDetails, resourceInstance){
-            if(oSelectedItem.quantity>oSfcDetails.sfcLeftQuantity){
+            if(oSelectedItem.quantity>oSfcDetails.sfcLeftQuantity && oSfcDetails.multiOperation && oSfcDetails.lastOperation){
                 this._oErrorHandler.throwError("error.q23.sfcNotEnoughQuantity");
             }
 
-            if(oSelectedItem.quantity>oSfcDetails.sfcQuantityInWork && (!oSfcDetails.multiOperation || !oSfcDetails.lastOperation)){
+            if(oSfcDetails.sfcQuantityInWork<1 && (!oSfcDetails.multiOperation || !oSfcDetails.lastOperation)){
                 this._oErrorHandler.throwError("error.q23.sfcNotInWork");
             }
+
+            // if(oSelectedItem.quantity>oSfcDetails.sfcQuantityInWork && (!oSfcDetails.multiOperation || !oSfcDetails.lastOperation)){
+            //     this._oErrorHandler.throwError("error.q23.sfcNotInWork");
+            // }
             else if(oSfcDetails.multiOperation && oSfcDetails.lastOperation && oSelectedItem.quantity>oSfcDetails.sfcQuantityInWork){
                 await Sfc.startSfcs(this, oSfcDetails.plant, [oSfcDetails.sfc], oSfcDetails.operation, this._oResource );
             }
@@ -538,6 +557,8 @@ sap.ui.define([
                                     }
                                     oTextArea.setValue("");
                                     this.oApproveDialog.close();
+                                    this.oApproveDialog.destroy();
+                                    this.oApproveDialog = undefined;
                                     this._resolveComment(oReturn);
                                 } catch (oError) { this._oErrorHandler.handleError(oError) }
                             }.bind(this)
@@ -628,13 +649,17 @@ sap.ui.define([
             //                        comment: guid,
             //                        value: `0001` });
 
-            let issuesCreated = issueManager.getCreatedIssues();
+            
             let issuesAsString = [];
-            for(const issue of issuesCreated){
-                let issueAsString = Object.entries(issue)
-                                        .map(([key, value]) => `${key}:${value}`)
-                                        .join('||');
-                issuesAsString.push(issueAsString);
+            if(issueManager){
+                let issuesCreated = issueManager.getCreatedIssues();
+                for(const issue of issuesCreated){
+                    let issueAsString = Object.entries(issue)
+                                            .map(([key, value]) => `${key}:${value}`)
+                                            .join('||');
+                    issuesAsString.push(issueAsString);
+            }
+
 
                 // parameterValues.push({ name: `CONSUMPTION`,
                 //                        comment: guid,

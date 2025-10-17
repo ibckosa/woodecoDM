@@ -55,7 +55,8 @@ sap.ui.define([
             UOM: parameters.uom,
             SALES_ORDER: parameters.salesOrder,
             MATERIAL: parameters.material,
-            CONSUMPTION: parameters.consumption
+            CONSUMPTION: parameters.consumption,
+            ERRORS: parameters.errors
         };
 
         await this._callApi(controller, url, requestParameters);

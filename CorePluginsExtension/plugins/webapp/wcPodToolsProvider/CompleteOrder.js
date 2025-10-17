@@ -56,23 +56,31 @@ sap.ui.define([
             }
         },
         _completeMOOrder: async function(){
+            await this._checkIssueForComponents();
+            let showConfirmCloseDialog = true;
+
             let orderPositions = await this._order.getOrderPositions();
             for(const position of orderPositions){
                 if(position.deliveredQuantity < position.minQuantity){
+                    showConfirmCloseDialog = false;
                     const confirmDialog = new ConfirmDialog();
                     confirmDialog.setTitleText("error.q1.quantityPositionText");
                     confirmDialog.setContentText("error.q1.lessMinQuantityPosition", position.itemNumberErp);
                     await confirmDialog.show();
-                }
-
-                if(position.deliveredQuantity > position.maxQuantity){
+                }else if(position.deliveredQuantity > position.maxQuantity){
+                    showConfirmCloseDialog = false;
                     const confirmDialog = new ConfirmDialog();
                     confirmDialog.setTitleText("error.q1.quantityPositionText");
                     confirmDialog.setContentText("error.q1.exceedMaxQuantityPosition", position.itemNumberErp);
                     await confirmDialog.show();
                 }
             }
-            await this._checkIssueForComponents();
+
+            if(showConfirmCloseDialog){
+                const confirmDialog = new ConfirmDialog();
+                confirmDialog.setContentText("information.completeOrder.confirmCloseOrder");
+                await confirmDialog.show();
+            }
 
             await this._signoff([this._parameters.sfc]);
 
@@ -80,6 +88,8 @@ sap.ui.define([
             await this._order.completeOrder();
         },
         _completeSOSingleOperation: async function(){
+            await this._checkIssueForComponents();
+
             let maxOrderQuantity = this._order.getMaxOrderQuantitySO();
             let minOrderQuantity = this._order.getMinOrderQuantitySO();
             let orderProgress = OrderReceiptsFromProgressIndicator.getOrderProgress(this._order.getOrderNumber());
@@ -88,17 +98,16 @@ sap.ui.define([
                 confirmDialog.setTitleText("error.q1.quantityPositionText");
                 confirmDialog.setContentText("error.q1.lessMinQuantity");
                 await confirmDialog.show();
-            }
-
-            if(orderProgress.quantityDone > maxOrderQuantity){
+            }else if(orderProgress.quantityDone > maxOrderQuantity){
                 const confirmDialog = new ConfirmDialog();
                 confirmDialog.setTitleText("error.q1.quantityPositionText");
                 confirmDialog.setContentText("error.q1.greaterMaxQuantity");
                 await confirmDialog.show();
+            }else{
+                const confirmDialog = new ConfirmDialog();
+                confirmDialog.setContentText("information.completeOrder.confirmCloseOrder");
+                await confirmDialog.show();
             }
-
-            await this._checkIssueForComponents();
-
 
             await this._signoff([this._parameters.sfc]);
             // for(const sfc of sfcs){
@@ -117,12 +126,14 @@ sap.ui.define([
                 confirmDialog.setTitleText("error.q1.quantityPositionText");
                 confirmDialog.setContentText("error.q1.lessMinQuantity");
                 await confirmDialog.show();
-            }
-
-            if(orderProgress.quantityDone > maxOrderQuantity){
+            }else if(orderProgress.quantityDone > maxOrderQuantity){
                 const confirmDialog = new ConfirmDialog();
                 confirmDialog.setTitleText("error.q1.quantityPositionText");
                 confirmDialog.setContentText("error.q1.greaterMaxQuantity");
+                await confirmDialog.show();
+            }else{
+                const confirmDialog = new ConfirmDialog();
+                confirmDialog.setContentText("information.completeOrder.confirmCloseOrder");
                 await confirmDialog.show();
             }
 

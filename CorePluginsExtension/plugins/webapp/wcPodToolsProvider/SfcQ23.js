@@ -10,8 +10,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "ibc/dm/plugins/wcPodToolsProvider/Sfc",
     "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
-    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
-], function (ObjectUI5, ErrorHandler, AjaxUtil, TextHandler, Dialog, mobileLibrary, ResourceRepository, OrderRepository, SfcRepository, Sfc, IssuesManager, DataCollectionSaver
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver",
+    "ibc/dm/plugins/wcPodToolsProvider/IssuesManagerV2"
+], function (ObjectUI5, ErrorHandler, AjaxUtil, TextHandler, Dialog, mobileLibrary, ResourceRepository, OrderRepository, SfcRepository, Sfc, IssuesManager, DataCollectionSaver, IssuesManagerV2
 ) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcQ23", {
@@ -57,11 +58,21 @@ sap.ui.define([
             
             let oComment = await this._getComment(this._oParameters.isCommentRequired);
 
-            let oIssuesManager = new IssuesManager(this._oController, this._oParameters.plant, this._oParameters.workCenter, this._oParameters.resource, 
-                this._oParameters.order, this._oParameters.sfc, this._oParameters.operationActivity, this._oParameters.quantity, this._oOrder.getCustomerOrder(), this._oOrder.getCustomerOrderItem(), "Q2", this._oParameters.totalRegisteredQ23 );
+            let issueManager;
             if(automaticIssues){
-                await oIssuesManager.prepareIssues();
-            } 
+                issueManager = new IssuesManagerV2(this._oController, { sfcNumber: this._oParameters.sfc,
+                                                                        orderNumber: this._oParameters.order,
+                                                                        operation: this._oParameters.operationActivity,
+                                                                        plant: this._oParameters.plant,
+                                                                        workCenter: this._oParameters.workCenter,
+                                                                        resource: this._oParameters.resource,
+                                                                        salesOrder: this._oOrder.getCustomerOrder(),
+                                                                        salesOrderItem: this._oOrder.getCustomerOrderItem(),
+                                                                        mode: "Q2",
+                                                                        q2Quantity: this._oParameters.totalRegisteredQ23 });
+                await issueManager.initializeManager();
+                await issueManager.checkQuantityAvailable(this._oParameters.quantity);
+            }
             
             this._oParameters.sfc = await Sfc.splitSfc(this._oController, this._oParameters.plant, this._oParameters.sfc , this._oParameters.quantity, true);
             let oNonconformanceId =  await this._logNonconformance(oComment);
@@ -73,10 +84,9 @@ sap.ui.define([
             
             await this._executeSfcScrap();
             if(automaticIssues){
-                oIssuesManager.changeSfcNumber(this._oParameters.sfc);
-                await oIssuesManager.executeIssues();
+                await issueManager.executeIssues(this._oParameters.quantity, this._oParameters.sfc);
             }
-            await this._saveDataCollection(oIssuesManager);
+            await this._saveDataCollection(issueManager);
 
 
             this._oController.showSuccessMessage(this._oTextHandler.getText("success.q23.ProccessFinished"), true, true);
@@ -274,45 +284,22 @@ sap.ui.define([
                                    comment: guid,
                                    value: `${this._oParameters.itemNumberErp}` });
 
-            let issuesCreated = issueManager.getCreatedIssues();
+            
             let issuesAsString  = [];
             //let issueAsString  = "";
-            for(const issue of issuesCreated){
-                let issueAsString = Object.entries(issue)
-                                        .map(([key, value]) => `${key}:${value}`)
-                                        .join('||');
-                issuesAsString.push(issueAsString);
-                parameterValues.push({ name: `CONSUMPTION`,
-                                       comment: guid,
-                                       value: issueAsString });
-            }                  
-
-
-            // let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
-            // let oRequestParameters = {
-            //     plant: this._oParameters.plant,
-            //     group: { dcGroup: "WOODECO_PROD_ACTIVITY",
-            //              version: "A" },
-            //     operation: { operation: this._oParameters.operationActivity,
-            //                   version: "ERP001" },
-            //     parameterValues: parameterValues,
-            //     //stepId: this._oReceiptParameters.stepId,
-            //     workCenter: this._oParameters.workCenter,
-            //     resource: this._oParameters.resource,
-            //     sfcs: [ this._oParameters.sfc ]
-            // };
-
-            // return await new Promise((resolve,reject)=>{
-            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-            //         oResponseData => {
-            //             resolve();
-            //         },
-            //         (oError, sHttpErrorMessage) => {                        
-            //             resolve();
-            //         }
-            //     );
-            // });
-
+            if(issueManager){
+                let issuesCreated = issueManager.getCreatedIssues();
+                for(const issue of issuesCreated){
+                    let issueAsString = Object.entries(issue)
+                                            .map(([key, value]) => `${key}:${value}`)
+                                            .join('||');
+                    issuesAsString.push(issueAsString);
+                    parameterValues.push({ name: `CONSUMPTION`,
+                                        comment: guid,
+                                        value: issueAsString });
+                } 
+            }
+                 
 
             await DataCollectionSaver.saveProductionDC(
                 this._oController,
@@ -337,7 +324,7 @@ sap.ui.define([
                     processStart: "",
                     processStop: "",
                     ncCode: this._oParameters.nonconformanceCode,
-                    ncCodeDescription: "",
+                    ncCodeDescription: this._oParameters.nonconformanceCodeDescription,
                     guid: guid
                 }
 

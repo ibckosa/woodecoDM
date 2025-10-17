@@ -152,7 +152,6 @@
                                         <RadioButton id="rg5" text="5" class="myRadioButtonGroup"/>
                                     </RadioButtonGroup>
                                 </HBox>
-
                                 <HBox justifyContent="Center" alignItems="Center" width="100%">
                                         <Label text="{i18n>inputPalleteQuanLabel}" id="inputPalleteQuanLabel" labelFor="inputPalleteQuan" class="sapUiSmallMarginEnd fontText"/>
                                         <Input id="inputPalleteQuan" value="1" liveChange="onReceiptInputLiveChange" class="inputFont sapUiSmallMarginEnd " width="5rem"/>
@@ -168,12 +167,12 @@
                                             id="buttonReceipt" width="14rem" />
                                 </HBox>
                             </VBox>
-
                         </IconTabFilter>
+                        
                         <IconTabFilter icon="sap-icon://message-error" key="info" iconColor="Negative" text="Q3">
                             <VBox id="q2q3Section" class="sapUiSmallMarginTop">
                                 <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                        <Text text="Przyczyna" class="sapUiTinyMarginEnd"/>
+                                    <Text text="Przyczyna" class="sapUiTinyMarginEnd"/>
                                     <ComboBox
                                         id="q23ReasonsList"
                                         width="25rem"
@@ -183,8 +182,13 @@
                                         class="sapUiTinyMarginEnd">
                                         <core:Item key="{multiOrdersModel>code}" text="{multiOrdersModel>codeDescription}"/>
                                     </ComboBox>
-                                    <Input id="inputQ23" liveChange="onReceiptInputLiveChange" value="0" width="3rem" class="sapUiTinyMarginEnd"/>
+                                    <Input id="inputQ23" liveChange="onReceiptInputLiveChange" value="" width="3rem" class="sapUiTinyMarginEnd"/>
                                     <Button id="btnQ23" icon="sap-icon://accept" type="Accept" press="onButtonQ23"/>
+
+                                    <Text text="Ilość zarejestrowana na pozycji:" class="sapUiTinyMarginEnd sapUiMediumMarginBegin"/>
+                                    <Input id="inputPositionQ23" editable="false" value="{viewModel>/selectedOrder/totalQ23}" width="3rem" class="sapUiTinyMarginEnd"/>
+                                    <Text text="Ilość zarejestrowana na zleceniu:" class="sapUiTinyMarginEnd sapUiMediumMarginBegin"/>
+                                    <Input id="inputTotalQ23" editable="false" value="{multiOrdersModel>/totalQ23}" width="3rem" class="sapUiTinyMarginEnd"/>
                                 </HBox>
                             </VBox>
                         </IconTabFilter>

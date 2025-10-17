@@ -87,7 +87,33 @@ sap.ui.define([
             }catch(oError){}
 
             return result;
-        }
+        },
+        getComponentQuantity: function(componentSequence){
+            let result = 0;
+            try{
+               let bomComponent = this._oDetails.components.find( component => {return component.sequence === componentSequence;});
+               result = bomComponent.totalQuantity;
+            }catch(oError){}
 
+            return result;
+        },
+        getComponentType: function(componentSequence){
+            let result = "NORMAL";
+            try{
+               let bomComponent = this._oDetails.components.find( component => {return component.sequence === componentSequence;});
+               result = bomComponent.componentType;
+            }catch(oError){}
+
+            return result;
+        },
+        getComponentStoragelication: function(componentSequence){
+            let result = "";
+            try{
+               let bomComponent = this._oDetails.components.find( component => {return component.sequence === componentSequence;});
+               result = bomComponent.storageLocation;
+            }catch(oError){}
+
+            return result;
+        },
     });
 });

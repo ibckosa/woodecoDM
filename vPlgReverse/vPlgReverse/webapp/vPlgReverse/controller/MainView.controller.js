@@ -16,8 +16,6 @@ sap.ui.define([
 			PluginViewController.prototype.onInit.apply(this, arguments);
 			this._oTextHandler = new TextHandler();
             this._oErrorHandler = new ErrorHandler(this);
-			           
-            
 		},
         onAfterRendering: function(){
         },
@@ -85,22 +83,23 @@ sap.ui.define([
 
 		onExit: function () {
 			PluginViewController.prototype.onExit.apply(this, arguments);
-
-
 		},
         _setInternalVariables: function(){
-            let oPodSelectionModel = this.getPodSelectionModel();
-            let oSelections = oPodSelectionModel.getSelections(); 
-            let oFirstSelection = oSelections[0]; 
-            this._oPlant = this.getPodController().getUserPlant();
-            this._oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
-            this._oWorkCenter = oPodSelectionModel.workCenter;
-            this._oResource = oPodSelectionModel.resource.resource;
-            this._oSfc = oFirstSelection.getSfc().getSfc();
-            this._operation = oFirstSelection.getSfcData().getOperation();
-            this._routing = oFirstSelection.getSfcData().getRouting();
-            this._routingVersion = oFirstSelection.getSfcData().getRoutingVersion();
-
+            try{
+                let oPodSelectionModel = this.getPodSelectionModel();
+                let oSelections = oPodSelectionModel.getSelections(); 
+                let oFirstSelection = oSelections[0]; 
+                this._oPlant = this.getPodController().getUserPlant();
+                this._oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
+                this._oWorkCenter = oPodSelectionModel.workCenter;
+                this._oResource = oPodSelectionModel.resource.resource;
+                this._oSfc = oFirstSelection.getSfc().getSfc();
+                this._operation = oFirstSelection.getSfcData().getOperation();
+                this._routing = oFirstSelection.getSfcData().getRouting();
+                this._routingVersion = oFirstSelection.getSfcData().getRoutingVersion();
+            }catch(error){
+                this._oErrorHandler.throwErrorNoDisplay("");
+            }
         },
         _loadDataSO: async function(){
             let oReturn = [];
@@ -391,6 +390,9 @@ sap.ui.define([
                 await sfcMovementReverse.execute();
                 await this._loadData();
             }catch(error){
+                if(!error.displayType){
+                    error.displayType = "POPUP";
+                }
                 this._oErrorHandler.handleError(error);
             }
         }

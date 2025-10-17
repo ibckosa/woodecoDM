@@ -125,6 +125,19 @@ sap.ui.define([
             }catch(oError){}
             return result;
         },
+        getWorkListScheme: function(){
+            let result = "1,2,3";
+            try{
+                let workList = this._oDetails.customValues.find(customValue => { return customValue.attribute === "WORKLIST_SCHEME"});
+                if(workList){
+                    result = workList.value;
+                }
+            }catch(oError){}
+            if(result === ""){
+                result = "1,2,3";
+            }
+            return result;
+        }, 
         getQ1LabelCopies: function(){
             let result = 0;
             try{
@@ -133,6 +146,15 @@ sap.ui.define([
                 if(result>5){
                     result = 5;
                 }
+            }catch(oError){}
+
+            return result;
+        },
+        getMaxPalletesPerReceipt: function(){
+            let result = 1;
+            try{
+                let q1MaxPalletes = this._oDetails.customValues.find(customValue => { return customValue.attribute === "Q1_MAX_PALLETS"});
+                result = parseInt(q1MaxPalletes.value);
             }catch(oError){}
 
             return result;

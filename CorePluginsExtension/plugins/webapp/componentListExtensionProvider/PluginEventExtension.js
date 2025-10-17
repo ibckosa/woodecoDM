@@ -15,9 +15,13 @@ sap.ui.define([
 
     return PluginControllerExtension.extend("ibc.dm.plugins.componentListExtensionProvider.PluginEventExtension", {
         constructor: function (oExtensionUtilities) {
-            this._oExtensionUtilities = oExtensionUtilities;
-            this._oPalleteQueueHandler = new PalleteQueueHandler();
-            this._oTextHandler = new TextHandler();
+            try{
+                this._oExtensionUtilities = oExtensionUtilities;
+                this._oPalleteQueueHandler = new PalleteQueueHandler();
+                this._oTextHandler = new TextHandler();
+            }catch(error){
+            }
+
         },
 
         getOverrideExecution: function(sOverrideMember) {
@@ -68,92 +72,66 @@ sap.ui.define([
         },
 
         onWorklistSelectEvent: function(oEvent){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onWorklistSelectEvent: hi");
         },
 
         onInputChangeEvent: function(oEvent){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onInputChangeEvent: hi");
         },
 
         onOperationChangeEvent: function(oEvent){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onOperationChangeEvent: hi");
         },
 
         onPodSelectionChangeEvent: function(oEvent){
-            debugger;
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onPodSelectionChangeEvent: hi");
         },
 
         onAssemblyPointComponentChangeEvent: function(oEvent){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onAssemblyPointComponentChangeEvent: hi");
         },
 
         onComponentAssembledEvent: function(oEvent){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onComponentAssembledEvent: hi");
         },
 
         onProductionProcessSuccessEvent: function(oEvent){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onProductionProcessSuccessEvent: hi");
         },
 
         onAutoAssembledSfcStateChangedEvent: function(oEvent){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onAutoAssembledSfcStateChangedEvent: hi");
         },
     
         loadComponent: function(oComponentList){
-            debugger;
-            this._oExtensionUtilities.logMessage("PluginEventExtension.loadComponent: oComponentList = ", oComponentList);
         },
 
         onAssembleButtonPressedEvent: function(oSelectionData){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onAssembleButtonPressedEvent: oSelectionData = ", oSelectionData);
         },
 
         onRemoveButtonPressedEvent: function(oPayload, oSelectionData){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onRemoveButtonPressedEvent: oPayload = ", oPayload);
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onRemoveButtonPressedEvent: oSelectionData = ", oSelectionData);
         },
 
         onErrorRemovingComponent: function(sError){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.onErrorRemovingComponent: oError = " + sError);
         },
 
         createAndRefreshTable: async function(oPluginConfiguration, oListConfiguration){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.createAndRefreshTable: hi");
-            debugger;
             try {
                 this.getController().byId("componentList").attachEvent( "updateFinished", await this.onUpdateFinished.bind(this) );
                 var oList = this.getController().byId("componentList");
             } catch (error) {
-                
             }
         },
 
         updateListConfiguration: function(oListConfiguration){
-        
-            this._oExtensionUtilities.logMessage("PluginEventExtension.updateListConfiguration: oListConfiguration hi");
         },
 
         updateTableConfiguration: function(oTableConfiguration){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.updateTableConfiguration: oTableConfiguration hi");
         },
 
         updateColumnConfiguration: function(aColumnConfiguration){
-            this._oExtensionUtilities.logMessage("PluginEventExtension.updateColumnConfiguration: hi");
         },
         onUpdateFinished: async function(oEvent){
             try {
             // Create a resource bundle for language specific texts
-            var oResourceModel = new sap.ui.model.resource.ResourceModel({
-                bundleName : "ibc.dm.plugins.componentListExtensionProvider.i18n.i18n"
-            });
-
-            // Assign the model object to the SAPUI5 core using the name "i18n"
+                var oResourceModel = new sap.ui.model.resource.ResourceModel({
+                    bundleName : "ibc.dm.plugins.componentListExtensionProvider.i18n.i18n"
+                });
 
             this.getController().getPodController().getView().setModel(oResourceModel,"i18n_local");
-                
             var bError = false;
-
             var oPodContr = this.getController().getPodController();
 
             try {
@@ -180,7 +158,6 @@ sap.ui.define([
 
 
             } catch (error) {
-                debugger;
                 bError = true;
             }
 
@@ -212,167 +189,148 @@ sap.ui.define([
             //
             //  SORTOWANIE TABELI
             //            
-            function fnSortTable(){
-                // erpBackflushing
-                try {
-                    if( oTable.getBinding("items").aSorters[0].sPath === "erpBackflushing" ){
-                        if(oTable.getBinding("items").aSorters){
-                            oTable.getBinding("items").sort(oTable.getBinding("items").aSorters);
-                            oTable.getBinding("items").applySort();
-                        }
-                    }else{
-                        var oNewSorter = [new sap.ui.model.Sorter("erpBackflushing",false)];
-                        oTable.getBinding("items").aSorters.forEach(sorter=>{oNewSorter.push(sorter)});
-                        oTable.getBinding("items").sort(oNewSorter);
-                        oTable.getBinding("items").applySort();
-                    }
-                } catch (error) {
+            // function fnSortTable(){
+            //     // erpBackflushing
+            //     try {
+            //         if( oTable.getBinding("items").aSorters[0].sPath === "erpBackflushing" ){
+            //             if(oTable.getBinding("items").aSorters){
+            //                 oTable.getBinding("items").sort(oTable.getBinding("items").aSorters);
+            //                 oTable.getBinding("items").applySort();
+            //             }
+            //         }else{
+            //             var oNewSorter = [new sap.ui.model.Sorter("erpBackflushing",false)];
+            //             oTable.getBinding("items").aSorters.forEach(sorter=>{oNewSorter.push(sorter)});
+            //             oTable.getBinding("items").sort(oNewSorter);
+            //             oTable.getBinding("items").applySort();
+            //         }
+            //     } catch (error) {
                     
-                }
+            //     }
                 
-            };
+            // };
 
             if(bError){
 
-                fnSortTable();
+                this.fnSortTable(this._oTable);
                 return;
             }
             
             // 
             // AKTUALIZACJA MODELU I BINDINGU 
             //             
-            async function fnUpdateTableItems(oTable,bomComponents, oPodController, oController, that, shopOrder){
-                let materialIssuesTab = [];
-                var bSort = false;
-                var oCompQuanFromOrder = false;
+            // async function fnUpdateTableItems(oTable,bomComponents, oPodController, oController, that, shopOrder){
+            //     let materialIssuesTab = [];
+            //     var bSort = false;
+            //     var oCompQuanFromOrder = false;
 
-                var oConfiguration = oController.getConfiguration();
-                let orderInstance = await OrderRepository.readOrder(oController, that.getController().getPodController().getUserPlant(), shopOrder);
-                let bomInstance = await BomRepository.getInstance(oController, that.getController().getPodController().getUserPlant(), orderInstance.getBomNumber(), orderInstance.getBomType() );
+            //     var oConfiguration = oController.getConfiguration();
+            //     let orderInstance = await OrderRepository.readOrder(oController, that.getController().getPodController().getUserPlant(), shopOrder);
+            //     let bomInstance = await BomRepository.getInstance(oController, that.getController().getPodController().getUserPlant(), orderInstance.getBomNumber(), orderInstance.getBomType() );
                 
                 
 
-                if(oConfiguration&& typeof oConfiguration.compQuanFromOrder !== "undefined"){
-                    oCompQuanFromOrder = oConfiguration.compQuanFromOrder;
-                }
+            //     if(oConfiguration&& typeof oConfiguration.compQuanFromOrder !== "undefined"){
+            //         oCompQuanFromOrder = oConfiguration.compQuanFromOrder;
+            //     }
 
-                var bColumnExists = oTable.getColumns().some(function (oColumn) {
-                    return oColumn.getId() === "uomCol";
-                  });
-                if (!bColumnExists){
-                    let oNewColumn = new Column({ header: new Text({ text: that._oTextHandler.getText("labels.components.uomColumn")}), id: "uomCol" });
-                    let oIssuedColumn = new Column({ header: new Text({ text: that._oTextHandler.getText("labels.components.issuedQuanColumn")}), id: "issuedCol" });
-                    oTable.insertColumn(oNewColumn, oTable.getColumns().length );  
-                    oTable.insertColumn(oIssuedColumn, oTable.getColumns().length - 1 );  
-                }
-                debugger;
-                for(const item of oTable.getItems()){
-                    try {
-                        let issuedQuantity = 0;
-                        let itemData = item.getBindingContext().getObject();
-                        let materialIssues = materialIssuesTab.find(tab=>{ return filter.material === itemData.component.material });
-                        if(!materialIssues){
-                            let issues = await that._getIssueForMaterial(that.getController().getPodController().getUserPlant(), itemData.component.material, itemData.component.version, shopOrder);
+            //     var bColumnExists = oTable.getColumns().some(function (oColumn) {
+            //         return oColumn.getId() === "uomCol";
+            //       });
+            //     if (!bColumnExists){
+            //         let oNewColumn = new Column({ header: new Text({ text: that._oTextHandler.getText("labels.components.uomColumn")}), id: "uomCol" });
+            //         let oIssuedColumn = new Column({ header: new Text({ text: that._oTextHandler.getText("labels.components.issuedQuanColumn")}), id: "issuedCol" });
+            //         oTable.insertColumn(oNewColumn, oTable.getColumns().length );  
+            //         oTable.insertColumn(oIssuedColumn, oTable.getColumns().length - 1 );  
+            //     }
+            //     debugger;
+            //     for(const item of oTable.getItems()){
+            //         try {
+            //             let issuedQuantity = 0;
+            //             let itemData = item.getBindingContext().getObject();
+            //             let materialIssues = materialIssuesTab.find(tab=>{ return filter.material === itemData.component.material });
+            //             if(!materialIssues){
+            //                 let issues = await that._getIssueForMaterial(that.getController().getPodController().getUserPlant(), itemData.component.material, itemData.component.version, shopOrder);
  
-                            materialIssues = { material: itemData.component.material,
-                                               issues: issues
-                            };
+            //                 materialIssues = { material: itemData.component.material,
+            //                                    issues: issues
+            //                 };
 
-                            materialIssuesTab.push(materialIssues);
-                        }
-                        if(materialIssues.issues){
-                            let materialIssuesForSeq = materialIssues.issues.filter( issue=>{return issue.comment === itemData.componentSequence && issue.cancellationTriggered === false});
-                            for(issue of materialIssuesForSeq){
-                                issuedQuantity = Math.round((issuedQuantity + issue.quantityInBaseUnit.value)*1000)/1000;
-                            }
-                        }
+            //                 materialIssuesTab.push(materialIssues);
+            //             }
+            //             if(materialIssues.issues){
+            //                 let materialIssuesForSeq = materialIssues.issues.filter( issue=>{return issue.comment === itemData.componentSequence && issue.cancellationTriggered === false});
+            //                 for(issue of materialIssuesForSeq){
+            //                     issuedQuantity = Math.round((issuedQuantity + issue.quantityInBaseUnit.value)*1000)/1000;
+            //                 }
+            //             }
                         
 
 
-                        var itemCompSeq = item.getBindingContext().getObject().componentSequence;
-                        var oBomComponent = bomComponents.find((line) => line.sequence == itemCompSeq );
-                        if(oTable.getColumns().length > item.getCells().length&&oBomComponent){
-                            item.insertCell(new Text({ text: oBomComponent.componentQuantityCommercialUom }), item.getCells().length - 1);
-                            item.insertCell(new Text({ text:issuedQuantity }), item.getCells().length - 1);
-                        }
-                        if(oBomComponent){
-                            oMdl.setProperty(item.getBindingContextPath()+"/zstorageLocation", oBomComponent.storageLocation);
-                        }
+            //             var itemCompSeq = item.getBindingContext().getObject().componentSequence;
+            //             var oBomComponent = bomComponents.find((line) => line.sequence == itemCompSeq );
+            //             if(oTable.getColumns().length > item.getCells().length&&oBomComponent){
+            //                 item.insertCell(new Text({ text: oBomComponent.componentQuantityCommercialUom }), item.getCells().length - 1);
+            //                 item.insertCell(new Text({ text:issuedQuantity }), item.getCells().length - 1);
+            //             }
+            //             if(oBomComponent){
+            //                 oMdl.setProperty(item.getBindingContextPath()+"/zstorageLocation", oBomComponent.storageLocation);
+            //             }
                         
-                        if( typeof item.getBindingContext().getObject().erpBackflushing !== "boolean"  ){
-                            bSort = true;
-                            if(bomComponents.find((line) => line.sequence == itemCompSeq && line.erpBackflushing) || bomInstance.getComponentBackflush(itemCompSeq)){
-                                oMdl.setProperty(item.getBindingContextPath()+"/erpBackflushing",true);
-                                oMdl.setProperty(item.getBindingContextPath()+"/buttonVisible",false);
-                            }else{
-                                oMdl.setProperty(item.getBindingContextPath()+"/erpBackflushing",false);
-                                oMdl.setProperty(item.getBindingContextPath()+"/buttonVisible",true);
-                            }
-                        }
+            //             if( typeof item.getBindingContext().getObject().erpBackflushing !== "boolean"  ){
+            //                 bSort = true;
+            //                 if(bomComponents.find((line) => line.sequence == itemCompSeq && line.erpBackflushing) || bomInstance.getComponentBackflush(itemCompSeq)){
+            //                     oMdl.setProperty(item.getBindingContextPath()+"/erpBackflushing",true);
+            //                     oMdl.setProperty(item.getBindingContextPath()+"/buttonVisible",false);
+            //                 }else{
+            //                     oMdl.setProperty(item.getBindingContextPath()+"/erpBackflushing",false);
+            //                     oMdl.setProperty(item.getBindingContextPath()+"/buttonVisible",true);
+            //                 }
+            //             }
 
-                        if(oBomComponent&&oBomComponent.componentType.toUpperCase() !== "NORMAL"){
-                            item.setVisible(false);
-                        }
+            //             if(oBomComponent&&oBomComponent.componentType.toUpperCase() !== "NORMAL"){
+            //                 item.setVisible(false);
+            //             }
                         
-                        item.getCells().forEach(cell=>{
-                            if(cell.getContent){
-                                try {
-                                    if( cell.getContent()[1].getBindingPath("visible") !== "buttonVisible" ){
-                                        cell.getContent()[1].bindProperty( 
-                                            "visible",{
-                                                parts: [
-                                                "buttonVisible", 
-                                                "remainingQuantity"],
-                                                formatter: function(buttonVisible,remainingQuantity){
-                                                    return buttonVisible;
-                                                }
-                                            }
-                                        );
-                                        cell.getContent()[1].setText(that._oTextHandler.getText("labels.component.buttonConsume"));
-                                        cell.getContent()[1].attachPress(that._onPaletteQueuePress.bind(that));
-                                        cell.getContent()[0].setVisible(false);
-                                    }
-                                } catch (error) {
+            //             item.getCells().forEach(cell=>{
+            //                 if(cell.getContent){
+            //                     try {
+            //                         if( cell.getContent()[1].getBindingPath("visible") !== "buttonVisible" ){
+            //                             cell.getContent()[1].bindProperty( 
+            //                                 "visible",{
+            //                                     parts: [
+            //                                     "buttonVisible", 
+            //                                     "remainingQuantity"],
+            //                                     formatter: function(buttonVisible,remainingQuantity){
+            //                                         return buttonVisible;
+            //                                     }
+            //                                 }
+            //                             );
+            //                             cell.getContent()[1].setText(that._oTextHandler.getText("labels.component.buttonConsume"));
+            //                             cell.getContent()[1].attachPress(that._onPaletteQueuePress.bind(that));
+            //                             cell.getContent()[0].setVisible(false);
+            //                         }
+            //                     } catch (error) {
                                         
-                                }        
-                            }else if(cell.getText){
-                                if(oBomComponent&&oCompQuanFromOrder===true){
-                                    try{
-                                        let oItemValues =  item.getBindingContext().getObject();
-                                        let oPath = cell.getBindingPath("text");
-                                        if(oPath==="requiredQty"){
-                                            cell.setText(oBomComponent.componentQuantity);
-                                        }else if(oPath==="remainingQty"){
-                                            let oRemainingQuantity = oBomComponent.componentQuantity - oItemValues.requiredQuantity + oItemValues.remainingQuantity;
-                                            cell.setText(oRemainingQuantity);
-                                        }
-                                    }catch(oErr){}
-                                }
-                            }
-                        });
-                    } catch (error) {}
-                };
-                if(bSort){ fnSortTable(); }
-            };
-
-            function getMethodsOf (obj){
-                var methods = {}
-                Object.getOwnPropertyNames( Object.getPrototypeOf(obj) ).forEach(methodName => {
-                  methods[methodName] = obj[methodName]
-                })
-                return methods
-            };  
-
-            function _getText(oTextId, oPodController){             
-                try {
-                    var oText = oPodController.getView().getModel("i18n_local").getResourceBundle().getText(oTextId);
-               
-                } catch (error) {
-                    oText = oTextId;
-                }
-                return oText;
-            };
-
+            //                     }        
+            //                 }else if(cell.getText){
+            //                     if(oBomComponent&&oCompQuanFromOrder===true){
+            //                         try{
+            //                             let oItemValues =  item.getBindingContext().getObject();
+            //                             let oPath = cell.getBindingPath("text");
+            //                             if(oPath==="requiredQty"){
+            //                                 cell.setText(oBomComponent.componentQuantity);
+            //                             }else if(oPath==="remainingQty"){
+            //                                 let oRemainingQuantity = oBomComponent.componentQuantity - oItemValues.requiredQuantity + oItemValues.remainingQuantity;
+            //                                 cell.setText(oRemainingQuantity);
+            //                             }
+            //                         }catch(oErr){}
+            //                     }
+            //                 }
+            //             });
+            //         } catch (error) {}
+            //     };
+            //     if(bSort){ fnSortTable(); }
+            // };
 
             async function fnReadComponents(oParameters,oModel,oPodController){
                 return await new Promise((resolve,reject)=>{
@@ -430,10 +388,6 @@ sap.ui.define([
                     }
                 });
             };
-
-
-            
-
         } catch (error) {      
         }            
         },
@@ -653,7 +607,6 @@ sap.ui.define([
             }
         },
         fnSortTable: function(oTable){
-            // erpBackflushing
             try {
                 if( oTable.getBinding("items").aSorters[0].sPath === "erpBackflushing" ){
                     if(oTable.getBinding("items").aSorters){

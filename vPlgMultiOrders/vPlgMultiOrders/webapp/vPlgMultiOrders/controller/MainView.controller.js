@@ -90,11 +90,8 @@ sap.ui.define([
 
                     switch (oMsg.parameters[i].name){
                         case "template":
-                            
                             break;
-                        case "template2":
-                            
-                        
+                        case "template2":     
                         }        
           
 
@@ -128,10 +125,35 @@ sap.ui.define([
                 this._routingVersion = oFirstSelection.getSfcData().getRoutingVersion() 
                 let oPositions = await this._oOrder.getOrderPositions(this._routing, this._routingVersion);
                 let oCodesTab = await NcCodesReader.readCodes(this, this._oPlant, this._oWorkCenter, this._oResource);
-                const oModel = new JSONModel({ positions: oPositions, codes: oCodesTab });
+                let nonConformancesCodeReader = new NonconformanceReader(this, { plant: this.getPodController().getUserPlant(),
+                                                                                 operation_activity: oFirstSelection.getSfcData().getOperation(),
+                                                                                 resource: this._oResource,
+                                                                                 excludeStorned: true  } );
+
+                let nonconformances  = await nonConformancesCodeReader.readNonconformances();
+                let totalRegisteredQ23 = 0;
+                for(const nonconformance of nonconformances){
+                    totalRegisteredQ23 = totalRegisteredQ23 + nonconformance.quantity;
+                    if(nonconformance.dataFields){
+                        let itemNumberDataField = nonconformance.dataFields.find(datafield=>{return datafield.key === "ITEM_NUMBER"});
+                        if(itemNumberDataField){
+                            let position = oPositions.find(pos=>{return pos.itemNumber === itemNumberDataField.value});
+                            if(position){
+                                if(position.totalQ23){
+                                    position.totalQ23 = position.totalQ23 + nonconformance.quantity;
+                                }else{
+                                    position.totalQ23 = nonconformance.quantity;
+                                }
+                            }
+                        }
+
+                    }
+                }
+                this._totalRegisteredQ23 = totalRegisteredQ23;
+                const oModel = new JSONModel({ positions: oPositions, codes: oCodesTab, totalQ23: totalRegisteredQ23 });
                 this.getView().setModel(oModel, "multiOrdersModel");
+                
                 if( ( !this._oOrderNumberPrevious || this._oOrderNumberPrevious !== this._oOrderNumber ) && oPositions.length > 0){
-                    let oFirstPosition = oPositions[0];
                     let selectedPosition = this._selectPositionAfterLoad(oPositions);
                     let oViewModel = this.getView().getModel("viewModel");
                     oViewModel.setProperty("/selectedOrder", selectedPosition.selectedRow);
@@ -143,23 +165,13 @@ sap.ui.define([
                     let oViewModel = this.getView().getModel("viewModel");
                     oViewModel.setProperty("/selectedOrder", null);
                 }
-                let nonConformancesCodeReader = new NonconformanceReader(this, { plant: this.getPodController().getUserPlant(),
-                                                                                 operation_activity: oFirstSelection.getSfcData().getOperation(),
-                                                                                 resource: this._oResource,
-                                                                                 excludeStorned: true  } );
 
-                let nonconformances  = await nonConformancesCodeReader.readNonconformances();
-                let totalRegisteredQ23 = 0;
-                for(const nonconformance of nonconformances){
-                    totalRegisteredQ23 = totalRegisteredQ23 + nonconformance.quantity;
-                }
-                this._totalRegisteredQ23 = totalRegisteredQ23;
 
                 await this._setFieldVisibility();
                 this.getView().setBusy(false);
             } catch (error) {
                 this.getView().setBusy(false);
-                this._oErrorHandler.handleError(error);
+                //this._oErrorHandler.handleError(error);
             }
         },
         onQ1Press: function () {
@@ -185,6 +197,7 @@ sap.ui.define([
         onButtonReceipt: async function () {
             // Logika zatwierdzania dla Q1
             try{
+                this._checkTimeLastReceipt();
                 let selectedOrder = this.getView().getModel("viewModel").getData();
                 let oPodController = this.getPodController();
                 let oPodSelectionModel = this.getPodSelectionModel();
@@ -228,6 +241,7 @@ sap.ui.define([
                     await oSfcReceipt.executeReceipt();
                     selectedOrder.selectedOrder.deliveredQuantity = selectedOrder.selectedOrder.deliveredQuantity + oReceiptParameters.palletesNumber * oReceiptParameters.packageNumber * oReceiptParameters.quantity;
                     this.getView().getModel("viewModel").setData(selectedOrder);
+                    this._setLastReceiptTime();
                     this.getView().setBusy(false);
                     // setTimeout( async ()=> { 
                     //     if(this._oResourceInstance.getMOSelectionMode().toUpperCase()==="AUTOMATIC"){
@@ -282,8 +296,10 @@ sap.ui.define([
                 let oSfcQ23 = new SfcQ23(this, q23Parameters);
                 await oSfcQ23.executeMO();
                 this._totalRegisteredQ23 = this._totalRegisteredQ23 + q23Parameters.quantity;
-
-
+                selectedOrder.totalQ23 = selectedOrder.totalQ23 + q23Parameters.quantity;
+                this._updateModelAfterQ23(selectedOrder, q23Parameters.quantity);
+                this.byId("inputQ23").setValue("");
+ 
                 this.getView().setBusy(false);
             }catch(oError){
                 this.getView().setBusy(false);
@@ -701,7 +717,40 @@ sap.ui.define([
         },
         _setPrintQuantity: function(printQuantity){
             this.byId("rbg1").setSelectedIndex(printQuantity);
-        }
+        },
+        _checkTimeLastReceipt: function(){
+            if(this._lastReceiptTime){
+                const diff = Date.now() - this._lastReceiptTime;
+                if(diff < 15000){
+                    this._oErrorHandler.throwErrorPopup("error.q1.receiptTooFast");
+                }
+            }
+        },
+        _setLastReceiptTime: function(){
+            this._lastReceiptTime = Date.now();
+        },
+        _updateModelAfterQ23: function(item, quantity){
+            this._totalRegisteredQ23 = this._totalRegisteredQ23 + quantity;
+            item.selectedOrder.totalQ23 = item.selectedOrder.totalQ23 + quantity;
+            //this.getView().getModel("viewModel").setProperty("selectedOrder", item.selectedOrder);
+
+            let multiOrdersModel =  this.getView().getModel("multiOrdersModel");
+            let viewModel = this.getView().getModel("viewModel");
+
+            let multiOrdersModelData = multiOrdersModel.getData();
+            let viewModelData = viewModel.getData();
+
+            multiOrdersModelData.totalQ23 = multiOrdersModelData.totalQ23 + quantity;
+            viewModel.selectedOrder = item.selectedOrder;
+
+            multiOrdersModel.setData(multiOrdersModelData);
+            viewModel.setData(viewModelData);
+
+            this.getView().setModel(multiOrdersModel, "multiOrdersModel");
+            this.getView().setModel(viewModel, "viewModel");
+
+
+        } 
 
 	});
 });

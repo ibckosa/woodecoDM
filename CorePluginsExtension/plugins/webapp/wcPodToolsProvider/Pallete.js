@@ -25,16 +25,14 @@ sap.ui.define([
             let oParameters = { assemblyData: oAssemblyData,
                 lastModifiedDateTime: oPalleteDetails.modifiedDateTime
             };
-            debugger;
 
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPatchRequest(sUrl, oParameters,
                     (oResponseData) => {
-                        debugger;
+
                         resolve(oResponseData);
                     },
                     (oError, sHttpErrorMessage) => {
-                        debugger;
                         reject(oError);
                     }   
                 );
@@ -54,16 +52,13 @@ sap.ui.define([
             let oParameters = { assemblyData: oAssemblyData,
                 lastModifiedDateTime: oPalleteDetails.modifiedDateTime
             };
-            debugger;
 
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPatchRequest(sUrl, oParameters,
                     (oResponseData) => {
-                        debugger;
                         resolve(oResponseData);
                     },
                     (oError, sHttpErrorMessage) => {
-                        debugger;
                         reject(oError);
                     }   
                 );
@@ -236,7 +231,6 @@ sap.ui.define([
                 });
         },
         reducePalleteQuan: async function(oLine, oQuantityToReduce, oDummyOrder, oDummySfc){
-            debugger;
             let oRequestParameters = {
                 "shopOrder": oDummyOrder,///numer zlecenia
                 "batchId": oDummySfc, ///SFC
@@ -377,7 +371,6 @@ sap.ui.define([
             let oParameters = { assemblyData: oAssemblyData,
                 lastModifiedDateTime: oPalleteDetails.modifiedDateTime
             };
-            debugger;
 
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPatchRequest(sUrl, oParameters,
@@ -395,7 +388,6 @@ sap.ui.define([
             let parameterValues = [];
             let guid = crypto.randomUUID();
             let date = new Date();
-            // debugger;
             // parameterValues.push({ name: "GUID",
             //                        comment: guid,
             //                        value: guid });

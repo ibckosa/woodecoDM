@@ -33,6 +33,13 @@ sap.ui.define([
 
 
                 for(const dataCollection of sfcDtDataCollections){
+                    if(dataCollection.READINGS.CODE3){
+                        dataCollection.READINGS.CODE = dataCollection.READINGS.CODE3;
+                    }else if(dataCollection.READINGS.CODE2){
+                        dataCollection.READINGS.CODE = dataCollection.READINGS.CODE2;
+                    }else if(dataCollection.READINGS.CODE1){
+                        dataCollection.READINGS.CODE = dataCollection.READINGS.CODE1;
+                    }
                     if(dataCollection.READINGS.CODE){
                         codes.push({ code: dataCollection.READINGS.CODE,
                                      resource: dataCollection.READINGS.RESOURCE });
@@ -48,31 +55,51 @@ sap.ui.define([
 
                 try{
                     for(const dataCollection of sfcDtDataCollections){
+                        let oeeCode;
+                        let days = this._calculateDaysSince(new Date(dataCollection.ACTUAL_TIMESTAMP));
                         messages.push({ messageType: "I",
                                         messageValue: this._textHandler.getText("information.piq.dtUpdateAttempt", dataCollection.sfcNumber) });
 
-                        if(!dataCollection.READINGS.CODE){ this._errorHandler.throwError("error.piq.noCodeDt"); }
+                        //if(!dataCollection.READINGS.CODE){ this._errorHandler.throwError("error.piq.noCodeDt"); }
 
-                        let oeeCode = oeeCodes.find(code => {return code.resource === dataCollection.READINGS.RESOURCE && code.code === dataCollection.READINGS.CODE });
 
-                        if(!oeeCode){
-                            this._errorHandler.throwError("error.piq.noOeeCodeDt");
-                        }else if(!oeeCode.reasonCodeId || oeeCode.reasonCodeId ===""){
-                            this._errorHandler.throwError("error.piq.noReasonCode");
+                        if(dataCollection.READINGS.CODE){
+                            oeeCode = oeeCodes.find(code => {return code.resource === dataCollection.READINGS.RESOURCE && code.code === dataCollection.READINGS.CODE });
+
+                            // if(!oeeCode){
+                            //     this._errorHandler.throwError("error.piq.noOeeCodeDt");
+                            // }else if(!oeeCode.reasonCodeId || oeeCode.reasonCodeId ===""){
+                            //     this._errorHandler.throwError("error.piq.noReasonCode");
+                            // }
                         }
+
 
                         let sfc = await SfcRepository.getInstance(this._controller, this._parameters.plant, dataCollection.sfcNumber);
-                        await this._updateDt(dataCollection, oeeCode&&oeeCode.reasonCodeId);
-                        await this._saveNewStartTime(dataCollection);
-                        messages.push({ messageType: "S",
-                                        messageValue: this._textHandler.getTExt("success.piq.downTimeUpdated", dataCollection.sfcNumber) });
-        
-                        let days = this._calculateDaysSince(dataCollection.created);
-                        if(days>=3){
+                        if(days<5){
+                            if(oeeCode){
+                                    await this._updateDt(dataCollection, oeeCode.reasonCodeId);
+                                }else{
+                                    await this._updateDt(dataCollection);
+                                }
+                                
+                                await this._saveNewStartTime(dataCollection);
+                                messages.push({ messageType: "S",
+                                                messageValue: this._textHandler.getText("success.piq.downTimeUpdated", dataCollection.sfcNumber) });
+                
+                                
+                                if(days>=3){
+                                    await sfc.invalidate(); 
+                                    messages.push({ messageType: "S",
+                                                    messageValue: this._textHandler.getText("success.piq.downTimeClosed", dataCollection.sfcNumber) });
+                                }
+                        }else{
+                            messages.push({ messageType: "I",
+                                            messageValue: this._textHandler.getText("information.piq.downTimeCannotBeUpdated", dataCollection.sfcNumber) });
                             await sfc.invalidate(); 
                             messages.push({ messageType: "S",
-                                            messageValue: this._textHandler.getTExt("success.piq.downTimeClosed", dataCollection.sfcNumber) });
+                                            messageValue: this._textHandler.getText("success.piq.downTimeClosed", dataCollection.sfcNumber) });
                         }
+    
                     }
                 }catch(error){
                     if(!error.displayType){
@@ -176,12 +203,14 @@ sap.ui.define([
                                     endDateTime: this._convertToApiFormat(dataCollection.READINGS.FINISH),
                                     markParentDown: false,
                                     plant: this._parameters.plant,
-                                    reasonCodeId: reasonCodeId,
                                     resource: dataCollection.READINGS.RESOURCE,
                                     startDateTime: this._convertToApiFormat(dataCollection.READINGS.BEGIN),
                                     status: 5
                                }]
             };
+            if(reasonCodeId){
+                parameters.updateDowntimes[0].reasonCodeId = reasonCodeId;
+            }
             
 
             return await new Promise((resolve,reject)=>{
@@ -238,7 +267,7 @@ sap.ui.define([
             for(const result of results){
                 if(result.numberOfPages>1){
                     for(let i=1;i<result.numberOfPages;i++){
-                        calledAdditionalPromises.push(this._getCollectionsPromiseForSfcStep(result.sfcNumber, i))
+                        calledAdditionalPromises.push(this._getCollectionsPromise(result.sfcNumber, i))
                     }
                 }
             }

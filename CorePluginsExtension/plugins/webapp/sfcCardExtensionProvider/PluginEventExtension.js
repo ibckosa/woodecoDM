@@ -104,6 +104,7 @@ sap.ui.define([
                                                         ruType: "",
                                                         progressIndicatorValue: "",
                                                         percentProgress: "0",
+                                                        quantityPerPallet: "",
                                                         decors: []
                                                      },
                                                      sfcCardCustomVisibility: this._getVisibilityStructure()
@@ -158,6 +159,7 @@ sap.ui.define([
                                         ruType: "",
                                         progressIndicatorValue: "",
                                         percentProgress: "0",
+                                        quantityPerPallet: "",
                                         decors: []
                                      };
 
@@ -206,6 +208,13 @@ sap.ui.define([
                     oSfcCardCustom.progressIndicatorValue =  oDoneOrderQuan + " z " + oTotalOrderQuan;
                     oSfcCardCustom.percentProgress = parseInt( oDoneOrderQuan / oTotalOrderQuan * 100 ).toString();
                 }
+
+                let quantityMinMax = oOrderInstance.getPalleteMinMax();
+                let quantityFromPackingCode = oOrderInstance.getQuantityFromPackingCode();
+
+                let tollerancePlus = quantityMinMax.maxPalleteQuantity - quantityFromPackingCode;
+                let tolleranceMinus = quantityFromPackingCode - quantityMinMax.minPalleteQuantity;
+                 oSfcCardCustom.quantityPerPallet = `<strong>${quantityFromPackingCode}</strong> szt (tolerancja: -${tolleranceMinus} / +${tollerancePlus})`;
 
                 if(oOrderData.customValues !== undefined){
                     for(var i = 0; i < oOrderData.customValues.length; i++ ){
@@ -354,6 +363,7 @@ sap.ui.define([
                    artfamRohlpatte: visibilityValue,
                    ruType: visibilityValue,
                    progressIndicatorValue: visibilityValue,
+                   quantityPerPallet: visibilityValue,
                    decors: visibilityValue };
         }
     })

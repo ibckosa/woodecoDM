@@ -1,0 +1,62 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" 
+          xmlns="sap.m" 
+          xmlns:l="sap.ui.layout" 
+          xmlns:f="sap.ui.layout.form" 
+          xmlns:core="sap.ui.core" 
+          xmlns:html="http://www.w3.org/1999/xhtml" 
+          controllerName="ibc.dm.vPlgComponents.vPlgComponents.controller.MainView" 
+          width="100%" height="100%">
+        <Panel 
+                id="panelPlugin"  
+                width="100%"
+                height="100%"
+                expandable="false"
+                expanded="false"
+                accessibleRole="Region"
+                backgroundDesign="Transparent"
+                class="sapUiSmallContentPadding">  
+            <content> 
+                <Table id="componentsTable"   items="{path:'componentsModel>/items'}" inset="false">
+                    <columns>
+                        <Column width="7rem">
+                            <Text text="{i18n>columnSequence}" />
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>columnComponentVersion}" />
+                        </Column>
+                        <Column >
+                            <Text text="{i18n>columnDescription}" />
+                        </Column>
+                        <Column  width="12rem">
+                            <Text text="{i18n>columnComponentQuantity}" />
+                        </Column>
+                        <Column width="12rem">
+                            <Text text="{i18n>columnIssuedQuantity}" />
+                        </Column>
+                        <Column  width="5rem">
+                            <Text text="{i18n>columnUom}"/>
+                        </Column>
+                        <Column width="20rem">
+                            <Text text="{i18n>columnAction}" />
+                        </Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem vAlign="Middle">
+                            <cells>
+                                <Text text="{componentsModel>componentSequence}" />
+                                <Text text="{componentsModel>component/material}/{componentsModel>component/version}" />
+                                <Text text="{componentsModel>componentDescription}" />
+                                <Text text="{componentsModel>requiredQuantity}" />
+                                <Text text="{componentsModel>issuedQuantity}" />
+                                <Text text="{componentsModel>zuom}" />
+                                <Button text="{i18n>columnButtonConsume}" press="onConsume" visible="{componentsModel>consumeButtonVisible}"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+
+            </content>
+	    </Panel>		
+        
+  
+</mvc:View>

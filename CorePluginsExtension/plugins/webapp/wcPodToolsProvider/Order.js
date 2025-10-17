@@ -598,9 +598,26 @@ sap.ui.define([
             }catch(error){
 
             }
-
-
+            
             return result;
+        },
+        getOpenSfcs: async function(){
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + 'sfc/v1/worklist/sfcs';
+            var oParameters = { "filter.order": this._oOrderNumber,
+                                "page.size": 20,
+                                plant: this._oPlant,
+                                allSfcSteps: true };
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxGetRequest(sUrl, oParameters,
+                     (oResponseData) => {
+                        resolve(oResponseData);
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        reject(oError);
+                    }   
+                );
+
+            });
         }
 
         

@@ -14,7 +14,8 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
-], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary, ErrorHandler, SfcRepository, IssuesManager, SfcReceipt, ResourceRepository, TextHandler, OrderRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/StorageLocationRepository"
+], function (JSONModel, PluginViewController, Log, AjaxUtil, Dialog, Button, Text, mobileLibrary, ErrorHandler, SfcRepository, IssuesManager, SfcReceipt, ResourceRepository, TextHandler, OrderRepository, StorageLocationRepository) {
     "use strict";
 
     var oLogger = Log.getLogger("exampleExecutionPlugin", Log.Level.INFO);
@@ -105,7 +106,8 @@ sap.ui.define([
                 this.getView().setBusy(false);   
             }catch(oError){
                 this.getView().setBusy(false);
-                this._oErrorHandler.handleError(oError); }            
+                //this._oErrorHandler.handleError(oError); 
+            }            
         },
 
         /*
@@ -174,13 +176,13 @@ sap.ui.define([
         },
         onButtonReceipt: async function(oEvent){
             try{
+                this._checkTimeLastReceipt();
                 let oPodController = this.getPodController();
                 let oPodSelectionModel = this.getPodSelectionModel();
                 let aSelections = oPodSelectionModel.getSelections();  
                 if(aSelections.length < 1){ return; };
                 this.getView().setBusyIndicatorDelay(0);
                 this.getView().setBusy(true);
-                debugger;   
                 let aSelectionFirstRow = aSelections[0];
                 let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
                 let oReceiptParameters = { plant : oPodController.getUserPlant(),
@@ -203,20 +205,41 @@ sap.ui.define([
                     routing: aSelectionFirstRow.getSfcData().getRouting(),
                     routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion() };
                 
-                ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeIssue();
-                    //this._reloadQ1Plugin = true;
+
+                    await this._checkClearInput(oReceiptParameters);
+                    this._setLastReceiptTime();
                     this.getView().setBusy(false);
                     
                     //await this.loadModel();
 
             }catch(oError){
+                if(!oError.displayType){
+                    oError.displayType = "POPUP";
+                }
                 this.getView().setBusy(false);
                 this._oErrorHandler.handleError(oError);
             }
             
         },
+
+        _checkClearInput: async function(receiptParameters, inputField){
+            try{
+                let oOrderInstance = await OrderRepository.readOrder(this, receiptParameters.plant, receiptParameters.order);
+                let storageLocationNumber = oOrderInstance.getPutawayStorageLocation();
+                if(storageLocationNumber){
+                    let storageLocation = await StorageLocationRepository.getInstance(this, receiptParameters.plant, storageLocationNumber);
+                    let isEwmManaged = storageLocation.getIsEwm();
+                    if(!isEwmManaged){
+                        this.byId("inputReceiptQuantity").setValue("0");
+                    }
+                }
+            }catch(error){
+                debugger;
+            }
+        },
+
         _getCustomQuan: async function(oSelection){
             var oCustomquan = { isSetted: false,
                                 value: 0 };
@@ -367,6 +390,17 @@ sap.ui.define([
         },
         _setPrintQuantity: function(printQuantity){
             this.byId("rbg1").setSelectedIndex(printQuantity);
+        },
+        _checkTimeLastReceipt: function(){
+            if(this._lastReceiptTime){
+                const diff = Date.now() - this._lastReceiptTime;
+                if(diff < 15000){
+                    this._oErrorHandler.throwError("error.q1.receiptTooFast");
+                }
+            }
+        },
+        _setLastReceiptTime: function(){
+            this._lastReceiptTime = Date.now();
         }
     });
     return oPluginViewController;

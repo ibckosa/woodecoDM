@@ -184,7 +184,7 @@ sap.ui.define([
             oModel.loadData(sap.ui.require.toUrl(sPath), null, false);
             return oModel.getData();
         },
-        onPaletteQueuePress: function(oEvent){
+        onPaletteQueuePress: async function(oEvent){
             this._oErrorHandler = new ErrorHandler(this.oPluginEventExtension.getController());
             try{
                 let oController = this.oPluginEventExtension.getController();
@@ -197,6 +197,7 @@ sap.ui.define([
                 }
                 this._oWorkCenter = podSelectionModel.workCenter;
                 this._oResource = podSelectionModel.resource.resource;
+                await this._checkWorkListScheme("2");
 
                 let oPalleteQueueHandler = new PalleteQueueHandler();
 
@@ -212,7 +213,7 @@ sap.ui.define([
                                      order: "" };
                 
                 oPalleteQueueHandler.setHandlerData(oHandlerData);
-                oPalleteQueueHandler.displayPaletteQueue(oController,"RESOURCE");           
+                await oPalleteQueueHandler.displayPaletteQueue(oController,"RESOURCE");           
             }catch(oError){ this._oErrorHandler.handleError(oError);}
         },
 
@@ -227,8 +228,11 @@ sap.ui.define([
                 if(podSelectionModel.resource === null ||podSelectionModel.resource === undefined || podSelectionModel.resource.resource === undefined){
                     this._throwError("q23.error.emptyResource");
                 }
+                
                 this._oWorkCenter = podSelectionModel.workCenter;
                 this._oResource = podSelectionModel.resource.resource;
+
+                await this._checkWorkListScheme("3");
 
 
                 let oHandlerData = { plant: oController.getPodController().getUserPlant(),
@@ -251,7 +255,6 @@ sap.ui.define([
                     this._oSelController = oController;
                     this._initialized = true;
                 }            
-
             
                 let podSelectionModel =  oController.getPodSelectionModel()
                 if(podSelectionModel.workCenter === undefined || podSelectionModel.workCenter === ""){
@@ -262,6 +265,8 @@ sap.ui.define([
                 }
                 this._oWorkCenter = podSelectionModel.workCenter;
                 this._oResource = podSelectionModel.resource.resource;
+
+                await this._checkWorkListScheme("1");
 
                 await this._displayDialogQ23(oController);
                 debugger;            
@@ -1009,12 +1014,19 @@ sap.ui.define([
             let oResource = await ResourceRepository.getResourceInstance(this._oSelController, this._oSelController.getPodController().getUserPlant(), this._oResource);
             let oPrinter = oResource.getPrinterId();
 
-            if(oPrinter==="")
-            {
+            if(oPrinter===""){
                 this._oErrorHandler.throwError("error.printing.noPrinter");
             }
             return oPrinter;
 
+        },
+        _checkWorkListScheme: async function(workListScheme){
+            let oController = this.oPluginEventExtension.getController();
+            let oResource = await ResourceRepository.getResourceInstance(oController, oController.getPodController().getUserPlant(), this._oResource);
+            let resourceWorkListScheme = oResource.getWorkListScheme();
+            if(!resourceWorkListScheme.includes(workListScheme)){
+                this._oErrorHandler.throwErrorPopup("error.podSelection.functionalityNotAvailable", this._oResource);
+            }
         }
     })
 });

@@ -194,7 +194,10 @@ sap.ui.define([
             debugger;
             let oEndPoint = this._getNotifEndpoint();
             let oPlant = this._oController.getPodController().getUserPlant();
-            oItem.comments = `Wysłane do DUR\n${oItem.comments}`;
+            if(oItem.comments&&oItem.comments.includes("Wysłane do DUR")){
+                this._oErrorHandler.throwErrorPopup("error.downtimes.alreadySended");
+            }
+            
             let oDescription = oItem.comments.replaceAll("Wysłane do DUR\n", "");
             oDescription = oDescription.replaceAll("\n", "|@#|");
             let oDate = new Date(oItem.actualStart);
@@ -215,11 +218,15 @@ sap.ui.define([
                 STARTDATE: `${year}${month}${day}`,
                 STARTTIME: `${hours}${minutes}${seconds}`
             };
+            if(!oParameters.SHORTTEXT){
+                oParameters.SHORTTEXT = "Brak przyczyny wskazanej przez operatora.";
+            }
 
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + oEndPoint + "&async=false";
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPostRequest(sUrl, oParameters,
                     (oResponseData) => {
+                        oItem.comments = `Wysłane do DUR\n${oItem.comments}`;
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {
