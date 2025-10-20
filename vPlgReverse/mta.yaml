@@ -13,7 +13,8 @@ modules:
     httpHeaders:
        - X-Frame-Options: deny
     CORS: "[{\"uriPattern\": \"^/vPlgReverse/(.*)$\",\"allowedOrigin\": [
-           {\"host\": \"woodeco-dmc-qas-oiyz0u0q.execution.eu20-quality.web.dmc.cloud.sap\",\"protocol\": \"https\"}],
+           {\"host\": \"woodeco-dmc-qas-oiyz0u0q.execution.eu20-quality.web.dmc.cloud.sap\",\"protocol\": \"https\"},
+           {\"host\": \"woodeco-dmc-prd.execution.eu20-prod.web.dmc.cloud.sap\",\"protocol\": \"https\"}],
            \"allowedMethods\": [\"GET\",\"OPTIONS\"],
            \"allowedHeaders\":[\"Origin\", \"Accept\",\"X-Requested-With\",\"Content-Type\",
            \"Access-Control-Request-Method\",\"Access-Control-Request-Headers\",\"Authorization\",

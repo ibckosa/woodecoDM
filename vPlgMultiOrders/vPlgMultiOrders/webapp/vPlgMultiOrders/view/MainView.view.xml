@@ -169,7 +169,7 @@
                             </VBox>
                         </IconTabFilter>
                         
-                        <IconTabFilter icon="sap-icon://message-error" key="info" iconColor="Negative" text="Q3">
+                        <IconTabFilter icon="sap-icon://message-error" key="info" iconColor="Negative" text="Q2/Q3">
                             <VBox id="q2q3Section" class="sapUiSmallMarginTop">
                                 <HBox alignItems="Center" class="sapUiSmallMarginBottom">
                                     <Text text="Przyczyna" class="sapUiTinyMarginEnd"/>

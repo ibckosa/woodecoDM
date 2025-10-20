@@ -9,10 +9,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "ibc/dm/plugins/wcPodToolsProvider/Sfc",
-    "ibc/dm/plugins/wcPodToolsProvider/IssuesManager",
     "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver",
     "ibc/dm/plugins/wcPodToolsProvider/IssuesManagerV2"
-], function (ObjectUI5, ErrorHandler, AjaxUtil, TextHandler, Dialog, mobileLibrary, ResourceRepository, OrderRepository, SfcRepository, Sfc, IssuesManager, DataCollectionSaver, IssuesManagerV2
+], function (ObjectUI5, ErrorHandler, AjaxUtil, TextHandler, Dialog, mobileLibrary, ResourceRepository, OrderRepository, SfcRepository, Sfc, DataCollectionSaver, IssuesManagerV2
 ) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcQ23", {

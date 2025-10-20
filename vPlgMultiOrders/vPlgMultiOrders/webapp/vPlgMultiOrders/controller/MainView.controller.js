@@ -295,8 +295,8 @@ sap.ui.define([
 
                 let oSfcQ23 = new SfcQ23(this, q23Parameters);
                 await oSfcQ23.executeMO();
-                this._totalRegisteredQ23 = this._totalRegisteredQ23 + q23Parameters.quantity;
-                selectedOrder.totalQ23 = selectedOrder.totalQ23 + q23Parameters.quantity;
+                // this._totalRegisteredQ23 = this._totalRegisteredQ23 + q23Parameters.quantity;
+                // selectedOrder.totalQ23 = selectedOrder.totalQ23 + q23Parameters.quantity;
                 this._updateModelAfterQ23(selectedOrder, q23Parameters.quantity);
                 this.byId("inputQ23").setValue("");
  
