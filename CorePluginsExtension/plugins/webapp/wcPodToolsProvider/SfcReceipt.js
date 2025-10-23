@@ -606,9 +606,6 @@ sap.ui.define([
             this._oReceiptParameters.storageLocation = this._oOrder.getPutawayStorageLocation();
             this._oReceiptParameters.unitOfMeasure = this._oOrder.getUom();
         },
-        _getPrintingEndPoint: function(){
-            return '';
-        },
         _printLabel: async function(){
             let orderProgress = OrderReceiptsFromProgressIndicator.getOrderProgress(this._oReceiptParameters.order);
 

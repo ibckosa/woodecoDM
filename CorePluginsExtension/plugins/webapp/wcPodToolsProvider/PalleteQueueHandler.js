@@ -348,7 +348,6 @@ sap.ui.define([
                 let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
                 let oSelectedItems = this._getSelectedItems();
                 let oZweiEndpoint = this._getZweiEndpoint();
-                let oPrintingEndpoint = this._getPrintingEndpoint();
                 let oPrinter = await this._getPrinter();
                 try{
                     for(const item of oSelectedItems){
@@ -381,7 +380,7 @@ sap.ui.define([
                 let oPrinter = await this._getPrinter();
                 let oPallete  = new Palette(this._oPluginViewController);
                 let oDialogReturn = await ReturnNpwDialog.showDialog(oItem, this._oPluginViewController);
-                let oPrintingEndpoint = this._getPrintingEndpoint();
+            
                 if(oDialogReturn.quantity>0){ 
                     oItem.erpResourceId = oResource.getResourceErpId();
                     await oPallete.palleteReturnNpw(oItem, oZweiEndpoint, oDialogReturn.quantity);
@@ -494,15 +493,6 @@ sap.ui.define([
             }
 
             return oZweiEndpoint;
-        },
-        _getPrintingEndpoint: function(){
-            // let oPrintingEndpoint = this._oPluginViewController.getConfigurationValue("printerEndPoint");
-            // if(!oPrintingEndpoint||oPrintingEndpoint===""){
-            //     this._oErrorHandler.throwError("error.printing.noEndpoint");
-            // }
-            let oPrintingEndpoint = "";
-
-            return oPrintingEndpoint;
         },
         _getDialogTitle: function(){
             let oReturn = "";

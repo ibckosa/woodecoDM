@@ -597,59 +597,9 @@ sap.ui.define([
             });
         },
         _saveDataCollection: async function(quantity, sfcDetails, code, issueManager, ncCode, ncCodeDescription){
-            let parameterValues = [];
-
-            
             let guid = crypto.randomUUID();
             let date = new Date();
-            debugger;
-            // parameterValues.push({ name: "GUID",
-            //                        comment: guid,
-            //                        value: guid });
-            // parameterValues.push({ name: "DATE_CREATED",
-            //                        comment: guid,
-            //                        value: date.toJSON() });
-            // parameterValues.push({ name: "Q1/Q3",
-            //                        comment: guid,
-            //                        value: "Q3" });
 
-            // parameterValues.push({ name: "QUANTITY",
-            //                        comment: guid,
-            //                        value: `${quantity}` });
-
-            // parameterValues.push({ name: "UOM",
-            //                        comment: guid,
-            //                        value: this._oOrder.getInternalUom() });
-
-            // parameterValues.push({ name: "MATERIAL",
-            //                        comment: guid,
-            //                        value: this._oOrder.getHeaderMaterial() });                                   
-                                   
-            // parameterValues.push({ name: "Q3_CODE",
-            //                        comment: guid,
-            //                        value: code });
-
-            // parameterValues.push({ name: "NC_CODE",
-            //                        comment: guid,
-            //                        value: ncCode });
-
-            // parameterValues.push({ name: "NC_CODE_DESCRIPTION",
-            //                        comment: guid,
-            //                        value: ncCodeDescription });
-
-            // parameterValues.push({ name: "USER",
-            //                        comment: guid,
-            //                        value: this.getUserId() });
-
-            // parameterValues.push({ name: "CANCELLED",
-            //                        comment: guid,
-            //                        value: false });
-
-            // parameterValues.push({ name: "ITEM_NO",
-            //                        comment: guid,
-            //                        value: `0001` });
-
-            
             let issuesAsString = [];
             if(issueManager){
                 let issuesCreated = issueManager.getCreatedIssues();
@@ -658,38 +608,11 @@ sap.ui.define([
                                             .map(([key, value]) => `${key}:${value}`)
                                             .join('||');
                     issuesAsString.push(issueAsString);
+                }
+
             }
 
 
-                // parameterValues.push({ name: `CONSUMPTION`,
-                //                        comment: guid,
-                //                        value: issueAsString });
-            }
-
-
-            // let sUrl = this.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
-            // let oRequestParameters = {
-            //     plant: sfcDetails.plant,
-            //     group: { dcGroup: "WOODECO_PROD_ACTIVITY",
-            //              version: "A" },
-            //     operation: { operation: sfcDetails.step.operation.operation,
-            //                   version: sfcDetails.step.operation.version },
-            //     parameterValues: parameterValues,
-            //     workCenter: sfcDetails.workCenter,
-            //     resource: sfcDetails.resource,
-            //     sfcs: [ sfcDetails.sfc ]
-            // };
-
-            // return await new Promise((resolve,reject)=>{
-            //     this.ajaxPostRequest(sUrl, oRequestParameters,
-            //         oResponseData => {
-            //             resolve();
-            //         },
-            //         (oError, sHttpErrorMessage) => {                        
-            //             resolve();
-            //         }
-            //     );
-            // });
 
             await DataCollectionSaver.saveProductionDC(
                 this,

@@ -60,9 +60,7 @@ sap.ui.define([
             this._oReceiptParameters.packageNumber = 1;
 
 
-            let automaticIssues = this._oResource.getConsumptionMode()==="AUTOMATIC";
-            let _oPrintingEndpoint = this._getPrintingEndPoint();
-            
+            let automaticIssues = this._oResource.getConsumptionMode()==="AUTOMATIC";            
 
             this._fillMissingParameters();
             await this._generalChecks();
@@ -109,7 +107,7 @@ sap.ui.define([
                 OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
                 this._oReceiptParameters.receiptCount = this._oReceiptParameters.receiptCount + 1;
                 await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', issueManager);                        
-                await this._printLabel(_oPrintingEndpoint);
+                await this._printLabel();
 
                 if(automaticIssues){
                     await this.sleep(4000);
@@ -321,17 +319,8 @@ sap.ui.define([
             this._oReceiptParameters.storageLocation = this._oOrder.getPutawayStorageLocation();
             this._oReceiptParameters.unitOfMeasure = this._oOrder.getInternalUom();
         },
-        _getPrintingEndPoint: function(){
-            let oReturn = this._oController.getConfigurationValue("printerEndPoint");
-
-            if(!oReturn||oReturn===""){
-                this._oErrorHandler.throwErrorPopup("error.printing.noEndpoint");
-            }
-            return oReturn;
-        },
-        _printLabel: async function(oEndpoint){
+        _printLabel: async function(){
             let oPrintingDetails = {};
-            oPrintingDetails.endpoint = oEndpoint;
             oPrintingDetails.plant  = this._oReceiptParameters.plant;
             oPrintingDetails.order = this._oReceiptParameters.order;
             oPrintingDetails.workCenter = this._oReceiptParameters.workCenter;

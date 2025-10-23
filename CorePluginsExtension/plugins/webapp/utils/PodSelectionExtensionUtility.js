@@ -645,18 +645,14 @@ sap.ui.define([
         onButtonPackaging: async function(oEvent){
             try{
                 this._oZweiEndpoint = this._getZweiEndpoint();
-                let oPrintingEndpoint = this._getPrintingEndpoint();
                 let oSelectedLines = this._getSelectedQ23Lines();
-                let oPrinter = await this._getPrinter();
                 for(let oLine of oSelectedLines){
                     try{
                         let order = await OrderRepository.readOrder(this._oSelController, oLine.plant, oLine.orderNumber);
                         oLine.materialId = order.getPackagingMaterial(oLine.itemNumber);
                         await this._closeNonconformance(oLine);
-                        //this._showSuccessMessage("q23.success.closeNonconformance");
                         oLine.HU = await this._generateHuNumber(oLine);
                         await this._callCustomApi("PACKAGE", oLine);
-                        //await this._executeLabelPrint(oLine, oPrintingEndpoint, oPrinter);
                         this._showSuccessMessage("q23.success.packageNonconformance");
                     }catch(oError){ this._oErrorHandler.handleError(oError); }
                 }
@@ -670,7 +666,6 @@ sap.ui.define([
             let oErrorHandler = new ErrorHandler(this._oSelController);
             try{
                 this._oZweiEndpoint = this._getZweiEndpoint();
-                let oPrintingEndpoint = this._getPrintingEndpoint();
                 let oPrinter = await this._getPrinter();
                 let oSelectedLines = this._getSelectedQ23Lines();
                 
@@ -681,9 +676,8 @@ sap.ui.define([
                         oLine.materialId = order.getScrapingMaterial(oLine.itemNumber);
                         await this._closeNonconformance(oLine);
                         oLine.HU = await this._generateHuNumber(oLine);
-                        //this._showSuccessMessage("q23.success.closeNonconformance");
                         await this._callCustomApi("RETURN", oLine);
-                        await this._executeLabelPrint(oLine, oPrintingEndpoint, oPrinter);
+                        await this._executeLabelPrint(oLine, oPrinter);
                         this._showSuccessMessage("q23.success.returnNonconformance");
                     }catch(oError){ this._oErrorHandler.handleError(oError); }
                 }
@@ -974,11 +968,11 @@ sap.ui.define([
 
             return oPrintingEndpoint;
         },
-        _executeLabelPrint: async function(oItem, oEndpoint, oPrinter){
+        _executeLabelPrint: async function(oItem, oPrinter){
             let oPrintingDetails = {};
             let oMaterial = await MaterialRepository.getMaterialInstance(this._oSelController, oItem.plant, oItem.materialId);
             let oOrder = await OrderRepository.readOrder(this._oSelController, oItem.plant, oItem.orderNumber);
-            oPrintingDetails.endpoint = oEndpoint;
+            //oPrintingDetails.endpoint = oEndpoint;
             oPrintingDetails.plant  = oItem.plant;
             oPrintingDetails.order = oItem.orderNumber;
             oPrintingDetails.workCenter = this._oWorkCenter;
