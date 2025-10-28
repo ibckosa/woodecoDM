@@ -82,6 +82,16 @@ sap.ui.define([
             }catch(oError){}
             return oReturn;
         },
+        getPrinterComponentsId(errorWhenEmpty = false){
+            let oReturn = "";
+
+            try{
+                let oBinCustomValue = this._oDetails.customValues.find(customValue => { return customValue.attribute === "PRINTER_ID_COMPONENTS"});
+                oReturn = oBinCustomValue.value;
+            }catch(oError){}
+            return oReturn;
+        },
+
         getConsumptionMode(errorWhenEmpty = false){
             let oReturn = "";
 

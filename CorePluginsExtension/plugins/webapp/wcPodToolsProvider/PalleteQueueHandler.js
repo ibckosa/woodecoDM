@@ -592,7 +592,7 @@ sap.ui.define([
         },
         _getPrinter: async function(){
             let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
-            let oPrinter = oResource.getPrinterId();
+            let oPrinter = oResource.getPrinterComponentsId();
 
             if(oPrinter==="")
             {
