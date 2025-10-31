@@ -202,7 +202,7 @@ sap.ui.define([
             oDescription = oDescription.replaceAll("\n", "|@#|");
             let oDate = new Date(oItem.actualStart);
             const year = oDate.getFullYear();
-            const month = String(oDate.getMonth() + 1).padStart(2, '0'); // miesiąc jest od 0, więc dodajemy 1
+            const month = String(oDate.getMonth() + 1).padStart(2, '0');
             const day = String(oDate.getDate()).padStart(2, '0');
             const hours = String(oDate.getHours()).padStart(2, '0');
             const minutes = String(oDate.getMinutes()).padStart(2, '0');

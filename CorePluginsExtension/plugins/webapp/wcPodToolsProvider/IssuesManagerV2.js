@@ -137,7 +137,7 @@ sap.ui.define([
             let result = 0;
             if(this._sfcQuantity!==0){
                 if(uom === 'ST'){
-                    result = Math.ceil(requiredQuantity * ( receiptQuantity / this._sfcQuantity ));
+                    result = Math.ceil( (requiredQuantity * ( receiptQuantity / this._sfcQuantity )).toFixed(3) );
                 }else{
                     result = requiredQuantity * ( receiptQuantity / this._sfcQuantity );
                     result = Math.round( result * 1000 ) / 1000;

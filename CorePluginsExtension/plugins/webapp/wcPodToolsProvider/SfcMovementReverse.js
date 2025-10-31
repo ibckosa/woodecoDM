@@ -394,7 +394,7 @@ sap.ui.define([
         _getIssueDt(){
             let today = new Date();
             let oYear = today.getFullYear().toString();
-            let oMonth = today.getMonth().toString();
+            let oMonth = (today.getMonth()+1).toString();
             let oDay = today.getDate().toString();
             let oHour = today.getHours().toString();
             let oMinutes = today.getMinutes().toString();
