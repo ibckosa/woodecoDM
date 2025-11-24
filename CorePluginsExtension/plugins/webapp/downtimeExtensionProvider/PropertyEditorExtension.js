@@ -54,6 +54,14 @@ sap.ui.define([
                 let oLabel = aContent[iIndex-1];
                 oLabel.setText("Notification endpoint");
             }
+
+            oInput = oPropertyEditor.addInputField(oPropertyFormContainer, "downTimeHoursRange", oPropertyData);
+            iIndex = oPropertyFormContainer.indexOfContent(oInput);
+            aContent = oPropertyFormContainer.getContent();
+            if (aContent[iIndex-1].setText) {
+                let oLabel = aContent[iIndex-1];
+                oLabel.setText("downTimeHoursRange");
+            }
         },
 
         /*
@@ -72,6 +80,9 @@ sap.ui.define([
             }
             if (typeof oPropertyData.notifEndpoint === "undefined") {
                 oPropertyData.notifEndpoint = "";
+            }
+            if (typeof oPropertyData.downTimeHoursRange === "undefined") {
+                oPropertyData.downTimeHoursRange = "24";
             }
             return oPropertyData;
         },
@@ -99,6 +110,7 @@ sap.ui.define([
             oPropertyData.logToConsole = false;
             oPropertyData.downtimeListButtonHeight = "48px";
             oPropertyData.notifEndpoint = "";
+            oPropertyData.downTimeHoursRange = "";
             return oPropertyData;
         }
     })

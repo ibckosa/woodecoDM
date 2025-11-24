@@ -200,7 +200,8 @@ sap.ui.define([
         var sUrl = oController.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/merge";
         var oRequestParameters = { plant: oPlant,
                                    parentSfc: oSfcParent,
-                                   sourceSfcs: oSfcs };
+                                   sourceSfcs: oSfcs,
+                                   copyDataCollectionData: true };
 
         return await new Promise((resolve,reject)=>{
             oController.ajaxPostRequest(sUrl, oRequestParameters,

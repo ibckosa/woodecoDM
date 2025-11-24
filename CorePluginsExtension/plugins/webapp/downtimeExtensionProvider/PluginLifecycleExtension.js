@@ -51,9 +51,30 @@ sap.ui.define([
             }
             this._oExtensionUtilities.logMessage("LifecycleExtension.onBeforeRendering: Downtime extension");
             let controller = this.getController();
-            debugger;
-            controller.getDownTimes = function (oEvent) {
+            let hoursFromConfiguration = this.getHoursRangeFromConfiguration();
+            controller.getHoursRangeFromConfiguration = function(){
                 debugger;
+                let result = 24;
+                var oController = this;
+                try{
+                    let configuration = oController.getConfiguration();
+                    if(configuration.downTimeHoursRange){
+                        result = parseInt(configuration.downTimeHoursRange);
+
+                        if(result>120){
+                            result = 120;
+                        }
+                        if(result<=0){
+                            result = 24;
+                        }
+                    }
+
+                }catch(error){}
+
+                return result;
+            }
+
+            controller.getDownTimes = function (oEvent) {
                 var sQueryString = "";
                 var oController = this;
                 var url = this.oeeTransactionUrl + "downtimes";
@@ -62,10 +83,14 @@ sap.ui.define([
                     endTime = formatter.dmcDateToUTCFormat(oController.shiftEndTimestamp, PlantSettings.getTimeZone());
                     startTime = formatter.dmcDateToUTCFormat(oController.shiftStartTimestamp, PlantSettings.getTimeZone());
                     const originalDate = new Date(startTime);
-                    originalDate.setUTCDate(originalDate.getUTCDate() - 1);
+                    originalDate.setUTCHours(originalDate.getUTCHours() - oController.getHoursRangeFromConfiguration());
                     startTime = originalDate.toISOString();
                     url = oController.oeeTransactionUrl + "downtimes?workcenter=" + jQuery.sap.encodeURL(oController.defaultWorkcenterBO) + "&startDateTime=" + startTime + "&endDateTime=" + endTime + "&includeNotifications=true";
                     AjaxUtil.get(url, sQueryString, function (data) {
+                        try{
+                            data.sort((a, b) => new Date(b.startDateTime) - new Date(a.startDateTime));
+                        }catch(error){}
+                        
                         oController.downtimeFromGet = data;
                         oController.setDetailInDowntimes();
                         oController.oDownTimeModel.setData(oController.downtime);
@@ -99,12 +124,14 @@ sap.ui.define([
                     let endTime = formatter.dmcDateToUTCFormat(this.shiftEndTimestamp, PlantSettings.getTimeZone());
                     let startTime = formatter.dmcDateToUTCFormat(this.shiftStartTimestamp, PlantSettings.getTimeZone());
                     const originalDate = new Date(startTime);
-                    originalDate.setUTCDate(originalDate.getUTCDate() - 1);
+                    originalDate.setUTCHours(originalDate.getUTCHours() - oController.getHoursRangeFromConfiguration());
                     startTime = originalDate.toISOString();
 
-                    debugger;
                     url = this.oeeTransactionUrl + "downtimes?workcenter=" + jQuery.sap.encodeURL(this.defaultWorkcenterBO) + "&startDateTime=" + startTime + "&endDateTime=" + endTime + "&includeNotifications=true";
                     AjaxUtil.get(url, sQueryString, function (data) {
+                        try{
+                            data.sort((a, b) => new Date(b.startDateTime) - new Date(a.startDateTime));
+                        }catch(error){}
                         oController.downtimeFromGet = data;
                         oController.setDetailInDowntimes();
                         oController.oDownTimeModel = new sap.ui.model.json.JSONModel();
@@ -172,6 +199,26 @@ sap.ui.define([
             // Wynik jako ISO string
             const newDateISO = originalDate.toISOString();
             return newDateISO;
+        },
+        getHoursRangeFromConfiguration: function(){
+            let result = 24;
+            try{
+                let configuration = this.getController().getConfiguration();
+                if(configuration.downTimeHoursRange){
+                    result = parseInt(configuration.downTimeHoursRange);
+
+                    if(result>120){
+                        result = 120;
+                    }
+                    if(result<=0){
+                        result = 24;
+                    }
+                }
+
+            }catch(error){}
+
+            return result;
         }
+
     })
 });

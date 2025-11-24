@@ -176,13 +176,14 @@ sap.ui.define([
         },
         onButtonReceipt: async function(oEvent){
             try{
+                this.getView().setBusyIndicatorDelay(0);
+                this.getView().setBusy(true);
                 this._checkTimeLastReceipt();
                 let oPodController = this.getPodController();
                 let oPodSelectionModel = this.getPodSelectionModel();
                 let aSelections = oPodSelectionModel.getSelections();  
-                if(aSelections.length < 1){ return; };
-                this.getView().setBusyIndicatorDelay(0);
-                this.getView().setBusy(true);
+                if(aSelections.length < 1){ this.getView().setBusy(false);  return; };
+
                 let aSelectionFirstRow = aSelections[0];
                 let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
                 let oReceiptParameters = { plant : oPodController.getUserPlant(),

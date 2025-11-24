@@ -9,10 +9,17 @@ sap.ui.define([
         let results = [];
         let additionalApiCalls = [];
 
-        let firstApiCallResults = await this._callApiGetIssue(controller, plant, order, materialNumber, materialVersion);
+        let parameters = {
+            plant: plant,
+            order: order,
+            materialNumber: materialNumber,
+            materialVersion: materialVersion
+        };
+
+        let firstApiCallResults = await this._callApiGetIssue(controller, parameters);
         if(firstApiCallResults.totalPages&&firstApiCallResults.totalPages>1){
             for(let i=1;i<firstApiCallResults.totalPages; i++){
-                additionalApiCalls.push(this._callApiGetIssue(controller, plant, order, materialNumber, materialVersion, i));
+                additionalApiCalls.push(this._callApiGetIssue(controller, parameters, i));
             }
         }
 
@@ -32,17 +39,18 @@ sap.ui.define([
         return results;  
     };
 
-    issueReader._callApiGetIssue = async function(controller, plant, order, materialNumber, materialVersion, page=0){
+    issueReader._callApiGetIssue = async function(controller, parameters, page=0){
             let sUrl = controller.getPublicApiRestDataSourceUri() + "inventory/v1/inventory/goodsIssues";
 
-            let parameters = {  plant: plant,
-                                material: materialNumber,
-                                materialVersion: materialVersion,
-                                order: order,
+            let requestParameters = {  plant: parameters.plant,
+                                material: parameters.materialNumber,
+                                materialVersion: parameters.materialVersion,
+                                order: parameters.order,
+                                sfc: parameters.sfc,
                                 size: 50,
                                 page: page };
             return await new Promise((resolve,reject)=>{
-                controller.ajaxGetRequest(sUrl, parameters,
+                controller.ajaxGetRequest(sUrl, requestParameters,
                     (oResponseData) => {
                         debugger;
                         resolve(oResponseData);
@@ -56,5 +64,40 @@ sap.ui.define([
             });
 
     }
+
+    issueReader.readIssuesSfc = async function(controller, plant, sfc, materialNumber, materialVersion){
+        let results = [];
+        let additionalApiCalls = [];
+
+        let parameters = {
+            plant: plant,
+            sfc: sfc,
+            materialNumber: materialNumber,
+            materialVersion: materialVersion
+        };
+
+        let firstApiCallResults = await this._callApiGetIssue(controller, parameters);
+        if(firstApiCallResults.totalPages&&firstApiCallResults.totalPages>1){
+            for(let i=1;i<firstApiCallResults.totalPages; i++){
+                additionalApiCalls.push(this._callApiGetIssue(controller, parameters, i));
+            }
+        }
+
+        if(firstApiCallResults.content){
+            results =  firstApiCallResults.content;
+        }
+
+        if(additionalApiCalls.length>0){
+            let additionalResults = await Promise.all(additionalApiCalls);
+            for(const additionalResult of additionalResults){
+                if(additionalResult.content){
+                        results = results.concat(additionalResult.content);
+                }
+            }
+        }
+
+        return results;  
+    };
+
     return issueReader;
 });

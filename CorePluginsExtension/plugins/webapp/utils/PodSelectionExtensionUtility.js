@@ -632,6 +632,8 @@ sap.ui.define([
         // },
         onButtonScrap: async function(oEvent){ 
             try{
+                this._oDialogQ23.setBusyIndicatorDelay(0);
+                this._oDialogQ23.setBusy(true);
                 let oSelectedLines = this._getSelectedQ23Lines();
                 for(let oLine of oSelectedLines){
                     try{
@@ -639,11 +641,17 @@ sap.ui.define([
                         this._showSuccessMessage("q23.success.closeNonconformance")
                     }catch(oError){this._oErrorHandler.handleError(oError);}
                 }
-                this._loadDataQ23();
-            }catch(oError){this._oErrorHandler.handleError(oError);}
+                await this._loadDataQ23();
+                this._oDialogQ23.setBusy(false);
+            }catch(oError){
+                this._oDialogQ23.setBusy(false);
+                this._oErrorHandler.handleError(oError);
+            }
         },
         onButtonPackaging: async function(oEvent){
             try{
+                this._oDialogQ23.setBusyIndicatorDelay(0);
+                this._oDialogQ23.setBusy(true);
                 this._oZweiEndpoint = this._getZweiEndpoint();
                 let oSelectedLines = this._getSelectedQ23Lines();
                 for(let oLine of oSelectedLines){
@@ -654,9 +662,14 @@ sap.ui.define([
                         oLine.HU = await this._generateHuNumber(oLine);
                         await this._callCustomApi("PACKAGE", oLine);
                         this._showSuccessMessage("q23.success.packageNonconformance");
-                    }catch(oError){ this._oErrorHandler.handleError(oError); }
+                        await this._loadDataQ23();
+                        this._oDialogQ23.setBusy(false);
+                    }catch(oError){ 
+                        this._oDialogQ23.setBusy(false);
+                        this._oErrorHandler.handleError(oError);
+                    }
                 }
-                this._loadDataQ23();
+                
                 
             }catch(oError){
                 this._oErrorHandler.handleError(oError);
@@ -665,6 +678,8 @@ sap.ui.define([
         onButtonReturn: async function(oEvent){
             let oErrorHandler = new ErrorHandler(this._oSelController);
             try{
+                this._oDialogQ23.setBusyIndicatorDelay(0);
+                this._oDialogQ23.setBusy(true);
                 this._oZweiEndpoint = this._getZweiEndpoint();
                 let oPrinter = await this._getPrinter();
                 let oSelectedLines = this._getSelectedQ23Lines();
@@ -678,10 +693,15 @@ sap.ui.define([
                         oLine.HU = await this._generateHuNumber(oLine);
                         await this._callCustomApi("RETURN", oLine);
                         await this._executeLabelPrint(oLine, oPrinter);
+                        await this._loadDataQ23();
                         this._showSuccessMessage("q23.success.returnNonconformance");
-                    }catch(oError){ this._oErrorHandler.handleError(oError); }
+                        this._oDialogQ23.setBusy(false);
+                    }catch(oError){ 
+                        this._oDialogQ23.setBusy(false);
+                        this._oErrorHandler.handleError(oError);
+                     }
                 }
-                this._loadDataQ23();
+                
             }catch(oError){
                 this._oErrorHandler.handleError(oError);
             }

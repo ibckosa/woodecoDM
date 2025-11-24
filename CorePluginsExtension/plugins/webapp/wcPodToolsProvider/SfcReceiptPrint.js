@@ -254,6 +254,10 @@ sap.ui.define([
             this._getSalesText();
             this._convertDescription();
             this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
+            this._oPrintingInterface.NORM = this._convertMultipleLineText(this._oPrintingInterface.NORM);
+            this._oPrintingInterface.PRDCLS = this._convertMultipleLineText(this._oPrintingInterface.PRDCLS);
+            //this._oPrintingInterface.ZERT_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZERT_TXT);
+
         },
 
         _getInterfaceQ1: function(){
@@ -311,6 +315,9 @@ sap.ui.define([
             this._getSalesText();
             this._convertDescription();
             this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
+            this._oPrintingInterface.NORM = this._convertMultipleLineText(this._oPrintingInterface.NORM);
+            this._oPrintingInterface.PRDCLS = this._convertMultipleLineText(this._oPrintingInterface.PRDCLS);
+            //this._oPrintingInterface.ZERT_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZERT_TXT);
         },
 
         _getInterfaceInputReturn: function(){
@@ -366,6 +373,9 @@ sap.ui.define([
             this._getSalesText();
             this._convertDescription();
             this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
+            this._oPrintingInterface.NORM = this._convertMultipleLineText(this._oPrintingInterface.NORM);
+            this._oPrintingInterface.PRDCLS = this._convertMultipleLineText(this._oPrintingInterface.PRDCLS);
+            //this._oPrintingInterface.ZERT_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZERT_TXT);
         },
 
         _getInterfaceInputReturnNpw: function(){
@@ -423,6 +433,9 @@ sap.ui.define([
             this._getSalesText();
             this._convertDescription();
             this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
+            this._oPrintingInterface.NORM = this._convertMultipleLineText(this._oPrintingInterface.NORM);
+            this._oPrintingInterface.PRDCLS = this._convertMultipleLineText(this._oPrintingInterface.PRDCLS);
+            //this._oPrintingInterface.ZERT_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZERT_TXT);
         },
 
         _getSalesText: function(){
@@ -632,8 +645,12 @@ sap.ui.define([
             let result = "";
             try{
                 if(this._oPrintingInterface.PEG_BSTNK){
-                    result = `(400)${this._oPrintingInterface.PEG_BSTNK}`;
-                    this._addToGs1Text(`ORDER NO.(400) zam ${this._oPrintingInterface.PEG_BSTNK}`);
+                    let peg_bnstk = this._oPrintingInterface.PEG_BSTNK;
+                    if(peg_bnstk.length>30){
+                        peg_bnstk = peg_bnstk.substring(0,30);
+                    }
+                    result = `(400)${peg_bnstk}`;
+                    this._addToGs1Text(`ORDER NO.(400) zam ${peg_bnstk}`);
                 }
             }catch(oError){}
             return result;
@@ -695,8 +712,12 @@ sap.ui.define([
         }, 
         _GET_GS1_241: function(){
             if(this._oPrintingInterface.PEG_KDMAT){
-                let result = `(241)${this._oPrintingInterface.PEG_KDMAT}`;
-                this._addToGs1Text(`CUST. PART NO. (241)\n${this._oPrintingInterface.PEG_KDMAT}`);
+                let peg_kdmat = this._oPrintingInterface.PEG_KDMAT;
+                if(peg_kdmat.length>30){
+                    peg_kdmat = peg_kdmat.substring(0,30);
+                }
+                let result = `(241)${peg_kdmat}`;
+                this._addToGs1Text(`CUST. PART NO. (241)\n${peg_kdmat}`);
                 return result;
             }
 

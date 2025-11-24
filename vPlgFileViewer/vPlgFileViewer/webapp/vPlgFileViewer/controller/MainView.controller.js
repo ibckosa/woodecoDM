@@ -109,16 +109,11 @@ sap.ui.define([
                 window.open(sLink, "_blank");
             }
         },
-        
-        
-        
-        
-        
-
 		onExit: function () {
 			PluginViewController.prototype.onExit.apply(this, arguments);
-
-
+		},
+		onExit3: function () {
+			PluginViewController.prototype.onExit.apply(this, arguments);
 		}
 	});
 });

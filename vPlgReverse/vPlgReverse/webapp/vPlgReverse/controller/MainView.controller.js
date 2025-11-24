@@ -60,6 +60,7 @@ sap.ui.define([
         _loadData: async function(){
             try{
                 let returnTab = [];
+                let stornoFunctionAvailable = this._getStornoButtonVisibleConfiguration();
                 this.getView().setBusyIndicatorDelay(0);
                 this.getView().setBusy(true);
                 this._setInternalVariables();
@@ -68,6 +69,9 @@ sap.ui.define([
                     returnTab = await this._loadDataMO();
                 }else{
                     returnTab = await this._loadDataSO();
+                }
+                for(const returnLine of returnTab){
+                    returnLine.stornoFunctionAvailable = stornoFunctionAvailable;
                 }
                 const oModel = new JSONModel({ items: returnTab });
                 this.getView().setModel(oModel, "stornoModel");
@@ -378,23 +382,35 @@ sap.ui.define([
             result.push( new sap.m.Text({ text: "{stornoModel>confText}" }) );
             result.push( new sap.m.Text({ text: "{stornoModel>issueText}" }) );
             result.push( new sap.m.Text({ text: "{stornoModel>USER}"}) );
-            result.push( new sap.m.Button({ text: "Storno", press: this.onReverseButton.bind(this), visible: "{= ${stornoModel>CANCELLED} !== 'true' }" }) );
+            result.push( new sap.m.Button({ text: "Storno", press: this.onReverseButton.bind(this), visible: "{= ${stornoModel>CANCELLED} !== 'true' && ${stornoModel>stornoFunctionAvailable} }" }) );
 
             return result;
         },
         onReverseButton: async function(event){
             try{
-                debugger;
+                this.getView().setBusyIndicatorDelay(0);
+                this.getView().setBusy(true);
                 const selectedItem = event.getSource().getParent().getBindingContext("stornoModel").getObject();
                 let sfcMovementReverse = new SfcMovementReverse(this, this._oPlant, this._oWorkCenter, this._oResource, selectedItem, this._oOrderNumber, this._oSfc, this._routing, this._routingVersion);
                 await sfcMovementReverse.execute();
                 await this._loadData();
+                this.getView().setBusy(false);
             }catch(error){
                 if(!error.displayType){
                     error.displayType = "POPUP";
                 }
+                this.getView().setBusy(false);
                 this._oErrorHandler.handleError(error);
             }
+        },
+        _getStornoButtonVisibleConfiguration: function(){
+            let result = false;
+
+            var oConfiguration = this.getConfiguration();
+            if (oConfiguration && typeof oConfiguration.stornoButtonVisible !== "undefined") {
+                result = oConfiguration.stornoButtonVisible;
+            }
+            return result;
         }
 
 	});

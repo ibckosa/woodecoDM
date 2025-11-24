@@ -157,7 +157,7 @@ sap.ui.define([
             
 
             if(!sfcStepInWork){
-                await this.order.completeOrder();
+                await this._order.completeOrder();
             }
         },
         _completeSOLastOperation: async function(){
@@ -173,7 +173,7 @@ sap.ui.define([
                 let sfcStepInWork = sfcsSteps.find( step => { return ( step.quantityInQueue > 0 || step.quantityInWork > 0 )  } );
 
                 if(!sfcStepInWork){
-                    await this.order.completeOrder();
+                    await this._order.completeOrder();
                 }
             }catch(oError){debugger;}
         },

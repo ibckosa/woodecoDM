@@ -2,8 +2,9 @@ sap.ui.define([
     "sap/ui/base/Object",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
-], function (ManagedObject, ErrorHandler, SfcRepository, DataCollectionSaver) {
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver",
+    "ibc/dm/plugins/wcPodToolsProvider/Issue"
+], function (ManagedObject, ErrorHandler, SfcRepository, DataCollectionSaver, Issue) {
     "use strict";
     let Pallete = ManagedObject.extend("ibc.dm.plugins.wcPodToolsProvider.Pallete", {
         constructor: function(oContoller){
@@ -280,39 +281,68 @@ sap.ui.define([
             this._additionalIssueChecks(oLine, oQuantity, oSfc, oBomRef, oOperation);
             let sfc = await SfcRepository.getInstance(this._oController, oLine.plant, oSfc);
             let step = sfc.getStepByOperation(oOperation);
-            let oRequestParameters = {
-                "shopOrder": oLine.orderNumber,///numer zlecenia
-                "batchId": oSfc, ///SFC
-                "operationActivity": oOperation,//operation activity
-                "bomComponentRef": oBomRef,
-                "material": oLine.materialId,
-                "batchNumber": null,
-                "shopOrderLocationRef": null,
-                "workCenter": oLine.workCenter,
-                "inventory": oLine.inventoryId, //inventory id
-                "isBomComponent": true, //true or false
-                "quantity": {
-                    "value": oQuantity,
-                    "unitOfMeasure": {
-                        "uom": oLine.uom,//As the API does not support UoM yet
-                        "internalUom": oLine.uom,
-                        "shortText": null,
-                        "longText": null,
-                        "numerator": null,
-                        "denominator": null,
-                    }
-                },
-                "useFullHandlingUnit": false, //true or false
-                "handlingUnitNumber": oLine.handlingUnit,
-                "storageLocation": oLine.storageLocation,
-                "isInventoryManaged": true,
-                "userId": this._oController.getUserId(),
-                "dateTime": this._getIssueDt(),
-                "comments": `${componentSequence}`,
-                "calculatedData": null, 
-                "customFieldData":  JSON.stringify([{"id": "STORAGE_LOCATION", "value": String(oLine.storageLocation) }])
-            };
-            let issueResponse = await this._additionalIssueCallApi(oRequestParameters);
+            let bom = sfc.getBom();
+
+
+            oQuantity = oQuantity.toFixed(3);
+            let issueResponse = await Issue.execute(this._oController,{    plant: oLine.plant,
+                                                                           order: oLine.orderNumber,
+                                                                           sfc: oSfc,
+                                                                           operation: oOperation,
+                                                                           workCenter: oLine.workCenter,
+                                                                           material: oLine.materialId,
+                                                                           materialVersion: oLine.palleteDetails.materialVersion,
+                                                                           componentSequence: componentSequence,
+                                                                           inventoryId: oLine.inventoryId,
+                                                                           quantity: oQuantity,
+                                                                           uom: oLine.uom,
+                                                                           bom: bom.bom,
+                                                                           bomVersion: bom.version,
+                                                                           isAI: true });
+
+            if(!issueResponse){
+                this._oErrorHandler.throwErrorPopup("error.issue.aiFailed");
+            }
+
+            
+
+            // let oRequestParameters = {
+            //     "shopOrder": oLine.orderNumber,///numer zlecenia
+            //     "batchId": oSfc, ///SFC
+            //     "operationActivity": oOperation,
+            //     "bomComponentRef": oBomRef,
+            //     "material": oLine.materialId,
+            //     "batchNumber": null,
+            //     "shopOrderLocationRef": null,
+            //     "workCenter": oLine.workCenter,
+            //     "inventory": oLine.inventoryId, //inventory id
+            //     "isBomComponent": true, //true or false
+            //     "quantity": {
+            //         "value": oQuantity,
+            //         "unitOfMeasure": {
+            //             "uom": oLine.uom,//As the API does not support UoM yet
+            //             "internalUom": oLine.uom,
+            //             "shortText": null,
+            //             "longText": null,
+            //             "numerator": null,
+            //             "denominator": null,
+            //         }
+            //     },
+            //     "useFullHandlingUnit": false,
+            //     "handlingUnitNumber": oLine.handlingUnit,
+            //     "storageLocation": oLine.storageLocation,
+            //     "isInventoryManaged": true,
+            //     "userId": this._oController.getUserId(),
+            //     "dateTime": this._getIssueDt(),
+            //     "comments": `${componentSequence}`,
+            //     "calculatedData": null, 
+            //     "customFieldData":  JSON.stringify([{"id": "STORAGE_LOCATION", "value": String(oLine.storageLocation) }])
+            // };
+            // let issueResponse = await this._additionalIssueCallApi(oRequestParameters);
+
+
+
+
             await this._saveDataCollection(oLine, oQuantity, oSfc, oOperation, issueResponse, step.stepId);
             // let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
             // return await new Promise((resolve,reject)=>{
@@ -389,8 +419,9 @@ sap.ui.define([
             let guid = crypto.randomUUID();
             let date = new Date();
 
-            let consumptionValue = `txnId:${issueResponse.txnId}||stepId:${stepId}||order:${oLine.orderNumber}||operation:${oOperation}||quantity:${oQuantity}||uom:${oLine.uom}`;
-            consumptionValue = consumptionValue + `||handlingUnit:${oLine.handlingUnit}||storageLocation:${oLine.storageLocation}||material:${oLine.materialId}||sfc:${oSfc}`;
+            //let consumptionValue = `txnId:${issueResponse.txnId}||stepId:${stepId}||order:${oLine.orderNumber}||operation:${oOperation}||quantity:${oQuantity}||uom:${oLine.uom}`;
+            let consumptionValue = `issueGuid:${issueResponse}||stepId:${stepId}||order:${oLine.orderNumber}||operation:${oOperation}||quantity:${oQuantity}||uom:${oLine.uom}`;
+            consumptionValue = consumptionValue + `||handlingUnit:${oLine.handlingUnit}||storageLocation:${oLine.storageLocation}||material:${oLine.materialId}||sfc:${oSfc}||materialVersion:${oLine.palleteDetails.materialVersion}`;
 
             await DataCollectionSaver.saveProductionDC(
                 this._oController,

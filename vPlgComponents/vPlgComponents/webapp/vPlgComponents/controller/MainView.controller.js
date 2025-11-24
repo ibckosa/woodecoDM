@@ -118,6 +118,11 @@ sap.ui.define([
                     let issuedQuantity = 0;
                     sfcComponent.zuom = bomInstance.getComponentUom(sfcComponent.componentSequence);
                     let materialIssues = await IssueReader.readIssues(this, this._oPlant, this._oOrderNumber, sfcComponent.component.material, sfcComponent.component.version);
+                    for(const materialIssue of materialIssues){
+                        if(materialIssue.comments.includes("//")){
+                            materialIssue.comments = materialIssue.comments.split('//')[0].trim();
+                        }
+                    }
 
                     let materialIssuesForSeq = materialIssues.filter( issue=>{return issue.comments === sfcComponent.componentSequence.toString() && issue.cancellationTriggered === false});
                     for(let issue of materialIssuesForSeq){

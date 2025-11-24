@@ -694,7 +694,7 @@ sap.ui.define([
                 let oStorageLocation = await this._getStorageLocation();
                 if(oStorageLocation.isEWMManagedStorageLocation){
                     if(this._oReceiptParameters.quantity < oSfcStep.quantityInWork){
-                        await this._splitSfc(issueManager);
+                        await this._splitSfc(undefined);
                     }
                 }else{
                     await this._checkRequiredParams();

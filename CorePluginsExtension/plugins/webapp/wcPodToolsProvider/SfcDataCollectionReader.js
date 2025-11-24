@@ -171,6 +171,7 @@ sap.ui.define([
     dataCollectionReader._convertConsumption = function(consumptionValue){
         let consumptionStructure = {
             txnId: "",
+            issueGuid: "",
             stepId: "",
             order: "",
             operation: "",
@@ -179,6 +180,7 @@ sap.ui.define([
             handlingUnit: "",
             storageLocation: "",
             material: "",
+            materialVersion: "",
             sfc: ""
         };
 
@@ -198,6 +200,9 @@ sap.ui.define([
             switch(value.field_name){
                 case "txnId":
                     consumptionStructure.txnId = value.field_value;
+                    break;
+                case "issueGuid":
+                    consumptionStructure.issueGuid = value.field_value;
                     break;
                 case "stepId":
                     consumptionStructure.stepId = value.stepId;
@@ -222,6 +227,9 @@ sap.ui.define([
                     break;
                 case "material":
                     consumptionStructure.material = value.field_value;
+                    break;
+                case "materialVersion":
+                    consumptionStructure.materialVersion = value.field_value;
                     break;
                 case "sfc":
                     consumptionStructure.sfc = value.field_value;

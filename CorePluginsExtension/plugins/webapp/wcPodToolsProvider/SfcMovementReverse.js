@@ -5,8 +5,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
-    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator"
-], function (ObjectUI5, ErrorHandler, OrderRepository, SfcRepository, mobileLibrary, TextHandler, OrderReceiptsFromProgressIndicator) {
+    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
+    "ibc/dm/plugins/wcPodToolsProvider/IssueReader"
+], function (ObjectUI5, ErrorHandler, OrderRepository, SfcRepository, mobileLibrary, TextHandler, OrderReceiptsFromProgressIndicator, IssueReader) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcMovementReverse", {
         constructor: function(controller, plant, workCenter, resource, parameters, orderNumber, currentSfcNumber, routing, routingVersion){
@@ -31,6 +32,8 @@ sap.ui.define([
             this._sfc = await SfcRepository.ReadSfcBypassBuffer(this._controller, this._plant, this._parameters.SFC_NUMBER, this._routing, this._routingVersion);
 
             await this._checkConfirmAction();
+            await this._fillMissingTxnid();
+
             switch(this._parameters["Q1/Q3"]){
                 case "AI":
                     await this._executeAI();
@@ -99,11 +102,13 @@ sap.ui.define([
         },
         _executeConsumptionReverse: async function(consumption){
             let request = { plant: this._plant, 
-                            transactionId: consumption.txnId  };
+                            transactionId: consumption.txnId,
+                            material: consumption.material,
+                            sfc: this._parameters.SFC_NUMBER  };
             
 
 
-            let url = this._controller.getPublicApiRestDataSourceUri() + "processorder/v1/goodsissue/cancellations";
+            let url = this._controller.getPublicApiRestDataSourceUri() +  "/pe/api/v1/process/processDefinitions/start?key=REG_b19ac9f7-f8c3-43c9-b326-3e5800bec9d3"; //"processorder/v1/goodsissue/cancellations";
 
             return await new Promise((resolve,reject)=>{
                 this._controller.ajaxPostRequest(url, request,
@@ -554,6 +559,25 @@ sap.ui.define([
                     }
                 );
             });
+        },
+        _fillMissingTxnid: async function(){
+           if(this._parameters.CONSUMPTION){
+                for(const consumption of this._parameters.CONSUMPTION){
+                    if(!consumption.txnId&&consumption.issueGuid){
+                        consumption.txnId = await this._getTxnIdForIssue(consumption);
+                    }
+                }
+            }
+        },
+        _getTxnIdForIssue: async function(consumption){
+            let result = "";
+            let issuesForConsumption = await IssueReader.readIssuesSfc(this._controller, this._plant, this._parameters.SFC_NUMBER, consumption.material, consumption.materialVersion)
+
+            let issueForConsumption = issuesForConsumption.find(issue=>{ return issue.comments === consumption.issueGuid });
+            if(issueForConsumption){
+                result = issueForConsumption.transactionId;
+            }
+            return result;
         }
     });
 });

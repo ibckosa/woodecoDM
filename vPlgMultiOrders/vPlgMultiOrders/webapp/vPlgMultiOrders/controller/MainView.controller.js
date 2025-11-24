@@ -197,14 +197,16 @@ sap.ui.define([
         onButtonReceipt: async function () {
             // Logika zatwierdzania dla Q1
             try{
+                this.getView().setBusyIndicatorDelay(0);
+                this.getView().setBusy(true); 
                 this._checkTimeLastReceipt();
                 let selectedOrder = this.getView().getModel("viewModel").getData();
                 let oPodController = this.getPodController();
                 let oPodSelectionModel = this.getPodSelectionModel();
                 let aSelections = oPodSelectionModel.getSelections();  
-                if(aSelections.length < 1){ return; };
-                this.getView().setBusyIndicatorDelay(0);
-                this.getView().setBusy(true); 
+                if(aSelections.length < 1){ 
+                    this.getView().setBusy(false); 
+                    return; };
                 let aSelectionFirstRow = aSelections[0];
                 let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
                 let oReceiptParameters = { plant : oPodController.getUserPlant(),
@@ -240,8 +242,11 @@ sap.ui.define([
                     let oSfcReceipt = new SfcMOReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeReceipt();
                     selectedOrder.selectedOrder.deliveredQuantity = selectedOrder.selectedOrder.deliveredQuantity + oReceiptParameters.palletesNumber * oReceiptParameters.packageNumber * oReceiptParameters.quantity;
+                    selectedOrder.selectedOrder.executedReceipts = selectedOrder.selectedOrder.executedReceipts + oReceiptParameters.palletesNumber;
+                    selectedOrder.selectedOrder.maxLeftQuantity = selectedOrder.selectedOrder.maxLeftQuantity - oReceiptParameters.palletesNumber * oReceiptParameters.packageNumber * oReceiptParameters.quantity;
                     this.getView().getModel("viewModel").setData(selectedOrder);
                     this._setLastReceiptTime();
+                    this._selectPositionAfterReceipt();
                     this.getView().setBusy(false);
                     // setTimeout( async ()=> { 
                     //     if(this._oResourceInstance.getMOSelectionMode().toUpperCase()==="AUTOMATIC"){
@@ -258,6 +263,8 @@ sap.ui.define([
         },
         onButtonQ23: async function(oEvent){
             try{
+                this.getView().setBusyIndicatorDelay(0);
+                this.getView().setBusy(true);
                 let selectedCode = this.getView().byId("q23ReasonsList").getSelectedItem().getBindingContext("multiOrdersModel").getObject();
                 let selectedOrder = this.getView().getModel("viewModel").getData();
                 let oPodController = this.getPodController();
@@ -265,10 +272,6 @@ sap.ui.define([
                 let aSelections = oPodSelectionModel.getSelections();  
                 if(aSelections.length < 1){ return; };
                 let aSelectionFirstRow = aSelections[0];
-
-                this.getView().setBusyIndicatorDelay(0);
-                this.getView().setBusy(true);
-
     
                 let q23Parameters = {   quantity: parseInt(this.byId("inputQ23").getValue()),
                                         leftQuantity: selectedOrder.selectedOrder.leftQuantity,
@@ -729,6 +732,16 @@ sap.ui.define([
         _setLastReceiptTime: function(){
             this._lastReceiptTime = Date.now();
         },
+        _selectPositionAfterReceipt: function(){
+            try{
+                let positions = this.getView().getModel("multiOrdersModel").getData().positions;
+                let selectedPosition = this._selectPositionAfterLoad(positions);
+                let oViewModel = this.getView().getModel("viewModel");
+                oViewModel.setProperty("/selectedOrder", selectedPosition.selectedRow);
+                this._setSelectedFirstPosition(selectedPosition.index);
+                this._oOrderNumberPrevious = this._oOrderNumber;
+            }catch(error){}
+        },
         _updateModelAfterQ23: function(item, quantity){
             this._totalRegisteredQ23 = this._totalRegisteredQ23 + quantity;
             item.selectedOrder.totalQ23 = item.selectedOrder.totalQ23 + quantity;
@@ -750,7 +763,6 @@ sap.ui.define([
             this.getView().setModel(viewModel, "viewModel");
 
 
-        } 
-
+        }
 	});
 });

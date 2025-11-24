@@ -343,6 +343,7 @@ sap.ui.define([
         },
         onButtonReturn: async function(){
             try{
+                this._oDialogLog.setBusyIndicatorDelay(0);
                 this._oDialogLog.setBusy(true);
                 let oDummyOrderSfc = this._getDummyOrderSfc();
                 let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
@@ -369,6 +370,7 @@ sap.ui.define([
 
         onButtonReturnNpw: async function(){
             try{
+                this._oDialogLog.setBusyIndicatorDelay(0);
                 this._oDialogLog.setBusy(true)
                 let oDummyOrderSfc = this._getDummyOrderSfc();
                 let oZweiEndpoint = this._getZweiEndpoint();
@@ -400,17 +402,19 @@ sap.ui.define([
 
         onButtonAdditionIssue: async function(){
             try{
+                this._oDialogLog.setBusyIndicatorDelay(0);
+                this._oDialogLog.setBusy(true)
                 let oPallete  = new Palette(this._oPluginViewController);
                 let oItem = this._getSelectedItem();
                 let oQuanAdditional = await AdditionalIssueDialog.showDialog(oItem);
                 if(oQuanAdditional>0){
-                    this._oDialogLog.setBusy(true)
                     await oPallete.additionalIssue(oItem, oQuanAdditional, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity, this._oHandlerData.sequence);
                     this._addIssuedQuantity(oQuanAdditional);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteAdditionalIssue"),true,true);
                     setTimeout( async ()=> {  await this._getDialogData();
                                             this._oDialogLog.setBusy(false);},1500);
                 }
+                this._oDialogLog.setBusy(false)
             }catch(oError){
                 this._oDialogLog.setBusy(false);
                 this._oErrorHandler.handleError(oError);
@@ -419,6 +423,7 @@ sap.ui.define([
 
         onButtonAdditionMHuIssue: async function(){
             try{
+                this._oDialogLog.setBusyIndicatorDelay(0);
                 this._oDialogLog.setBusy(true);
                 this._checkSelectedReservedItem();
                 let oSelectedItems = this._getSelectedItems();

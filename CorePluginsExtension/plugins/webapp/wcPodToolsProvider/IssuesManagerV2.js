@@ -74,8 +74,11 @@ sap.ui.define([
                     if(oBomComponent&&oBomComponent.backflushEnabled === false&&backFlushValue!=="X"){
                         this._componentsForIssue.push({
                             material: oBomComponent.material.material,
+                            materialVersion: oBomComponent.material.version,
                             sequence: oBomComponent.sequence,
                             bomRef: sfcComponent.bomComponentRef,   
+                            bom: oSfc.getBom().bom,
+                            bomVersion: oSfc.getBom().version,
                             uom: oBomComponent.unitOfMeasure,
                             salesSegmentRequired: segmentSalesRequired,
                             splittedComponent: isSplittedComponent,
@@ -141,9 +144,10 @@ sap.ui.define([
                 }else{
                     result = requiredQuantity * ( receiptQuantity / this._sfcQuantity );
                     result = Math.round( result * 1000 ) / 1000;
+                    result = result.toFixed(3);
                 }
             }
-            return result;
+            return parseFloat(result);
         },
 
         executeIssues: async function(quantity, sfcNumber){
@@ -180,7 +184,10 @@ sap.ui.define([
                                                                                         sfc: sfcNumber, 
                                                                                         operation: this._parameters.operation,
                                                                                         bomRef: componentForIssue.bomRef,
+                                                                                        bom: componentForIssue.bom,
+                                                                                        bomVersion: componentForIssue.bomVersion,
                                                                                         material: componentForIssue.material,
+                                                                                        materialVersion: componentForIssue.materialVersion,
                                                                                         workCenter: this._parameters.workCenter,
                                                                                         quantity: quantityToIssueFromPallete,
                                                                                         sequence: componentForIssue.sequence,

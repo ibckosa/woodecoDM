@@ -1,9 +1,9 @@
 sap.ui.define([
     "sap/ui/base/Object",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
-    "ibc/dm/plugins/wcPodToolsProvider/Pallete"
-    
-], function (ObjectUI5, ErrorHandler, Pallete) {
+    "ibc/dm/plugins/wcPodToolsProvider/Pallete",
+    "ibc/dm/plugins/wcPodToolsProvider/Issue",
+], function (ObjectUI5, ErrorHandler, Pallete, Issue) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.ComponentIssue", {
         constructor: function(controller, parameters){
@@ -14,7 +14,7 @@ sap.ui.define([
         },
 
         executeIssue: async function(){
-            
+            this._parameters.quantity = parseFloat(this._parameters.quantity.toFixed(3));
             let palleteInstance = new Pallete(this._controller);
             if(this._parameters.palleteDetails.isNewReservation===true){
                 await palleteInstance.palleteReservationAndConsumption(this._parameters.palleteDetails, this._parameters.plant, this._parameters.orderNumber, this._parameters.sequence, true, true);
@@ -22,20 +22,47 @@ sap.ui.define([
                 await palleteInstance.palleteReservationAndConsumption(this._parameters.palleteDetails, this._parameters.plant, this._parameters.orderNumber, this._parameters.sequence, false, true);
             }
 
-            let issueResponse = await this._issue();
-            if(issueResponse&&issueResponse.txnId){
-                this._createdIssue = {  
-                    txnId: issueResponse.txnId,
-                    stepId: issueResponse.stepId,
-                    order: this._parameters.orderNumber,
-                    operation: this._parameters.operation,
-                    quantity: this._parameters.quantity,
-                    uom: this._parameters.palleteDetails.uom,
-                    handlingUnit: this._parameters.palleteDetails.handlingUnit,
-                    storageLocation: this._parameters.palleteDetails.storageLocation,
-                    material: this._parameters.material,
-                    sfc: this._parameters.sfc};
-            }
+            let issueResponse = await Issue.execute(this._controller  ,{   plant: this._parameters.plant,
+                                                                           order: this._parameters.orderNumber,
+                                                                           sfc: this._parameters.sfc,
+                                                                           operation: this._parameters.operation,
+                                                                           workCenter: this._parameters.workCenter,
+                                                                           material: this._parameters.material,
+                                                                           materialVersion: this._parameters.materialVersion,
+                                                                           componentSequence: this._parameters.sequence,
+                                                                           inventoryId: this._parameters.palleteDetails.inventoryId,
+                                                                           quantity: this._parameters.quantity,
+                                                                           uom: this._parameters.palleteDetails.uom,
+                                                                           bom: this._parameters.bom,
+                                                                           bomVersion: this._parameters.bomVersion });
+
+            this._createdIssue = {  
+                issueGuid: issueResponse,
+                stepId: undefined,
+                order: this._parameters.orderNumber,
+                operation: this._parameters.operation,
+                quantity: this._parameters.quantity,
+                uom: this._parameters.palleteDetails.uom,
+                handlingUnit: this._parameters.palleteDetails.handlingUnit,
+                storageLocation: this._parameters.palleteDetails.storageLocation,
+                material: this._parameters.material,
+                materialVersion: this._parameters.materialVersion,
+                sfc: this._parameters.sfc };                                                            
+            //let issueResponse = await this._issue();
+            // if(issueResponse&&issueResponse.issueGuid){
+            //     this._createdIssue = {  
+            //         issueGuid: issueResponse.issueGuid,
+            //         stepId: issueResponse.stepId,
+            //         order: this._parameters.orderNumber,
+            //         operation: this._parameters.operation,
+            //         quantity: this._parameters.quantity,
+            //         uom: this._parameters.palleteDetails.uom,
+            //         handlingUnit: this._parameters.palleteDetails.handlingUnit,
+            //         storageLocation: this._parameters.palleteDetails.storageLocation,
+            //         material: this._parameters.material,
+            //         materialVersion: this._parameters.materialVersion,
+            //         sfc: this._parameters.sfc};
+            // }
         },
         _issue: async function( ){
             if(this._parameters.palleteDetails.uom==='ST'){
@@ -43,6 +70,10 @@ sap.ui.define([
             }else{
                 this._parameters.quantity = Math.round( this._parameters.quantity * 1000 ) / 1000; 
             }
+
+            
+
+
             let oRequestParameters = {
                 "shopOrder": this._parameters.orderNumber,
                 "batchId": this._parameters.sfc,
@@ -93,7 +124,7 @@ sap.ui.define([
             });
         },
         _getIssueDt: function(){
-            let today = new Date();
+            let today = new Date(now.getTime() - 5000);
             let oYear = today.getFullYear().toString();
             let oMonth = today.getMonth().toString();
             let oDay = today.getDate().toString();

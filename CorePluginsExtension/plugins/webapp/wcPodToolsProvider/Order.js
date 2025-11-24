@@ -563,6 +563,9 @@ sap.ui.define([
                 let materialIssues =  await IssueReader.readIssues(this._oController, this._oPlant, this._oOrderNumber, materialUniqe.material, materialUniqe.version)
                 for(const materialIssue of materialIssues){
                     if(materialIssue.cancellationTriggered === false){
+                        if(materialIssue.comments.includes("//")){
+                            materialIssue.comments = materialIssue.comments.split('//')[0].trim();
+                        }
                         let resultLine = result.find(line=>{return materialIssue.comments === line.componentSequence });
                         if(resultLine){
                             resultLine.issuedQuantity = resultLine.issuedQuantity + materialIssue.quantityInBaseUnit.value;
