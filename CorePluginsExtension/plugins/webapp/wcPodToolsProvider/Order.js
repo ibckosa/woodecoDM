@@ -221,6 +221,7 @@ sap.ui.define([
                 leftQuantity: 0,
                 maxleftQuantity: 0,
                 deliveredQuantity: 0,
+                totalQ23: 0,
                 salesOrder: "",
                 salesOrderItem: "",
                 salesText: "",

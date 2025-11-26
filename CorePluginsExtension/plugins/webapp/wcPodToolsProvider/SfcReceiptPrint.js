@@ -457,12 +457,12 @@ sap.ui.define([
             let oSalesText = this._oPrintDetails.materialCustomValues.find(customValue=>{ return customValue.attribute === _oSalesTextName });
             if(oSalesText){
                 this._oPrintingInterface.SALES_TEXT = oSalesText.value;
-                this._oPrintingInterface.SALES_TEXT = this._oPrintingInterface.SALES_TEXT.replaceAll("$&", "\n")
+                this._oPrintingInterface.SALES_TEXT = this._oPrintingInterface.SALES_TEXT.replaceAll("$&", "\n");
             }
 
         },
         _executePrint: async function(){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri()  + "print/v1/print"; //this._oPrintDetails.endpoint;
+            let sUrl = this._oController.getPublicApiRestDataSourceUri()  +  "/pe/api/v1/process/processDefinitions/start?key=REG_f71c5c6d-67c2-4ca0-84d1-d12f7d1b8abc"; //"print/v1/print"; //this._oPrintDetails.endpoint;
 
             let printingParameters = this._getPrintingParameters();
             return await new Promise((resolve,reject)=>{
@@ -650,7 +650,7 @@ sap.ui.define([
                         peg_bnstk = peg_bnstk.substring(0,30);
                     }
                     result = `(400)${peg_bnstk}`;
-                    this._addToGs1Text(`ORDER NO.(400) zam ${peg_bnstk}`);
+                    this._addToGs1Text(`ORDER NO.(400) ${peg_bnstk}`);
                 }
             }catch(oError){}
             return result;
@@ -717,7 +717,7 @@ sap.ui.define([
                     peg_kdmat = peg_kdmat.substring(0,30);
                 }
                 let result = `(241)${peg_kdmat}`;
-                this._addToGs1Text(`CUST. PART NO. (241)\n${peg_kdmat}`);
+                this._addToGs1Text(`CUST. PART NO. (241) ${peg_kdmat}`);
                 return result;
             }
 

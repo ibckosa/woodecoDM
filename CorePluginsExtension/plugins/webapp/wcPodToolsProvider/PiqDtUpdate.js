@@ -76,11 +76,20 @@ sap.ui.define([
 
                         let sfc = await SfcRepository.getInstance(this._controller, this._parameters.plant, dataCollection.sfcNumber);
                         if(days<5){
-                            if(oeeCode){
-                                    await this._updateDt(dataCollection, oeeCode.reasonCodeId);
+                            try{
+                                if(oeeCode){
+                                    await this._updateDt(dataCollection, 5, oeeCode.reasonCodeId);
                                 }else{
-                                    await this._updateDt(dataCollection);
+                                    await this._updateDt(dataCollection, 5);
                                 }
+                            }catch(error){
+                                if(oeeCode){
+                                    await this._updateDt(dataCollection, 4, oeeCode.reasonCodeId);
+                                }else{
+                                    await this._updateDt(dataCollection, 4);
+                                }
+                            }
+
                                 
                                 await this._saveNewStartTime(dataCollection);
                                 messages.push({ messageType: "S",
@@ -186,26 +195,29 @@ sap.ui.define([
                 }
                 if(myStructure.READINGS && myStructure.ACTUAL_TIMESTAMP&&myStructure.READINGS.RESOURCE === this._parameters.resource){
                     myStructure.sfcNumber = collectionFromApi.sfcNumber;
+                    if(!myStructure.READINGS.DESC){
+                        myStructure.READINGS.DESC = "";
+                    }
                     result.push(myStructure);
                 }
             }
             
             return result;
         },
-        _updateDt: async function(dataCollection, reasonCodeId){
+        _updateDt: async function(dataCollection, status, reasonCodeId){
             let url = this._controller.getOeeTransactionRestDataSourceUri() + "downtimes";
 
             let parameters = { plant: this._parameters.plant,
                                resource: dataCollection.READINGS.RESOURCE,
                                startDateTime: this._convertToApiFormat(dataCollection.ACTUAL_TIMESTAMP),
                                updateDowntimes: [{
-                                    comments: "",
+                                    comments: dataCollection.READINGS.DESC,
                                     endDateTime: this._convertToApiFormat(dataCollection.READINGS.FINISH),
                                     markParentDown: false,
                                     plant: this._parameters.plant,
                                     resource: dataCollection.READINGS.RESOURCE,
                                     startDateTime: this._convertToApiFormat(dataCollection.READINGS.BEGIN),
-                                    status: 5
+                                    status: status
                                }]
             };
             if(reasonCodeId){
@@ -213,12 +225,12 @@ sap.ui.define([
             }
             
 
-            return await new Promise((resolve,reject)=>{
+            return await new Promise((resolve,reject)=> {
                 AjaxUtil.put(url, parameters,
                      (oResponseData) => {
                         resolve();
                     },
-                    (oError, sHttpErrorMessage) => {
+                    async (oError, sHttpErrorMessage) => {
                         reject(oError);
                     }
                 );

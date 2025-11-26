@@ -146,8 +146,7 @@ sap.ui.define([
             let oPanel = new Panel({ height: "38rem", width: "100rem" });
             let oColumns = this._getColumns();
 
-            let searchField = new sap.m.SearchField({placeholder: "Szukaj po materiale", search: this.onMaterialSearch.bind(this) });
-
+            this._searchMaterialField = new sap.m.SearchField({placeholder: "Wyszukaj", search: this.onMaterialSearch.bind(this) });
 
             let oTable = new Table({
                 growing: false,
@@ -171,10 +170,9 @@ sap.ui.define([
             });
             this._table = oTable;
             let oVBox = new VBox();
-            if(this._oMode ==="RESOURCE"){
-                oVBox.addItem(searchField);
-            }
-            
+
+            oVBox.addItem(this._searchMaterialField);
+
             oVBox.addItem(oTable);
             let oDynamicPage = new DynamicPage({ height: "40rem", width: "112rem", content: [oVBox], fitContent: true });
             //let oDynamicPage = new DynamicPage({ height: "40rem", width: "112rem", content: [oTable], fitContent: true });
@@ -308,6 +306,7 @@ sap.ui.define([
             let oLogModel = new JSONModel();
             oLogModel.setData(oLogData);
             this._oDialogLog.setModel(oLogModel);
+            this.onMaterialSearch();
         },
 
         onButtonReservation: async function(){
@@ -619,17 +618,34 @@ sap.ui.define([
             return this._issuedQuantity;
         },
         onMaterialSearch: function(oEvent){
-            const sQuery = oEvent.getParameter("newValue") ?? oEvent.getParameter("query") ?? "";
-            const oBinding = this._table.getBinding("items");
-            const searchFilters = sQuery ? [ new sap.ui.model.Filter("materialId", sap.ui.model.FilterOperator.Contains, sQuery), ]: [];
-            const aFilters = [];
-            if (searchFilters.length) {
+            try{
+                //const sQuery = oEvent.getParameter("newValue") ?? oEvent.getParameter("query") ?? "";
+                const oBinding = this._table.getBinding("items");
+
+                let sQuery = this._searchMaterialField.getValue();
+
+                if (!sQuery) {
+                    oBinding.filter([]);
+                    return;
+                }
+
+                const searchFilters =   [   new sap.ui.model.Filter("handlingUnit", sap.ui.model.FilterOperator.Contains, sQuery),
+                                            new sap.ui.model.Filter("reservation", sap.ui.model.FilterOperator.Contains, sQuery)];
+                                            
+                if (!isNaN(sQuery)) {
+                    searchFilters.push(new sap.ui.model.Filter("quantity", sap.ui.model.FilterOperator.EQ, Number(sQuery)));
+                } 
+                if(this._oMode ==="RESOURCE"){
+                    searchFilters.push(new sap.ui.model.Filter("materialId", sap.ui.model.FilterOperator.Contains, sQuery));
+                    searchFilters.push(new sap.ui.model.Filter("materialDesc", sap.ui.model.FilterOperator.Contains, sQuery));
+                }             
+                const aFilters = [];
                 aFilters.push(new sap.ui.model.Filter({ filters: searchFilters, and: false }));
+                oBinding.filter(aFilters);
+            }catch(error){
+                debugger;
             }
-            oBinding.filter(aFilters, "Application");
-
         }
-
     })
 
 });
