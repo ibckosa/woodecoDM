@@ -43,8 +43,10 @@ sap.ui.define([
         },
 
         executeIssue: async function(){
+            this._oReceiptParameters.quantityPerRoll = this._oReceiptParameters.quantity;
             this._oReceiptParameters.quantity = this._oReceiptParameters.quantity * this._oReceiptParameters.numberOfRolls;
-            this._oReceiptParameters.numberOfRolls = 1;
+
+            //this._oReceiptParameters.numberOfRolls = 1;
             this._oReceiptParameters.totalQuantity = this._oReceiptParameters.quantity * this._oReceiptParameters.numberOfPalletes;
             this._startProcessDate = new Date();
 
@@ -621,6 +623,9 @@ sap.ui.define([
             oPrintingDetails.orderCustomValues = this._oOrder.getHeaderCustomValues();
             oPrintingDetails.materialCustomValues = this._oMaterial.getCustomValues();
             oPrintingDetails.quantity = this._oReceiptParameters.quantity;
+            if(this._oReceiptParameters.numberOfRolls>1){
+                oPrintingDetails.quantityDisplay = `${ this._oReceiptParameters.numberOfRolls } x ${ this._oReceiptParameters.quantityPerRoll }`;
+            }
             oPrintingDetails.printer = this._oReceiptParameters.printer;
             oPrintingDetails.operation = this._oReceiptParameters.stepId;
             oPrintingDetails.document = 'DM_INFO';
@@ -790,72 +795,6 @@ sap.ui.define([
             let guid = crypto.randomUUID();
             let date = new Date();
             let stopProcessDate = new Date();
-            //let date = date.toJSON();
-            // parameterValues.push({ name: "GUID",
-            //                        comment: guid,
-            //                        value: guid });
-
-            // parameterValues.push({ name: "DATE_CREATED",
-            //                        comment: guid,
-            //                        value: date.toJSON() });
-            // parameterValues.push({ name: "PROCESS_START",
-            //                        comment: guid,
-            //                        value: this._startProcessDate.toJSON() });
-            // parameterValues.push({ name: "PROCESS_STOP",
-            //                        comment: guid,
-            //                        value: stopProcessDate.toJSON() });
-
-            // parameterValues.push({ name: "Q1/Q3",
-            //                        comment: guid,
-            //                        value: "Q1" });
-
-            // parameterValues.push({ name: "QUANTITY",
-            //                        comment: guid,
-            //                        value: `${this._oReceiptParameters.quantity}` });
-
-            // parameterValues.push({ name: "UOM",
-            //                        comment: guid,
-            //                        value: this._oOrder.getInternalUom() }); //value: this._oReceiptParameters.unitOfMeasure
-
-            // parameterValues.push({ name: "MATERIAL",
-            //                        comment: guid,
-            //                        value: this._oReceiptParameters.material });
-
-            // parameterValues.push({ name: "ITEM_NO",
-            //                        comment: guid,
-            //                        value: "0001" });
-                                   
-
-            // if(this._oReceiptParameters.handlingUnit){
-            //     parameterValues.push({ name: "HU",
-            //         comment: guid,
-            //         value: this._oReceiptParameters.handlingUnit });
-            // }else{
-            //     parameterValues.push({ name: "HU",
-            //         comment: guid,
-            //         value: "" });
-            // }
-                                   
-            // parameterValues.push({ name: "Q3_CODE",
-            //                        comment: guid,
-            //                        value: "" });
-
-            // parameterValues.push({ name: "NC_CODE",
-            //                        comment: guid,
-            //                        value: "" });
-
-            // parameterValues.push({ name: "NC_CODE_DESCRIPTION",
-            //                        comment: guid,
-            //                        value: "" });
-
-            // parameterValues.push({ name: "USER",
-            //                        comment: guid,
-            //                        value: this._oController.getUserId() });
-
-            // parameterValues.push({ name: "CANCELLED",
-            //                        comment: guid,
-            //                        value: false });
-
             
             let issuesAsString = [];
             let errorsAsString="";
@@ -876,46 +815,6 @@ sap.ui.define([
                     errorsAsString = `${errorsAsString}${error.errorMessage}`;
                 }
             }
-
-           
-
-            
-
-
-            // let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
-            // let oRequestParameters = {
-            //     plant: this._oReceiptParameters.plant,
-            //     group: { dcGroup: "WOODECO_PROD_ACTIVITY",
-            //              version: "A" },
-            //     operation: { operation: this._oReceiptParameters.operationActivity,
-            //                   version: "ERP001" },
-            //     parameterValues: parameterValues,
-            //     stepId: this._oReceiptParameters.stepId,
-            //     workCenter: this._oReceiptParameters.workCenter,
-            //     resource: this._oReceiptParameters.resource,
-            //     sfcs: [ this._oReceiptParameters.sfc ]
-            // };
-
-            // let that = this;
-
-            // return await new Promise((resolve,reject)=>{
-            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-            //         async oResponseData => {
-            //             if(!oResponseData||!oResponseData.success||(oResponseData.failedSfcs&&oResponseData.failedSfcs.length>0)){
-            //                 await that._saveDataCollection('', issueManager);
-            //             }
-
-            //             resolve();
-            //         },
-            //         async (oError, sHttpErrorMessage) => {
-            //             if(repeatWrongSave){
-            //                 await that._saveDataCollection('', issueManager);
-            //             }  
-            //             resolve();                         
-            //         }
-            //     );
-            // });
-
 
             await DataCollectionSaver.saveProductionDC(
                 this._oController,

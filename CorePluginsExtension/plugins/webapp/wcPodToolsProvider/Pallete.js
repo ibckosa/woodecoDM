@@ -304,57 +304,7 @@ sap.ui.define([
                 this._oErrorHandler.throwErrorPopup("error.issue.aiFailed");
             }
 
-            
-
-            // let oRequestParameters = {
-            //     "shopOrder": oLine.orderNumber,///numer zlecenia
-            //     "batchId": oSfc, ///SFC
-            //     "operationActivity": oOperation,
-            //     "bomComponentRef": oBomRef,
-            //     "material": oLine.materialId,
-            //     "batchNumber": null,
-            //     "shopOrderLocationRef": null,
-            //     "workCenter": oLine.workCenter,
-            //     "inventory": oLine.inventoryId, //inventory id
-            //     "isBomComponent": true, //true or false
-            //     "quantity": {
-            //         "value": oQuantity,
-            //         "unitOfMeasure": {
-            //             "uom": oLine.uom,//As the API does not support UoM yet
-            //             "internalUom": oLine.uom,
-            //             "shortText": null,
-            //             "longText": null,
-            //             "numerator": null,
-            //             "denominator": null,
-            //         }
-            //     },
-            //     "useFullHandlingUnit": false,
-            //     "handlingUnitNumber": oLine.handlingUnit,
-            //     "storageLocation": oLine.storageLocation,
-            //     "isInventoryManaged": true,
-            //     "userId": this._oController.getUserId(),
-            //     "dateTime": this._getIssueDt(),
-            //     "comments": `${componentSequence}`,
-            //     "calculatedData": null, 
-            //     "customFieldData":  JSON.stringify([{"id": "STORAGE_LOCATION", "value": String(oLine.storageLocation) }])
-            // };
-            // let issueResponse = await this._additionalIssueCallApi(oRequestParameters);
-
-
-
-
             await this._saveDataCollection(oLine, oQuantity, oSfc, oOperation, issueResponse, step.stepId);
-            // let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
-            // return await new Promise((resolve,reject)=>{
-            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-            //         (oResponseData) => {
-            //             resolve(oResponseData);
-            //         },
-            //         (oError, sHttpErrorMessage) => {
-            //             reject(oError);
-            //         }   
-            //     );
-            // });
         },
         _getIssueDt(){
             let today = new Date();
@@ -452,19 +402,6 @@ sap.ui.define([
 
             );
 
-        },
-        _additionalIssueCallApi: async function(oRequestParameters){
-            let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
-            return await new Promise((resolve,reject)=>{
-                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-                    (oResponseData) => {
-                        resolve(oResponseData);
-                    },
-                    (oError, sHttpErrorMessage) => {
-                        reject(oError);
-                    }   
-                );
-            });
         }
     });
 

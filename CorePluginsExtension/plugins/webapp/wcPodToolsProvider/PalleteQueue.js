@@ -75,27 +75,6 @@ sap.ui.define([
                 queue = queue.filter(line=>{return line.salesOrderNumber === this._salesOrderNumber &&
                                                    line.salesOrderItemNumber === this._salesOrderItemNumber });
             }
-
-
-
-            // let materialInstance = await MaterialRepository.getMaterialInstance(this._oAdditionalData, this._oPlant, this._oAdditionalData.material);
-            // let materialIndividualReq = materialInstance.getIndividualReq();
-            // if(materialIndividualReq){
-            //     let salesOrderNumber = "";
-            //     let salesOrderItemNumber = "";
-            //     if(this._salesOrderNumber){
-            //         salesOrderNumber = this._salesOrderNumber;
-            //     }
-
-            //     if(this._salesOrderItemNumber){
-            //         salesOrderItemNumber = this._salesOrderItemNumber;
-            //     }
-
-
-            //     queue = queue.filter(line=>{return line.salesOrderNumber === salesOrderNumber &&
-            //                                        line.salesOrderItemNumber === salesOrderItemNumber });
-
-            // }
             return queue;
         },
 

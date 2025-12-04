@@ -9,12 +9,6 @@ sap.ui.define([
 
     dataCollectionReader.readCollections = async function(controller, plant, sfcs, operation="", getStornedCollections=true, getAllCollections=false, routing, routingVersion){
         let result = [];
-        // this._controller = controller;
-        // this._sfcs = sfcs;
-        // this._plant = plant;
-        // this._operation = operation;
-        // this._getStornedCollections = getStornedCollections;
-        // this._getAllCollections = getAllCollections;
 
         let dataCollectionsFromApi = await this._getCollectionsFromApi(controller, plant, sfcs, operation, getAllCollections, routing, routingVersion);
 

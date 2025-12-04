@@ -16,7 +16,7 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
 ], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, HuGenerator, IssuesManagerV2, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator, ResourceRepository, DataCollectionSaver) {
     "use strict";
-    return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcReceipt", {
+    return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcMOReceipt", {
         constructor: function(oController, oReceiptParameters){
             this._oController = oController;
             this._oReceiptParameters = oReceiptParameters;
@@ -288,7 +288,7 @@ sap.ui.define([
             });
         },
         _executeMmReceipt: async function(){
-            ///not implementation needed
+            ///no implementation needed
         },
         _refreshPod: function(){
             // let oPodSelectionModel = this._oController.getPodSelectionModel();

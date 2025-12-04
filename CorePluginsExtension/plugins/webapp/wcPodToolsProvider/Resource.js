@@ -160,6 +160,36 @@ sap.ui.define([
 
             return result;
         },
+        getQ2LabelCopies: function(){
+            let result = 1;
+            try{
+                let q2LabelCopies = this._oDetails.customValues.find(customValue => { return customValue.attribute === "Q2_LABEL_COPIES"});
+                result = parseInt(q2LabelCopies.value);
+                if(result>5){
+                    result = 5;
+                }
+                if(result < 0){
+                    result = 1;
+                }
+            }catch(oError){}
+
+            return result;
+        },
+        getComponentLabelCopies: function(){
+            let result = 1;
+            try{
+                let compLabelCopies = this._oDetails.customValues.find(customValue => { return customValue.attribute === "COMP_LABEL_COPIES"});
+                result = parseInt(compLabelCopies.value);
+                if(result>5){
+                    result = 5;
+                }
+                if(result < 0){
+                    result = 1;
+                }
+            }catch(oError){}
+
+            return result;
+        },
         getMaxPalletesPerReceipt: function(){
             let result = 1;
             try{

@@ -460,7 +460,7 @@ sap.ui.define([
                 plant: oSfcDetails.plant,
                 operation: oSfcDetails.operation,
                 quantity: oScrapQuantity,
-                resource: oSfcDetails.resource,
+                resource: this._oResource,
                 sfcs: [ oSfcDetails.sfc ],
                 reasonCodeKey: oResourceReasonCode   
             };
@@ -623,7 +623,7 @@ sap.ui.define([
                 {
                     plant: sfcDetails.plant,
                     sfc: sfcDetails.sfc,
-                    resource: sfcDetails.resource,
+                    resource: this._oResource,
                     operation: sfcDetails.step.operation.operation,
                     productionProcessType: "Q3",
                     q3Code: code,

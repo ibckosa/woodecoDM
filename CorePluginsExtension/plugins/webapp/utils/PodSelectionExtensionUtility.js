@@ -30,10 +30,13 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
     "ibc/dm/plugins/wcPodToolsProvider/PiqDtUpdate",
-    "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader"
+    "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader",
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionQ2DestinationSaver",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader"
 ], function (BaseObject, Button, Input, MessageBox, MessageToast, ToolbarSpacer, JSONModel, PodUtility , Dialog, Text
     , mobileLibrary, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler, TextHandler,
-    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository, PiqDtUpdate, NonconformanceReader) {
+    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository, PiqDtUpdate, NonconformanceReader, DataCollectionQ2DestinationSaver, SfcRepository, SfcDataCollectionReader) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
@@ -265,6 +268,7 @@ sap.ui.define([
                 }
                 this._oWorkCenter = podSelectionModel.workCenter;
                 this._oResource = podSelectionModel.resource.resource;
+                this._resourceInstance = await ResourceRepository.getResourceInstance(this._oSelController, this._oSelController.getPodController().getUserPlant(), this._oResource);
 
                 await this._checkWorkListScheme("1");
 
@@ -525,26 +529,31 @@ sap.ui.define([
                 if(itemNumberDataField){
                     itemNumber = itemNumberDataField.value;
                 }
-                let oSfc = await this._getSfcDetails(nonconformance.sfc);
-                let oOrderDetails = await this._getOrderDetails(oSfc.order.order);
-                let oStepId = this._getStepId(oSfc, nonconformance.operationActivity.operationActivity);
-                //let oMaterial = await this._getMaterialDetails();
+                let sfcInstance = await SfcRepository.getInstance(this._oSelController, this._oSelController.getPodController().getUserPlant(),nonconformance.sfc);
+                let sfcDetails = sfcInstance.getDetails();
+                let orderInstance = await OrderRepository.readOrder(this._oSelController, this._oSelController.getPodController().getUserPlant(), sfcDetails.order.order);
+                let orderDetails = orderInstance.getDetails();
+
                 let oItem = {
                     lineChecked: false,
-                    orderNumber: oSfc.order.order,
+                    orderNumber: sfcDetails.order.order,
                     materialId: nonconformance.material.material,
                     materialVersion: nonconformance.material.version,
-                    materialDesc: oSfc.material.description,
+                    materialDesc: sfcDetails.material.description,
                     quantity: nonconformance.quantity,
-                    uom: oOrderDetails.productionUnitOfMeasure,
+                    uom: orderDetails.productionUnitOfMeasure,
                     createdAt: nonconformance.createdDateTime,
                     nonconformanceId: nonconformance.id,
                     ncDescription: nonconformance.codeDescription,
                     sfc: nonconformance.sfc,
                     stepId: nonconformance.routingStepId,
-                    storageLocation: oOrderDetails.putawayStorageLocation,
-                    plant: oOrderDetails.plant,
+                    storageLocation: orderDetails.putawayStorageLocation,
+                    plant: orderDetails.plant,
                     packagingMaterial: "",
+                    operation: nonconformance.operationActivity.operationActivity,
+                    operationVersion: nonconformance.operationActivity.version,
+                    sfcInstance: sfcInstance,
+                    orderInstance: orderInstance,
                     HU: "",
                     itemNumber: itemNumber
                 };
@@ -553,83 +562,6 @@ sap.ui.define([
 
             return oReturnTab;
         },
-        _getNonconformances: async function(oStartDate, oEndDate){
-            let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + "nonconformance/v1/nonconformances";
-
-            let oParameters = { plant: this._oSelController.getPodController().getUserPlant(),
-                                resource: this._oResource,
-                                fromDate: oStartDate.toJSON(),
-                                toDate: oEndDate.toJSON()
-
-
-             };
-            return await new Promise((resolve,reject)=>{
-                this._oSelController.ajaxGetRequest(sUrl, oParameters,
-                    function (oResponseData) {
-                        resolve(oResponseData);
-                    },
-                    function (oError, sHttpErrorMessage) {
-                        reject(oError);
-                    }   
-                );
-
-            });
-        },
-        _getSfcDetails: async function(oSfcNumber){
-            let oSfc = this._getSfcDetailsBuffer(oSfcNumber);
-
-            if(oSfc===undefined){
-                oSfc = await this._getSfcDetailsApi(oSfcNumber);
-            }
-
-            if(oSfc===undefined){
-                //throw exceptions;
-            }
-
-            return oSfc;
-        },
-        _getSfcDetailsBuffer:  function(oSfcNumber){
-            if(!this._sfcDetails){return;}
-
-            return this._sfcDetails.find( (sfcDetail) => sfcDetail.sfc === oSfcNumber );
-
-        },
-        _getSfcDetailsApi: async function(oSfcNumber){
-            let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + "sfc/v1/sfcdetail";
-
-            let oParameters = { plant: this._oSelController.getPodController().getUserPlant(),
-                                sfc: oSfcNumber
-             };
-            return await new Promise((resolve,reject)=>{
-                this._oSelController.ajaxGetRequest(sUrl, oParameters,
-                    (oResponseData) => {
-                        this._bufferSfcDetails(oResponseData);
-                        //this._sfcDetails.push(oResponseData);
-                        resolve(oResponseData);
-                    },
-                    function (oError, sHttpErrorMessage) {
-                        reject(oError);
-                    }   
-                );
-
-            });
-        },
-        _bufferSfcDetails: function(oSfcData){
-            if(this._sfcDetails === undefined){
-                this._sfcDetails = [];
-            }
-            this._sfcDetails.push(oSfcData);    
-        },  
-
-        // _getMaterialDetails: async function(){
-        //     return {};
-        // },
-        // _getMaterialDetailsBuffer:  function(){
-            
-        // },
-        // _getMaterialDetailsApi: async function(){
-            
-        // },
         onButtonScrap: async function(oEvent){ 
             try{
                 this._oDialogQ23.setBusyIndicatorDelay(0);
@@ -637,7 +569,15 @@ sap.ui.define([
                 let oSelectedLines = this._getSelectedQ23Lines();
                 for(let oLine of oSelectedLines){
                     try{
+                        let guid = await this._getDcGuid(oLine);
                         await this._closeNonconformance(oLine);
+                        await DataCollectionQ2DestinationSaver.saveQ2DestinationDC(this._oSelController, { guid: guid,
+                                                                                                          plant: oLine.plant,
+                                                                                                          resource: this._oResource,
+                                                                                                          sfc: oLine.sfc,
+                                                                                                          q2Destination: "SCRAP",
+                                                                                                          operation: oLine.operation,
+                                                                                                          operationVersion: oLine.operationVersion } );
                         this._showSuccessMessage("q23.success.closeNonconformance")
                     }catch(oError){this._oErrorHandler.handleError(oError);}
                 }
@@ -656,12 +596,20 @@ sap.ui.define([
                 let oSelectedLines = this._getSelectedQ23Lines();
                 for(let oLine of oSelectedLines){
                     try{
+                        let guid = await this._getDcGuid(oLine);
                         let order = await OrderRepository.readOrder(this._oSelController, oLine.plant, oLine.orderNumber);
                         oLine.materialId = order.getPackagingMaterial(oLine.itemNumber);
                         await this._closeNonconformance(oLine);
                         oLine.HU = await this._generateHuNumber(oLine);
                         await this._callCustomApi("PACKAGE", oLine);
                         this._showSuccessMessage("q23.success.packageNonconformance");
+                        await DataCollectionQ2DestinationSaver.saveQ2DestinationDC(this._oSelController, { guid: guid,
+                                                                                                          plant: oLine.plant,
+                                                                                                          resource: this._oResource,
+                                                                                                          sfc: oLine.sfc,
+                                                                                                          q2Destination: "PACKAGING",
+                                                                                                          operation: oLine.operation,
+                                                                                                          operationVersion: oLine.operationVersion } );
                         await this._loadDataQ23();
                         this._oDialogQ23.setBusy(false);
                     }catch(oError){ 
@@ -676,8 +624,8 @@ sap.ui.define([
             }
         },
         onButtonReturn: async function(oEvent){
-            let oErrorHandler = new ErrorHandler(this._oSelController);
             try{
+                
                 this._oDialogQ23.setBusyIndicatorDelay(0);
                 this._oDialogQ23.setBusy(true);
                 this._oZweiEndpoint = this._getZweiEndpoint();
@@ -686,6 +634,7 @@ sap.ui.define([
                 
                 for(let oLine of oSelectedLines){
                     try{
+                        let guid = await this._getDcGuid(oLine);
                         let order = await OrderRepository.readOrder(this._oSelController, oLine.plant, oLine.orderNumber);
                         oLine.oldMaterial = oLine.materialId;
                         oLine.materialId = order.getScrapingMaterial(oLine.itemNumber);
@@ -693,6 +642,13 @@ sap.ui.define([
                         oLine.HU = await this._generateHuNumber(oLine);
                         await this._callCustomApi("RETURN", oLine);
                         await this._executeLabelPrint(oLine, oPrinter);
+                        await DataCollectionQ2DestinationSaver.saveQ2DestinationDC(this._oSelController, { guid: guid,
+                                                                                                          plant: oLine.plant,
+                                                                                                          resource: this._oResource,
+                                                                                                          sfc: oLine.sfc,
+                                                                                                          q2Destination: "RETURN",
+                                                                                                          operation: oLine.operation,
+                                                                                                          operationVersion: oLine.operationVersion } );
                         await this._loadDataQ23();
                         this._showSuccessMessage("q23.success.returnNonconformance");
                         this._oDialogQ23.setBusy(false);
@@ -751,51 +707,6 @@ sap.ui.define([
             }
 
             return oZweiEndpoint;
-        },
-        _getOrderDetails: async function(oOrder){
-            let oOrderDetails = this._getOrderDetailsBuffer(oOrder);
-
-            if(oOrderDetails===undefined){
-                oOrderDetails = await this._getOrderDetailsApi(oOrder);
-            }
-
-            if(oOrderDetails===undefined){
-                this._throwError();
-            }
-
-            return oOrderDetails;
-        },
-        _bufferOrderDetails: function(oOrderDetails){
-            if(this._orderDetails === undefined){
-                this._orderDetails = [];
-            }
-            this._orderDetails.push(oOrderDetails);    
-        },  
-        _getOrderDetailsBuffer:  function(oOrder){
-            if(!this._orderDetails){return;}
-
-            return this._orderDetails.find( (orderDetail) =>  orderDetail.order === oOrder );
-
-        },
-        _getOrderDetailsApi: async function(oOrder){
-            let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + "order/v1/orders";
-
-            let oParameters = { plant: this._oSelController.getPodController().getUserPlant(),
-                                order: oOrder
-             };
-            return await new Promise((resolve,reject)=>{
-                this._oSelController.ajaxGetRequest(sUrl, oParameters,
-                    (oResponseData) => {
-                        this._bufferOrderDetails(oResponseData);
-                        //this._sfcDetails.push(oResponseData);
-                        resolve(oResponseData);
-                    },
-                    function (oError, sHttpErrorMessage) {
-                        reject(oError);
-                    }   
-                );
-
-            });
         },
         _callCustomApi: async function(oProcess, oLine){
             let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + this._oZweiEndpoint;
@@ -991,8 +902,7 @@ sap.ui.define([
         _executeLabelPrint: async function(oItem, oPrinter){
             let oPrintingDetails = {};
             let oMaterial = await MaterialRepository.getMaterialInstance(this._oSelController, oItem.plant, oItem.materialId);
-            let oOrder = await OrderRepository.readOrder(this._oSelController, oItem.plant, oItem.orderNumber);
-            //oPrintingDetails.endpoint = oEndpoint;
+            //let oOrder = await OrderRepository.readOrder(this._oSelController, oItem.plant, oItem.orderNumber);
             oPrintingDetails.plant  = oItem.plant;
             oPrintingDetails.order = oItem.orderNumber;
             oPrintingDetails.workCenter = this._oWorkCenter;
@@ -1011,22 +921,21 @@ sap.ui.define([
             }
             
             oPrintingDetails.HU = oItem.HU;
-            oPrintingDetails.orderLineCustomValues = oOrder.getOrderLineCustomValues(oItem.itemNumber);
-            oPrintingDetails.orderCustomValues = oOrder.getHeaderCustomValues();
+            oPrintingDetails.orderLineCustomValues = oItem.orderInstance.getOrderLineCustomValues(oItem.itemNumber);
+            oPrintingDetails.orderCustomValues = oItem.orderInstance.getHeaderCustomValues();
             oPrintingDetails.materialCustomValues = oMaterial.getCustomValues();
             oPrintingDetails.quantity = oItem.quantity;
             oPrintingDetails.printer = oPrinter;
             oPrintingDetails.operation = oItem.stepId;
             oPrintingDetails.document = 'WOODECO1';
-            oPrintingDetails.printingCopies = 1;
+            oPrintingDetails.printingCopies = this._resourceInstance.getQ2LabelCopies();
             oPrintingDetails.printType = SfcReceiptPrint.PRINT_Q2_RETURN;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oSelController, oPrintingDetails);
             await oSfcReceiptPrint.print();
         },
         _getPrinter: async function(){
-            let oResource = await ResourceRepository.getResourceInstance(this._oSelController, this._oSelController.getPodController().getUserPlant(), this._oResource);
-            let oPrinter = oResource.getPrinterId();
+            let oPrinter = this._resourceInstance.getPrinterId();
 
             if(oPrinter===""){
                 this._oErrorHandler.throwError("error.printing.noPrinter");
@@ -1041,6 +950,18 @@ sap.ui.define([
             if(!resourceWorkListScheme.includes(workListScheme)){
                 this._oErrorHandler.throwErrorPopup("error.podSelection.functionalityNotAvailable", this._oResource);
             }
+        },
+        _getDcGuid: async function(line){
+            let result = "";
+            try{
+                let dataCollectionsForSfc = await SfcDataCollectionReader.readCollections(this._oSelController, line.plant, [line.sfc], line.operation, true, true);
+                let collectionQ2 = dataCollectionsForSfc.find( collection => { return collection['Q1/Q3'] === 'Q3'; });
+                if(collectionQ2){
+                     result = collectionQ2.GUID;
+                }
+            }catch(error){ }
+
+            return result;
         }
     })
 });

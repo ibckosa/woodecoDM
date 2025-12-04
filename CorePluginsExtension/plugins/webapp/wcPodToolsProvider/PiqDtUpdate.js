@@ -21,6 +21,8 @@ sap.ui.define([
             
             let codes = [];
             try{
+                this._controller.getPodController().getView().setBusyIndicatorDelay(0);
+                this._controller.getPodController().getView().setBusy(true);
                 this._getDummyOrder();
                 await this._getResources();
                 await this._getSfcs();
@@ -53,72 +55,98 @@ sap.ui.define([
                 // if(!oeeCodes||oeeCodes.length === 0){return};
 
 
-                try{
+                // try{
                     for(const dataCollection of sfcDtDataCollections){
-                        let oeeCode;
-                        let days = this._calculateDaysSince(new Date(dataCollection.ACTUAL_TIMESTAMP));
-                        messages.push({ messageType: "I",
-                                        messageValue: this._textHandler.getText("information.piq.dtUpdateAttempt", dataCollection.sfcNumber) });
+                        try{
+                            let oeeCode;
+                            let days = this._calculateDaysSince(new Date(dataCollection.ACTUAL_TIMESTAMP));
+                            messages.push({ messageType: "I",
+                                            messageValue: this._textHandler.getText("information.piq.dtUpdateAttempt", dataCollection.sfcNumber) });
 
-                        //if(!dataCollection.READINGS.CODE){ this._errorHandler.throwError("error.piq.noCodeDt"); }
-
-
-                        if(dataCollection.READINGS.CODE){
-                            oeeCode = oeeCodes.find(code => {return code.resource === dataCollection.READINGS.RESOURCE && code.code === dataCollection.READINGS.CODE });
-
-                            // if(!oeeCode){
-                            //     this._errorHandler.throwError("error.piq.noOeeCodeDt");
-                            // }else if(!oeeCode.reasonCodeId || oeeCode.reasonCodeId ===""){
-                            //     this._errorHandler.throwError("error.piq.noReasonCode");
-                            // }
-                        }
+                            //if(!dataCollection.READINGS.CODE){ this._errorHandler.throwError("error.piq.noCodeDt"); }
 
 
-                        let sfc = await SfcRepository.getInstance(this._controller, this._parameters.plant, dataCollection.sfcNumber);
-                        if(days<5){
-                            try{
-                                if(oeeCode){
-                                    await this._updateDt(dataCollection, 5, oeeCode.reasonCodeId);
-                                }else{
-                                    await this._updateDt(dataCollection, 5);
-                                }
-                            }catch(error){
-                                if(oeeCode){
-                                    await this._updateDt(dataCollection, 4, oeeCode.reasonCodeId);
-                                }else{
-                                    await this._updateDt(dataCollection, 4);
-                                }
+                            if(dataCollection.READINGS.CODE){
+                                oeeCode = oeeCodes.find(code => {return code.resource === dataCollection.READINGS.RESOURCE && code.code === dataCollection.READINGS.CODE });
+
+                                // if(!oeeCode){
+                                //     this._errorHandler.throwError("error.piq.noOeeCodeDt");
+                                // }else if(!oeeCode.reasonCodeId || oeeCode.reasonCodeId ===""){
+                                //     this._errorHandler.throwError("error.piq.noReasonCode");
+                                // }
                             }
 
-                                
+
+                            let sfc = await SfcRepository.getInstance(this._controller, this._parameters.plant, dataCollection.sfcNumber);
+                            if(days<5){
+                                if(dataCollection.CREATED){
+                                    try{
+                                        if(oeeCode){
+                                            await this._updateDt(dataCollection, 5, oeeCode.reasonCodeId);
+                                        }else{
+                                            await this._updateDt(dataCollection, 5);
+                                        }
+                                    }catch(error){
+                                        if(oeeCode){
+                                            await this._updateDt(dataCollection, 4, oeeCode.reasonCodeId);
+                                        }else{
+                                            await this._updateDt(dataCollection, 4);
+                                        }
+                                    }
+                                }else{
+                                    try{ 
+                                        await this._createDt(dataCollection, 'UNSCHEDULED_DOWN', oeeCode, true);
+                                    }catch(error){
+                                        try{
+                                            await this._createDt(dataCollection, 'SCHEDULED_DOWN', oeeCode, true);
+                                        }catch(error){
+
+                                            await this._createDt(dataCollection, 'SCHEDULED_DOWN', oeeCode, false);
+                                        }
+                                        
+                                    }
+                                    await this._saveCreated(dataCollection);
+                                    
+
+                                }
+
+
                                 await this._saveNewStartTime(dataCollection);
                                 messages.push({ messageType: "S",
                                                 messageValue: this._textHandler.getText("success.piq.downTimeUpdated", dataCollection.sfcNumber) });
-                
-                                
+                    
+                                    
                                 if(days>=3){
                                     await sfc.invalidate(); 
                                     messages.push({ messageType: "S",
                                                     messageValue: this._textHandler.getText("success.piq.downTimeClosed", dataCollection.sfcNumber) });
                                 }
-                        }else{
-                            messages.push({ messageType: "I",
-                                            messageValue: this._textHandler.getText("information.piq.downTimeCannotBeUpdated", dataCollection.sfcNumber) });
-                            await sfc.invalidate(); 
-                            messages.push({ messageType: "S",
-                                            messageValue: this._textHandler.getText("success.piq.downTimeClosed", dataCollection.sfcNumber) });
+                            }else{
+                                messages.push({ messageType: "I",
+                                                messageValue: this._textHandler.getText("information.piq.downTimeCannotBeUpdated", dataCollection.sfcNumber) });
+                                await sfc.invalidate(); 
+                                messages.push({ messageType: "S",
+                                                messageValue: this._textHandler.getText("success.piq.downTimeClosed", dataCollection.sfcNumber) });
+                            }
+                        }catch(error){
+                            if(error&&!error.displayType){
+                                let errorMessage = this._errorHandler.getTextFromError(error);
+                                messages.push({ messageType: "E",
+                                                messageValue: errorMessage  });
+                            }
                         }
-    
                     }
-                }catch(error){
-                    if(!error.displayType){
-                        let errorMessage = this._errorHandler.getTextFromError(error);
-                        messages.push({ messageType: "E",
-                                        messageValue: errorMessage  });
-                    }
+                // }catch(error){
+                //     if(!error.displayType){
+                //         let errorMessage = this._errorHandler.getTextFromError(error);
+                //         messages.push({ messageType: "E",
+                //                         messageValue: errorMessage  });
+                //     }
                     
-                }
+                // }
+                this._controller.getPodController().getView().setBusy(false);
             }catch(error){
+                this._controller.getPodController().getView().setBusy(false);
                 let errorMessage = this._errorHandler.getTextFromError(error);
                 messages.push({messageType: "E",
                 messageValue: errorMessage  });
@@ -237,6 +265,34 @@ sap.ui.define([
             });         
 
         },
+        _saveCreated: async function(dataCollection){
+            let parameterValues = [];
+            parameterValues.push({ name: 'CREATED',
+                                    value: 'X' });
+
+            let sUrl = this._controller.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            let oRequestParameters = {
+                plant: this._parameters.plant,
+                group: { dcGroup: "DOWNTIMES",
+                         version: "1" },
+                operation: { operation: "DUMMY_OPERATION",
+                              version: "A" },
+                parameterValues: parameterValues,
+                resource: "DUMMY_RESOURCE",
+                sfcs: [ dataCollection.sfcNumber ]
+            };
+
+            return await new Promise((resolve,reject)=>{
+                this._controller.ajaxPostRequest(sUrl, oRequestParameters,
+                    oResponseData => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {                        
+                        resolve();
+                    }
+                );
+            });
+        },
         _saveNewStartTime: async function(dataCollection){
             let parameterValues = [];
             if(dataCollection.ACTUAL_TIMESTAMP === dataCollection.READINGS.BEGIN ){ return };
@@ -352,6 +408,7 @@ sap.ui.define([
                         if(oResponseData.length>0){
                             try{
                                 oReturn.reasonCodeId = oResponseData[0].keyId;
+                                oReturn.timeElement = oResponseData[0].timeElement.timeElementName;
                             }catch(error){}
                         }
                         resolve(oReturn);
@@ -376,6 +433,37 @@ sap.ui.define([
             const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
           
             return diffDays;
+        },
+        _createDt: async function(dataCollection, status, oeeCode, assignReasonCodes=true){
+            let url = this._controller.getPublicApiRestDataSourceUri() + "oee/v1/downtime";
+
+            let parameters = [ { plant: this._parameters.plant,
+                               resource: dataCollection.READINGS.RESOURCE,
+                               status: status,
+                               startDateTime: dataCollection.READINGS.BEGIN,
+                               endDateTime: dataCollection.READINGS.FINISH,
+                               comments: dataCollection.READINGS.DESC }];
+
+            if(assignReasonCodes){
+                if(dataCollection.READINGS.CODE1){ parameters[0].reasonCode1 = dataCollection.READINGS.CODE1; }
+                if(dataCollection.READINGS.CODE2){ parameters[0].reasonCode2 = dataCollection.READINGS.CODE2; }
+                if(dataCollection.READINGS.CODE3){ parameters[0].reasonCode3 = dataCollection.READINGS.CODE3; }
+                if(oeeCode){
+                    parameters[0].timeElement = oeeCode.timeElement;
+                }
+            }
+
+            return await new Promise((resolve,reject)=> {
+                this._controller.ajaxPostRequest(url, parameters,
+                     (oResponseData) => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        reject(oError);
+                    }
+                );
+            });   
+
         }
 
 

@@ -138,16 +138,6 @@ sap.ui.define([
         },
         _executeSfcScrap: async function(){
             var sUrl = this._oController.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/scrap";
-            // var oRequestParameters = {
-            //     plant: this._oParameters.plant,
-            //     shopOrder: this._oParameters.order,
-            //     sfc: this._oParameters.sfc,
-            //     operationActivity: this._oParameters.operationActivity,
-            //     scrapQuantity: this._oParameters.quantity,
-            //     scrapQuantityUnit: this._oOrder.getInternalUom(),
-            //     workCenter: this._oParameters.workCenter,
-            //     reasonCodeKey: this._oParameters.resourceReasonCode
-            // }
             var oRequestParameters = {
                 plant: this._oParameters.plant,
                 operation: this._oParameters.operationActivity,

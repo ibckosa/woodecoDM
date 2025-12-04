@@ -105,6 +105,7 @@ sap.ui.define([
                                                         progressIndicatorValue: "",
                                                         percentProgress: "0",
                                                         quantityPerPallet: "",
+                                                        packagingDescription: "",
                                                         decors: []
                                                      },
                                                      sfcCardCustomVisibility: this._getVisibilityStructure()
@@ -160,6 +161,7 @@ sap.ui.define([
                                         progressIndicatorValue: "",
                                         percentProgress: "0",
                                         quantityPerPallet: "",
+                                        packagingDescription: "",
                                         decors: []
                                      };
 
@@ -178,20 +180,14 @@ sap.ui.define([
 
                 let oSfc = await SfcRepository.getInstance(oController, oPlant, oSfcNumber);
                 let oSteps  = oSfc.getSteps();
-                let oFirstStep = oSteps[0];
-                // let oSfcsInstances = await this._getSfcsInstances(oController, oPlant, oSfcs);
 
 
                 let dataCollections = await SfcDataCollectionReader.readCollections(oController, oPlant, oSfcs, oFirstSelection.getSfcData().getOperation(), true, true, oFirstSelection.getSfcData().getRouting(), oFirstSelection.getSfcData().getRoutingVersion());
                 oTotalOrderQuan = oOrderData.productionQuantity;
                 
-                // for(const sfcInstance of oSfcsInstances){
-                //     oTotalOrderQuan = oTotalOrderQuan + sfcInstance.getTotalQuan(oFirstSelection.getSfcData().getOperation());
-                //     //oDoneOrderQuan = oDoneOrderQuan + sfcInstance.getDoneQuanOfOperation(oFirstSelection.getSfcData().getOperation());
-                // }
-                // if(oFirstStep.operation.operation === oFirstSelection.getSfcData().getOperation()){
-                //     oTotalOrderQuan = oOrderData.productionQuantity;
-                // }
+                
+                
+                
                 
                 for(const dataCollection of dataCollections){
                     if(dataCollection.QUANTITY&&dataCollection["Q1/Q3"] === "Q1"){
@@ -295,6 +291,13 @@ sap.ui.define([
                         }
                     }
                 }
+                let orderItemCustomData = oOrderInstance.getOrderLineCustomValues(1);
+                let packagingDescriptionCustomData  = orderItemCustomData.find(customData=>{return customData.field_name === "ZZVERP_TXT"});
+                if(packagingDescriptionCustomData){
+                    oSfcCardCustom.packagingDescription = packagingDescriptionCustomData.field_value;
+                }
+
+
                 sfcCardCustomVisibility = this._getFieldConfiguration(oController, oOrderInstance);
                 
             }catch(e){
@@ -364,7 +367,8 @@ sap.ui.define([
                    ruType: visibilityValue,
                    progressIndicatorValue: visibilityValue,
                    quantityPerPallet: visibilityValue,
-                   decors: visibilityValue };
+                   decors: visibilityValue,
+                   packagingDescription: visibilityValue };
         }
     })
 });

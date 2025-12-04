@@ -26,7 +26,7 @@ sap.ui.define([
 
         execute: async function(){
             this._order = await OrderRepository.readOrderByPassBuffer(this._controller, this._parameters.plant, this._parameters.order);
-            this._sfc = await SfcRepository.getInstance(this._controller, this._parameters.plant, this._parameters.sfc, this._parameters.routing, this._parameters.routingVersion );
+            this._sfc = await SfcRepository.ReadSfcBypassBuffer(this._controller, this._parameters.plant, this._parameters.sfc, this._parameters.routing, this._parameters.routingVersion );
             this._resource = await ResourceRepository.getResourceInstance(this._controller, this._parameters.plant, this._parameters.resource);
 
             

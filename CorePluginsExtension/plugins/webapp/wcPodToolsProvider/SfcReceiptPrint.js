@@ -122,6 +122,7 @@ sap.ui.define([
                 workCenter:"",
                 sfc: "",
                 QUANTITY: 0,
+                QUANTITYDISPLAY: "",
                 OPERATION: "",
                 THICKNESS: "",
                 SALES_TEXT: "",
@@ -256,6 +257,9 @@ sap.ui.define([
             this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
             this._oPrintingInterface.NORM = this._convertMultipleLineText(this._oPrintingInterface.NORM);
             this._oPrintingInterface.PRDCLS = this._convertMultipleLineText(this._oPrintingInterface.PRDCLS);
+            this._oPrintingInterface.PEG_BSTNK = this._replacePolishChars(this._oPrintingInterface.PEG_BSTNK);
+            this._oPrintingInterface.PEG_KDMAT = this._replacePolishChars(this._oPrintingInterface.PEG_KDMAT);
+            this._oPrintingInterface.QUANTITYDISPLAY = this._oPrintDetails.quantityDisplay;
             //this._oPrintingInterface.ZERT_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZERT_TXT);
 
         },
@@ -317,6 +321,9 @@ sap.ui.define([
             this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
             this._oPrintingInterface.NORM = this._convertMultipleLineText(this._oPrintingInterface.NORM);
             this._oPrintingInterface.PRDCLS = this._convertMultipleLineText(this._oPrintingInterface.PRDCLS);
+            this._oPrintingInterface.PEG_BSTNK = this._replacePolishChars(this._oPrintingInterface.PEG_BSTNK);
+            this._oPrintingInterface.PEG_KDMAT = this._replacePolishChars(this._oPrintingInterface.PEG_KDMAT);
+            this._oPrintingInterface.QUANTITYDISPLAY = this._oPrintDetails.quantityDisplay;
             //this._oPrintingInterface.ZERT_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZERT_TXT);
         },
 
@@ -375,6 +382,9 @@ sap.ui.define([
             this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
             this._oPrintingInterface.NORM = this._convertMultipleLineText(this._oPrintingInterface.NORM);
             this._oPrintingInterface.PRDCLS = this._convertMultipleLineText(this._oPrintingInterface.PRDCLS);
+            this._oPrintingInterface.PEG_BSTNK = this._replacePolishChars(this._oPrintingInterface.PEG_BSTNK);
+            this._oPrintingInterface.PEG_KDMAT = this._replacePolishChars(this._oPrintingInterface.PEG_KDMAT);
+            this._oPrintingInterface.QUANTITYDISPLAY = this._oPrintDetails.quantityDisplay;
             //this._oPrintingInterface.ZERT_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZERT_TXT);
         },
 
@@ -435,6 +445,10 @@ sap.ui.define([
             this._oPrintingInterface.ZZVERP_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZZVERP_TXT);
             this._oPrintingInterface.NORM = this._convertMultipleLineText(this._oPrintingInterface.NORM);
             this._oPrintingInterface.PRDCLS = this._convertMultipleLineText(this._oPrintingInterface.PRDCLS);
+            this._oPrintingInterface.PEG_BSTNK = this._replacePolishChars(this._oPrintingInterface.PEG_BSTNK);
+            this._oPrintingInterface.PEG_KDMAT = this._replacePolishChars(this._oPrintingInterface.PEG_KDMAT);
+            this._oPrintingInterface.QUANTITYDISPLAY = this._oPrintDetails.quantityDisplay;
+            
             //this._oPrintingInterface.ZERT_TXT = this._convertMultipleLineText(this._oPrintingInterface.ZERT_TXT);
         },
 
@@ -481,6 +495,20 @@ sap.ui.define([
         _convertMultipleLineText(text){
             return text.replaceAll("$&", "\n");
         },
+        _replacePolishChars(text){
+            text = text.replaceAll("Ł", "L");
+            text = text.replaceAll("ł", "l");
+            text = text.replaceAll("ą", "a");
+            text = text.replaceAll("Ą", "A");
+            text = text.replaceAll("Ę", "E");
+            text = text.replaceAll("ę", "e");
+            text = text.replaceAll("Ż", "Z");
+            text = text.replaceAll("ż", "z");
+            text = text.replaceAll("Ó", "O");
+            text = text.replaceAll("ó", "o");
+            return text;
+        },
+
         _convertDescription: function(){
             this._oPrintingInterface.DESCRIPTION = this._oPrintingInterface.DESCRIPTION.replaceAll("$&", "\n");
         },
@@ -536,6 +564,7 @@ sap.ui.define([
                                                                 "workCenter" : this._oPrintingInterface.workCenter,
                                                                 "resource": this._oPrintingInterface.resource,
                                                                 "QUANTITY": this._oPrintingInterface.QUANTITY,
+                                                                "QUANTITYDISPLAY": this._oPrintingInterface.QUANTITYDISPLAY,
                                                                 "EAN11": this._oPrintingInterface.EAN11 ? parseInt(this._oPrintingInterface.EAN11).toString() : this._oPrintingInterface.EAN11,
                                                                 "SALES_TEXT": this._oPrintingInterface.SALES_TEXT,
                                                                 "BR": this._oPrintingInterface.BR,

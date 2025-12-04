@@ -45,6 +45,7 @@ sap.ui.define([
                 this._oMode = oMode;
                 this._oPluginViewController = oPluginViewController;
                 this._oErrorHandler = new ErrorHandler(this._oPluginViewController);
+                this._resourceInstance = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
                 await this._displayDialogLog();
             } catch (oError) {
 
@@ -443,23 +444,6 @@ sap.ui.define([
                 this._oErrorHandler.handleError(oError);
             }
 
-
-            // try{
-            //     let oPallete  = new Palette(this._oPluginViewController);
-            //     let oItem = this._getSelectedItem();
-            //     let oQuanAdditional = await AdditionalIssueDialog.showDialog(oItem);
-            //     if(oQuanAdditional>0){
-            //         //await this._additionalIssue();
-            //         this._oDialogLog.setBusy(true)
-            //         await oPallete.additionalIssue(oItem, oQuanAdditional, this._oHandlerData.sfc, this._oHandlerData.bomComponentRef, this._oHandlerData.operationActivity);
-            //         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteAdditionalIssue"),true,true);
-            //         setTimeout( async ()=> {  await this._getDialogData();
-            //                                 this._oDialogLog.setBusy(false);},1500);
-            //     }
-            // }catch(oError){
-            //     this._oDialogLog.setBusy(false);
-            //     this._oErrorHandler.handleError(oError);
-            // }
         },
 
         _getSelectedItems: function(){
@@ -544,23 +528,6 @@ sap.ui.define([
                     );
                 });
         },
-        _closeNonconformance: async function(oPlant , oNonconformanceId){
-            let sUrl = this._oPluginViewController.getPublicApiRestDataSourceUri() + "nonconformance/v1/close";
-            
-            let oParameters = { plant: oPlant,
-                                id: oNonconformanceId };
-            return await new Promise((resolve,reject)=>{
-                this._oPluginViewController.ajaxPostRequest(sUrl, oParameters,
-                    (oResponseData) => {
-                        resolve();
-                    },
-                    oError=>{
-                        resolve();
-                    }   
-                );
-
-            });
-        },
         _executeLabelPrint: async function(oItem, printer, quantity, printType){
             let oPrintingDetails = {};
             
@@ -588,7 +555,7 @@ sap.ui.define([
             oPrintingDetails.printer = printer;
             oPrintingDetails.operation = "";
             oPrintingDetails.document = 'DM_INFO';
-            oPrintingDetails.printingCopies = 1;
+            oPrintingDetails.printingCopies = this._resourceInstance.getComponentLabelCopies();
             oPrintingDetails.printType = printType;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oPluginViewController, oPrintingDetails);
@@ -619,7 +586,6 @@ sap.ui.define([
         },
         onMaterialSearch: function(oEvent){
             try{
-                //const sQuery = oEvent.getParameter("newValue") ?? oEvent.getParameter("query") ?? "";
                 const oBinding = this._table.getBinding("items");
 
                 let sQuery = this._searchMaterialField.getValue();

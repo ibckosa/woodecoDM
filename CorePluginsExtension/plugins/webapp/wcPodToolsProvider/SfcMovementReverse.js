@@ -6,8 +6,9 @@ sap.ui.define([
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
-    "ibc/dm/plugins/wcPodToolsProvider/IssueReader"
-], function (ObjectUI5, ErrorHandler, OrderRepository, SfcRepository, mobileLibrary, TextHandler, OrderReceiptsFromProgressIndicator, IssueReader) {
+    "ibc/dm/plugins/wcPodToolsProvider/IssueReader",
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
+], function (ObjectUI5, ErrorHandler, OrderRepository, SfcRepository, mobileLibrary, TextHandler, OrderReceiptsFromProgressIndicator, IssueReader, DataCollectionSaver) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcMovementReverse", {
         constructor: function(controller, plant, workCenter, resource, parameters, orderNumber, currentSfcNumber, routing, routingVersion){
@@ -128,135 +129,166 @@ sap.ui.define([
 
             
 
-            parameterValues.push({ name: "GUID",
-                                   comment: this._parameters.GUID,
-                                   value: this._parameters.GUID });
+            // parameterValues.push({ name: "GUID",
+            //                        comment: this._parameters.GUID,
+            //                        value: this._parameters.GUID });
 
-            parameterValues.push({ name: "Q1/Q3",
-                                   comment: this._parameters.GUID,
-                                   value: this._parameters["Q1/Q3"] });
+            // parameterValues.push({ name: "Q1/Q3",
+            //                        comment: this._parameters.GUID,
+            //                        value: this._parameters["Q1/Q3"] });
 
-            parameterValues.push({ name: "CANCELLED",
-                                   comment: this._parameters.GUID,
-                                   value: true });
-
-
-            if(this._parameters.QUANTITY){
-                parameterValues.push({ name: "QUANTITY",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.QUANTITY });
-            }
-
-            if(this._parameters.Q3_CODE){
-                parameterValues.push({ name: "Q3_CODE",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.Q3_CODE });
-            }
-
-            if(this._parameters.NC_CODE){
-                parameterValues.push({ name: "NC_CODE",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.NC_CODE });
-            }
-
-            if(this._parameters.NC_CODE_DESCRIPTION){
-                parameterValues.push({ name: "NC_CODE_DESCRIPTION",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.NC_CODE_DESCRIPTION });
-            }
-
-            if(this._parameters.UOM){
-                parameterValues.push({ name: "UOM",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.UOM });
-            }
-
-            if(this._parameters.MATERIAL){
-                parameterValues.push({ name: "MATERIAL",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.MATERIAL });
-            }
-
-            if(this._parameters.ITEM_NO){
-                parameterValues.push({ name: "ITEM_NO",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.ITEM_NO });
-            }
-
-            if(this._parameters.SALES_ORDER){
-                parameterValues.push({ name: "SALES_ORDER",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.SALES_ORDER });
-            }
-
-            if(this._parameters.SALES_ORDER_ITEM){
-                parameterValues.push({ name: "SALES_ORDER_ITEM",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.SALES_ORDER_ITEM });
-            }
+            // parameterValues.push({ name: "CANCELLED",
+            //                        comment: this._parameters.GUID,
+            //                        value: true });
 
 
-            if(this._parameters.HU){
-                parameterValues.push({ name: "HU",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.HU });
-            }
+            // if(this._parameters.QUANTITY){
+            //     parameterValues.push({ name: "QUANTITY",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.QUANTITY });
+            // }
 
-            if(this._parameters.USER){
-                parameterValues.push({ name: "USER",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.USER });
-            }
+            // if(this._parameters.Q3_CODE){
+            //     parameterValues.push({ name: "Q3_CODE",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.Q3_CODE });
+            // }
+
+            // if(this._parameters.NC_CODE){
+            //     parameterValues.push({ name: "NC_CODE",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.NC_CODE });
+            // }
+
+            // if(this._parameters.NC_CODE_DESCRIPTION){
+            //     parameterValues.push({ name: "NC_CODE_DESCRIPTION",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.NC_CODE_DESCRIPTION });
+            // }
+
+            // if(this._parameters.UOM){
+            //     parameterValues.push({ name: "UOM",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.UOM });
+            // }
+
+            // if(this._parameters.MATERIAL){
+            //     parameterValues.push({ name: "MATERIAL",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.MATERIAL });
+            // }
+
+            // if(this._parameters.ITEM_NO){
+            //     parameterValues.push({ name: "ITEM_NO",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.ITEM_NO });
+            // }
+
+            // if(this._parameters.SALES_ORDER){
+            //     parameterValues.push({ name: "SALES_ORDER",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.SALES_ORDER });
+            // }
+
+            // if(this._parameters.SALES_ORDER_ITEM){
+            //     parameterValues.push({ name: "SALES_ORDER_ITEM",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.SALES_ORDER_ITEM });
+            // }
 
 
-            if(this._parameters.QUANTITY){
-                parameterValues.push({ name: "QUANTITY",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.QUANTITY });
-            }
+            // if(this._parameters.HU){
+            //     parameterValues.push({ name: "HU",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.HU });
+            // }
 
-            if(this._parameters.DATE_CREATED){
-                parameterValues.push({ name: "DATE_CREATED",
-                    comment: this._parameters.GUID,
-                    value: this._parameters.DATE_CREATED });
-            }
+            // if(this._parameters.USER){
+            //     parameterValues.push({ name: "USER",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.USER });
+            // }
 
+
+            // if(this._parameters.QUANTITY){
+            //     parameterValues.push({ name: "QUANTITY",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.QUANTITY });
+            // }
+
+            // if(this._parameters.DATE_CREATED){
+            //     parameterValues.push({ name: "DATE_CREATED",
+            //         comment: this._parameters.GUID,
+            //         value: this._parameters.DATE_CREATED });
+            // }
+            let issuesAsString = [];
             if(this._parameters.CONSUMPTION){
                 for(const consumption of this._parameters.CONSUMPTION){
                     let issueAsString = Object.entries(consumption)
                     .map(([key, value]) => `${key}:${value}`)
                     .join('||');
-
-                    parameterValues.push({ name: "CONSUMPTION",
-                        comment: this._parameters.GUID,
-                        value: issueAsString });
+                    issuesAsString.push(issueAsString);
+                    // parameterValues.push({ name: "CONSUMPTION",
+                    //     comment: this._parameters.GUID,
+                    //     value: issueAsString });
                 }
             }
 
-            let url = this._controller.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
-            let request = {
-                plant: this._plant,
-                group: { dcGroup: "WOODECO_PROD_ACTIVITY",
-                         version: "A" },
-                operation: { operation: this._parameters.SFC_STEP.operation.operation,
-                              version: this._parameters.SFC_STEP.operation.version },
-                parameterValues: parameterValues,
-                stepId: this._parameters.SFC_STEP.stepId,
-                resource: this._resource,
-                workCenter: this._workCenter,
-                sfcs: [ this._parameters.SFC_NUMBER ]
-            };
+            await DataCollectionSaver.saveProductionDC(
+                this._controller,
+                {
+                    plant: this._plant,
+                    sfc: this._parameters.SFC_NUMBER,
+                    resource: this._resource,
+                    operation: this._parameters.SFC_STEP.operation.operation,
+                    productionProcessType: this._parameters["Q1/Q3"],
+                    q3Code: this._parameters.Q3_CODE,
+                    quantity: `${this._parameters.QUANTITY}`,
+                    uom: this._parameters.UOM,
+                    material: this._parameters.MATERIAL,
+                    itemNo: this._parameters.ITEM_NO,
+                    salesOrder: this._parameters.SALES_ORDER, 
+                    saledOrderItem: this._parameters.SALES_ORDER_ITEM,
+                    hu: this._parameters.HU,
+                    cancelled: true,
+                    user: this._parameters.USER,
+                    consumption: issuesAsString,
+                    dateCreated: this._parameters.DATE_CREATED,
+                    // processStart: this._startProcessDate.toJSON(),
+                    // processStop: stopProcessDate.toJSON(),
+                    ncCode: this._parameters.NC_CODE,
+                    ncCodeDescription: this._parameters.NC_CODE_DESCRIPTION,
+                    guid: this._parameters.GUID,
+                    errors: ""
+                }
 
-            return await new Promise((resolve,reject)=>{
-                this._controller.ajaxPostRequest(url, request,
-                    oResponseData => {
-                        resolve();
-                    },
-                    (oError, sHttpErrorMessage) => {                        
-                        resolve();
-                    }
-                );
-            });
+            );
+
+
+            // let url = this._controller.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
+            // let request = {
+            //     plant: this._plant,
+            //     group: { dcGroup: "WOODECO_PROD_ACTIVITY",
+            //              version: "A" },
+            //     operation: { operation: this._parameters.SFC_STEP.operation.operation,
+            //                   version: this._parameters.SFC_STEP.operation.version },
+            //     parameterValues: parameterValues,
+            //     stepId: this._parameters.SFC_STEP.stepId,
+            //     resource: this._resource,
+            //     workCenter: this._workCenter,
+            //     sfcs: [ this._parameters.SFC_NUMBER ]
+            // };
+
+            // return await new Promise((resolve,reject)=>{
+            //     this._controller.ajaxPostRequest(url, request,
+            //         oResponseData => {
+            //             resolve();
+            //         },
+            //         (oError, sHttpErrorMessage) => {                        
+            //             resolve();
+            //         }
+            //     );
+            // });
         
         },
         _executeReceiptStorno: async function(){

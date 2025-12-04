@@ -203,6 +203,7 @@ sap.ui.define([
 
             this._addInformationButton(oInformationContainer, "remarksButton");
             this._addInformationButton(oInformationContainer, "salesTextPL");
+            this._addInformationButton(oInformationContainer, "packagingDescription");
             this._addDekorButton(oInformationContainer);
 
             
