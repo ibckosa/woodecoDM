@@ -623,9 +623,7 @@ sap.ui.define([
             oPrintingDetails.orderCustomValues = this._oOrder.getHeaderCustomValues();
             oPrintingDetails.materialCustomValues = this._oMaterial.getCustomValues();
             oPrintingDetails.quantity = this._oReceiptParameters.quantity;
-            if(this._oReceiptParameters.numberOfRolls>1){
-                oPrintingDetails.quantityDisplay = `${ this._oReceiptParameters.numberOfRolls } x ${ this._oReceiptParameters.quantityPerRoll }`;
-            }
+            oPrintingDetails.quantityDisplay = `${ this._oReceiptParameters.numberOfRolls } x ${ this._oReceiptParameters.quantityPerRoll }`;
             oPrintingDetails.printer = this._oReceiptParameters.printer;
             oPrintingDetails.operation = this._oReceiptParameters.stepId;
             oPrintingDetails.document = 'DM_INFO';

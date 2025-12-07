@@ -159,6 +159,8 @@ sap.ui.define([
             if(!sfcStepInWork){
                 await this._order.completeOrder();
             }
+
+            await this._clearOrderReservationsCap();
         },
         _completeSOLastOperation: async function(){
             try{
@@ -183,6 +185,22 @@ sap.ui.define([
                                        sfcs: sfcs,
                                        operation: this._parameters.operation,
                                        resource: this._parameters.resource };
+    
+            return await new Promise((resolve,reject)=>{
+                this._controller.ajaxPostRequest(sUrl, oRequestParameters,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => { 
+                        resolve();
+                    }
+                );
+            });
+        },
+        _clearOrderReservationsCap: async function(){
+            var sUrl = this._controller.getPublicApiRestDataSourceUri() + "/pe/api/v1/process/processDefinitions/start?key=REG_d29f90c6-eb0f-41fe-9633-54d26661389e";
+            var oRequestParameters = { plant: this._parameters.plant,
+                                       order: this._order.getOrderNumber() };
     
             return await new Promise((resolve,reject)=>{
                 this._controller.ajaxPostRequest(sUrl, oRequestParameters,
