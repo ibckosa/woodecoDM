@@ -150,7 +150,7 @@ sap.ui.define([
             this._searchMaterialField = new sap.m.SearchField({placeholder: "Wyszukaj", search: this.onMaterialSearch.bind(this) });
 
             let oTable = new Table({
-                growing: false,
+                growing: true,
                 sticky: ["ColumnHeaders", "HeaderToolbar"],
                 width: "112rem",
                 inset: false,

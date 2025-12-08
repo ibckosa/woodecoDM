@@ -125,7 +125,7 @@ sap.ui.define([
             let oWorkCenter = new WorkCenter(this._oController, this._oPlant, this._oWorkCenter);
             await oWorkCenter.readData();
             oParameters.plant = this._oPlant;
-            oParameters.size = 150;
+            oParameters.size = 700;
             oParameters.productionSupplyArea = oWorkCenter.getPsa();;
 
             if(this._isReadForOrderPosition === true || this._isReadForQueueManager === true ){
