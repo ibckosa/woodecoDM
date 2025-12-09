@@ -47,15 +47,9 @@ sap.ui.define([
                                      resource: dataCollection.READINGS.RESOURCE });
                     }
                 }
-                // if(!codes||codes.length === 0){
-                //     this._throwError("error.piq.anyDtToUpdate");
-                //     return };
 
                 let oeeCodes = await this._getOeeCodes(codes);
-                // if(!oeeCodes||oeeCodes.length === 0){return};
 
-
-                // try{
                     for(const dataCollection of sfcDtDataCollections){
                         try{
                             let oeeCode;
@@ -63,17 +57,12 @@ sap.ui.define([
                             messages.push({ messageType: "I",
                                             messageValue: this._textHandler.getText("information.piq.dtUpdateAttempt", dataCollection.sfcNumber) });
 
-                            //if(!dataCollection.READINGS.CODE){ this._errorHandler.throwError("error.piq.noCodeDt"); }
 
 
                             if(dataCollection.READINGS.CODE){
-                                oeeCode = oeeCodes.find(code => {return code.resource === dataCollection.READINGS.RESOURCE && code.code === dataCollection.READINGS.CODE });
-
-                                // if(!oeeCode){
-                                //     this._errorHandler.throwError("error.piq.noOeeCodeDt");
-                                // }else if(!oeeCode.reasonCodeId || oeeCode.reasonCodeId ===""){
-                                //     this._errorHandler.throwError("error.piq.noReasonCode");
-                                // }
+                                oeeCode = oeeCodes.find(code => {return code.resource === dataCollection.READINGS.RESOURCE && code.CODE1 === dataCollection.READINGS.CODE1
+                                                                                                                           && code.CODE2 === dataCollection.READINGS.CODE2
+                                                                                                                           && code.CODE3 === dataCollection.READINGS.CODE3   });
                             }
 
 
@@ -106,8 +95,6 @@ sap.ui.define([
                                         
                                     }
                                     await this._saveCreated(dataCollection);
-                                    
-
                                 }
 
 
@@ -226,6 +213,16 @@ sap.ui.define([
                     if(!myStructure.READINGS.DESC){
                         myStructure.READINGS.DESC = "";
                     }
+                    if(!myStructure.READINGS.CODE1){
+                        myStructure.READINGS.CODE1 = null;
+                    }
+                    if(!myStructure.READINGS.CODE2){
+                        myStructure.READINGS.CODE2 = null;
+                    }
+                    if(!myStructure.READINGS.CODE3){
+                        myStructure.READINGS.CODE3 = null;
+                    }
+
                     result.push(myStructure);
                 }
             }
@@ -385,16 +382,20 @@ sap.ui.define([
                 calledPromises.push(this._getOeeCodeApi(code));
             }
             if(calledPromises.length>0){
-                results = await Promise.all(calledPromises);
+                let apiResults = await Promise.all(calledPromises);
+                for(const apiResult of apiResults){
+                    results = results.concat(apiResult);
+                }
             }
 
             return results;
 
         },
         _getOeeCodeApi: async function(code){
-            let oReturn = { code: code.code,
-                resource: code.resource,
-                reasonCodeId: "" };
+            
+            // let oReturn = { code: code.code,
+            //     resource: code.resource,
+            //     reasonCodeId: "" };
                 
             let sUrl = this._controller.getPublicApiRestDataSourceUri() + "resourceReasonCode/v1/resourceReasonCodes";
             let oRequestParameters = { plant: this._parameters.plant,
@@ -405,16 +406,21 @@ sap.ui.define([
             return new Promise((resolve,reject)=>{
                 this._controller.ajaxGetRequest(sUrl, oRequestParameters,
                      (oResponseData) => {
+                        let result = [];
                         if(oResponseData.length>0){
-                            try{
-                                oReturn.reasonCodeId = oResponseData[0].keyId;
-                                oReturn.timeElement = oResponseData[0].timeElement.timeElementName;
-                            }catch(error){}
+                            for(const response of oResponseData){
+                                result.push({
+                                    CODE1: response.reasonCode1,
+                                    CODE2: response.reasonCode2,
+                                    CODE3: response.reasonCode3,
+                                    resource: oRequestParameters.resource,
+                                    reasonCodeId: response.keyId })
+                            }
                         }
-                        resolve(oReturn);
+                        resolve(result);
                     },
                     (oError, sHttpErrorMessage) => {
-                        resolve(oReturn);
+                        resolve([]);
                     }
                 );
             });

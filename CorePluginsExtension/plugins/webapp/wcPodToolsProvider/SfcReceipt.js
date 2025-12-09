@@ -292,6 +292,11 @@ sap.ui.define([
             if(this._oReceiptParameters.quantity < palleteQuanRange.minPalleteQuantity || this._oReceiptParameters.quantity > palleteQuanRange.maxPalleteQuantity){
                 await this._checkConfirmTolerance(palleteQuanRange);
             }
+
+            let oCurrentStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
+            if(oCurrentStep.resource&&oCurrentStep.resource!==this._oReceiptParameters.resource){
+                this._oErrorHandler.throwErrorPopup("error.q1.wrongResource", oCurrentStep.resource);
+            }
         },
         _getStorageLocation: async function(){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "/inventory/v1/storageLocations";

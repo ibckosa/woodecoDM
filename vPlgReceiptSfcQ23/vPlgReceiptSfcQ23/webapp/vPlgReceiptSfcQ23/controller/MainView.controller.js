@@ -453,6 +453,10 @@ sap.ui.define([
                 }
             }
 
+            if(oSfcDetails.step.resource&&oSfcDetails.step.resource!==this._oResource){
+                this._oErrorHandler.throwErrorPopup("error.q1.wrongResource", oSfcDetails.step.resource);
+            }
+
         },
         _executeSfcScrap: async function(oScrapQuantity, oSfcDetails, oResourceReasonCode){
             var sUrl = this.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/scrap";
