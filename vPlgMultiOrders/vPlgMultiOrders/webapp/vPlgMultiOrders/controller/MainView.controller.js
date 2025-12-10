@@ -420,7 +420,6 @@ sap.ui.define([
                     this._oPreviousSelectedItem.removeStyleClass("selectedRowBackground");
                 }
                 this._oPreviousSelectedItem = oSelectedItem;
-
             }
         },
         onOrdersTableUpdateFinished: function(oEvent) {
@@ -439,7 +438,6 @@ sap.ui.define([
 
             let salesText = orderItemDetails.selectedOrder.salesText.replaceAll("$&","\n");
         
-            // Wyświetl tekst sprzedażowy jako komunikat
             if (salesText) {
                 sap.m.MessageBox.information(salesText);
             } else {
@@ -447,15 +445,27 @@ sap.ui.define([
             }
         },
 
+        onPackagingPress: function () {
+            let orderItemDetails = this.getView().getModel("viewModel").getData();
+
+            let packagingDescription = orderItemDetails.selectedOrder.packagingDescription.replaceAll("$&","\n");
+            if (packagingDescription) {
+                sap.m.MessageBox.information(packagingDescription);
+            } else {
+                sap.m.MessageBox.information("Brak opisu pakowania dla wybranej pozycji.");
+            }
+        },
+
+
         calculateProgress: function(deliveredQuantity, quantity) {
             if (!quantity || quantity === 0) {
-                return 0; // Zapobiega dzieleniu przez zero
+                return 0; 
             }
-            return (deliveredQuantity / quantity) * 100; // Oblicza procent
+            return (deliveredQuantity / quantity) * 100; 
         },
         
         formatProgressText: function(deliveredQuantity, quantity) {
-            return deliveredQuantity + " z " + quantity; // Tworzy tekst w formacie X / Y
+            return deliveredQuantity + " z " + quantity;
         },
         onFileViewPress: function(oEvent){
             let oItem = oEvent.getSource().getParent().getBindingContext("viewModel").getObject();
@@ -534,6 +544,7 @@ sap.ui.define([
                     if(i===index){
                         item.addStyleClass("selectedRowBackground");
                         this._oPreviousSelectedItem = item;
+                         this.getView().byId("ordersTable").setSelectedItem(item);
                     }else{
                         item.removeStyleClass("selectedRowBackground");
                     }

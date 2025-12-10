@@ -13,8 +13,10 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
     "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
-], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, HuGenerator, IssuesManagerV2, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, OrderReceiptsFromProgressIndicator, ResourceRepository, DataCollectionSaver) {
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver",
+    "ibc/dm/plugins/wcPodToolsProvider/ConfirmDialog",
+], function (ObjectUI5, ErrorHandler, SfcRepository, OrderRepository, HuGenerator, IssuesManagerV2, TextHandler, Sfc, Dialog, mobileLibrary, SfcReceiptPrint, MaterialRepository, 
+    OrderReceiptsFromProgressIndicator, ResourceRepository, DataCollectionSaver, ConfirmDialog) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcMOReceipt", {
         constructor: function(oController, oReceiptParameters){
@@ -142,6 +144,18 @@ sap.ui.define([
             if(this._oReceiptParameters.quantity  > this._oReceiptParameters.quantityPerPalletMax || 
                this._oReceiptParameters.quantity  < this._oReceiptParameters.quantityPerPalletMin){
                 await this._checkConfirmTolerance();
+            }
+
+            if(this._oResource.getMOSelectionMode().toUpperCase() === 'AUTOMATIC'){
+                let leftPlannedPalletes = this._oReceiptParameters.plannedPalletes - this._oReceiptParameters.receiptCount;
+                if(leftPlannedPalletes < 0){
+                    leftPlannedPalletes = 0;
+                }
+                if(leftPlannedPalletes<this._oReceiptParameters.palletesNumber){
+                        let confirmDialog = new ConfirmDialog();
+                        confirmDialog.setContentText("information.q1.exceedPlannedReceipts", leftPlannedPalletes);
+                        await confirmDialog.show();
+                }
             }
         },
         _getStorageLocation: async function(){

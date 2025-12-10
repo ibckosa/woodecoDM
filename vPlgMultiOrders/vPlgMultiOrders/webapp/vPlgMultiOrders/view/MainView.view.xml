@@ -14,6 +14,7 @@
                     <Table
                     id="ordersTable"
                     mode="SingleSelectMaster"
+                    includeItemInSelection="true"
                     items="{multiOrdersModel>/positions}"
                     selectionChange="onOrderSelect">
                         <columns>
@@ -101,7 +102,13 @@
                             id="btnDekor"
                             text="Dekor"
                             type="Emphasized"
-                            press="onDekorPress"/>
+                            press="onDekorPress"
+                            class="sapUiTinyMarginEnd"/>
+                        <Button
+                            id="btnPackagingDescription"
+                            text="{i18n>packagingDescription}"
+                            type="Emphasized"
+                            press="onPackagingPress"/>
                     </HBox>
                 
                 </HBox>

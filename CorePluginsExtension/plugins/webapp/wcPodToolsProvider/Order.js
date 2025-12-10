@@ -114,6 +114,9 @@ sap.ui.define([
                                 oMoStructure.quantityPerPallet = Number(oPartOfPackingCode); 
                             }
                             break;
+                        case "ZZVERP_TXT":
+                            oMoStructure.packagingDescription = attribute.field_value;
+                            break;
                         case "AUFPS":
                             oMoStructure.itemNumberErp = attribute.field_value;
                             break;
@@ -226,6 +229,7 @@ sap.ui.define([
                 salesOrderItem: "",
                 salesText: "",
                 packagingCode: "",
+                packagingDescription: "",
                 quantityPerPallet: 0,
                 quantityPerPalletMax: 0,
                 quantityPerPalletMin: 0,
