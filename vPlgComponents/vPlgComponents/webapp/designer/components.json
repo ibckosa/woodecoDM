@@ -9,7 +9,7 @@
 			"i18n": "ibc.dm.vPlgComponents.vPlgComponents.i18n.i18n",
             "productionProcessEnabled": true,
            "productionProcessTitle": "vPlgComponents",
-			"supportedPodTypes": ["WORK_CENTER","OPERATION","ORDER"]
+			"supportedPodTypes": ["WORK_CENTER","OPERATION","ORDER","OTHER"]
 		}   
 	]
 }

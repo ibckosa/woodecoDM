@@ -1,0 +1,46 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc"
+ xmlns="sap.m" xmlns:l="sap.ui.layout"
+ xmlns:f="sap.ui.layout.form"
+ xmlns:core="sap.ui.core" xmlns:html="http://www.w3.org/1999/xhtml" 
+ controllerName="ibc.dm.vPlgSelectOrder.vPlgSelectOrder.controller.MainView" width="100%" height="100%">
+<mvc:content>
+  <VBox class="sapUiSmallMarginTop sapUiSmallMarginBegin">
+    <HBox justifyContent="Start" alignItems="Center" > 
+      <Text text="{i18n>orderNumberLabel}" class="sapUiSmallMarginEnd"/>
+      <Input id="selectedOrderInput" width="15rem" class="sapUiSmallMarginEnd"/>
+      <Button id="selectOrderBtn" text="{i18n>buttonSelectLabel}" press="onSelectPress"/>
+    </HBox>
+    <Table id="componentsTable"   
+    items="{path:'selectOrderModel>/orderOperations'}"
+    mode="SingleSelectMaster"
+    includeItemInSelection="true"
+    selectionChange="onOperationSelect"
+    inset="false">
+      <columns>
+        <Column width="15rem">
+          <Text text="{i18n>materialLabel}" />
+        </Column>
+        <Column width="15rem">
+          <Text text="{i18n>materialDescriptionLabel}" />
+        </Column>
+        <Column width="15rem">
+          <Text text="{i18n>operationLabel}" />
+        </Column>
+        <Column width="15rem">
+          <Text text="{i18n>workCenterLabel}" />
+        </Column>
+      </columns>
+      <items>
+        <ColumnListItem vAlign="Middle">
+          <cells>
+            <Text text="{selectOrderModel>material}" />
+            <Text text="{selectOrderModel>materialDescription}" />
+            <Text text="{selectOrderModel>operation}" />
+            <Text text="{selectOrderModel>workCenter}" />
+          </cells>
+        </ColumnListItem>
+      </items>
+    </Table>
+  </VBox>
+</mvc:content>
+</mvc:View>

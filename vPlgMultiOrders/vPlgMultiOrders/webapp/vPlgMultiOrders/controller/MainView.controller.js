@@ -634,11 +634,10 @@ sap.ui.define([
                 }
 
                 if(endOrderDate){
-                    let oEndOrderDate = new Date(startOrderDate);
+                    let oEndOrderDate = new Date(endOrderDate);
                     if(oEndOrderDate<oRequestedDate){
                         this._oErrorHandler.throwErrorPopup("error.multiOrders.OAWrongDate2")
                     }
-
                 }
             }
 

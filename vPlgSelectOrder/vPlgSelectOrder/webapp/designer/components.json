@@ -1,0 +1,15 @@
+{
+	"components": [
+		{
+			"id": "vPlgSelectOrder",
+			"type": "VIEW_PLUGIN",
+			"allowMultipleInstances": false,
+			"name": "ibc.dm.vPlgSelectOrder.vPlgSelectOrder",
+			"propertyEditor": "ibc.dm.vPlgSelectOrder.vPlgSelectOrder.builder.PropertyEditor",
+			"i18n": "ibc.dm.vPlgSelectOrder.vPlgSelectOrder.i18n.i18n",
+            "productionProcessEnabled": true,
+            "productionProcessTitle": "vPlgSelectOrder",
+			"supportedPodTypes": ["WORK_CENTER", "ORDER", "OTHER"]
+		}   
+	]
+}

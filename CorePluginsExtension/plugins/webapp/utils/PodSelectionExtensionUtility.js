@@ -610,16 +610,16 @@ sap.ui.define([
                                                                                                           q2Destination: "PACKAGING",
                                                                                                           operation: oLine.operation,
                                                                                                           operationVersion: oLine.operationVersion } );
-                        await this._loadDataQ23();
-                        this._oDialogQ23.setBusy(false);
+                        
                     }catch(oError){ 
-                        this._oDialogQ23.setBusy(false);
                         this._oErrorHandler.handleError(oError);
                     }
                 }
-                
+                await this._loadDataQ23();
+                this._oDialogQ23.setBusy(false);
                 
             }catch(oError){
+                this._oDialogQ23.setBusy(false);
                 this._oErrorHandler.handleError(oError);
             }
         },
@@ -649,17 +649,16 @@ sap.ui.define([
                                                                                                           q2Destination: "RETURN",
                                                                                                           operation: oLine.operation,
                                                                                                           operationVersion: oLine.operationVersion } );
-                        await this._loadDataQ23();
                         this._showSuccessMessage("q23.success.returnNonconformance");
-                        this._oDialogQ23.setBusy(false);
                     }catch(oError){ 
-                        this._oDialogQ23.setBusy(false);
                         this._oErrorHandler.handleError(oError);
                      }
-                }
-                
+                }f
+                await this._loadDataQ23();
+                this._oDialogQ23.setBusy(false);
             }catch(oError){
-                this._oErrorHandler.handleError(oError);
+              this._oDialogQ23.setBusy(false);
+              this._oErrorHandler.handleError(oError);
             }
             
         }, 

@@ -1,0 +1,19 @@
+{
+  "welcomeFile": "/vPlgSelectOrder/index.html",
+  "authenticationMethod": "none",
+  "logout": {
+    "logoutEndpoint": "/do/logout"
+  },
+  "responseHeaders": [
+    { "name": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" },
+    { "name": "Pragma", "value":  "no-cache" },
+    { "name": "Expires", "value":  "0" }
+  ],
+  "routes": [
+    {
+      "source": "^/vPlgSelectOrder/(.*)$",
+      "target": "$1",
+      "localDir": "webapp"
+    }
+  ]
+}

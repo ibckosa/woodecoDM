@@ -10,7 +10,7 @@ sap.ui.define([
     });
     oWorkCenterRepository._oWorkCenters = [];
 
-    oWorkCenterRepository.getInstance =  async function(oController, oPlant, oWorkCenterNumber ){f
+    oWorkCenterRepository.getInstance =  async function(oController, oPlant, oWorkCenterNumber ){
         let oWorkCenter;
         
         let oWorkCenterRepo = this._oWorkCenters.find(workCenter=>{ return workCenter.plant === oPlant && workCenter.workCenterNumber === oWorkCenterNumber  });

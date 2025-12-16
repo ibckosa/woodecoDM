@@ -9,7 +9,7 @@
 			"i18n": "ibc.dm.vPlgReverse.vPlgReverse.i18n.i18n",
             "productionProcessEnabled": true,
            "productionProcessTitle": "vPlgReverse",
-			"supportedPodTypes": ["WORK_CENTER","OPERATION","ORDER"]
+			"supportedPodTypes": ["WORK_CENTER","OPERATION","ORDER","OTHER"]
 		}   
 	]
 }

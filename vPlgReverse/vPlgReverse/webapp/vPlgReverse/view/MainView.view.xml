@@ -17,7 +17,7 @@
                 class="sapUiSmallContentPadding">  
             <content> 
                 <Table id="stornoTable"   items="{ path: 'stornoModel>/items',
-                                                   factory: '.createRow' }" inset="false">
+                                                   factory: '.createRow' }" inset="false" growing="true" growingThreshold="100">
                 <columns>
                     <Column>
                         <Text text="Data/godzina" />
@@ -49,6 +49,4 @@
                 </Table>
             </content>
 	    </Panel>		
-        
-  
 </mvc:View>

@@ -206,6 +206,13 @@ sap.ui.define([
 
         },
         getSfcs: function(){
+            if(!this._oDetails.sfcs){
+              return [];
+            }
+            let mainSfc = this._oDetails.sfcs.find(sfc=>{return sfc === `${this._oOrderNumber}_M0000`});
+            if(!mainSfc){
+              this._oDetails.sfcs.push(`${this._oOrderNumber}_M0000`);
+            }
             return this._oDetails.sfcs;
         },
         getProducationQuantity: function(){
@@ -364,6 +371,9 @@ sap.ui.define([
             }catch(oError){}
 
             return oReturn;
+        },
+        getRouting: function(){
+          return this._oDetails.routing;
         },
         getOARequired: function(){
             let oReturn = false;

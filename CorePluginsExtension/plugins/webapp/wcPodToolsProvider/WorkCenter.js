@@ -33,7 +33,7 @@ sap.ui.define([
             let result = [];
 
             try{
-                for(member of this._oDetails.members){
+                for(const member of this._oDetails.members){
                     if(member.resource){
                         result.push(member.resource.resource);
                     }

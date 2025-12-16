@@ -154,7 +154,6 @@ sap.ui.define([
             await this._signoff([this._parameters.sfc]);
             //await this._completeOperation();
             await this._invalidateSfc(this._parameters.sfc);
-            
 
             if(!sfcStepInWork){
                 await this._order.completeOrder();
@@ -197,10 +196,11 @@ sap.ui.define([
                 );
             });
         },
-        _clearOrderReservationsCap: async function(){
-            var sUrl = this._controller.getPublicApiRestDataSourceUri() + "/pe/api/v1/process/processDefinitions/start?key=REG_d29f90c6-eb0f-41fe-9633-54d26661389e";
+        w: async function(){
+            var sUrl = this._controller.getPublicApiRestDataSourceUri() + "/pe/api/v1/process/processDefinitions/start?key=REG_af1c11ca-bdfe-443c-886c-102bc3173dfd";
             var oRequestParameters = { plant: this._parameters.plant,
-                                       order: this._order.getOrderNumber() };
+                                       order: this._order.getOrderNumber(),
+                                       operation: this._parameters.operation  };
     
             return await new Promise((resolve,reject)=>{
                 this._controller.ajaxPostRequest(sUrl, oRequestParameters,

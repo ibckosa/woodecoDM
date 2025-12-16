@@ -1,0 +1,79 @@
+/* Enter your custom styles here */
+                    .sapMBtn.bigButtonNC .sapMBtnInner {
+                    padding-top: 1rem;
+                    padding-left: 0.5rem;
+                    padding-right: 0.5rem;
+                    padding-bottom: 0.5rem;
+                    text-align: center;
+                    font-size: 2rem;
+                    height: 4rem;
+                    background-color: #107E3E;
+                    color: white;
+                    }
+
+                    .sapMBtn.bigButtonLHU .sapMBtnInner {
+                        font-size: 2rem;
+                        height: 4.5rem;
+                        padding-top: 0rem;
+                        text-align: center;
+                        background-color: #107E3E;
+                        color: white;
+                    }
+
+                    .bigButtonLHU .sapMBtnInner {
+                        height: 4rem;
+                    }
+
+                    .sapMBtn.bigButtonLHU {
+                        height: 3rem;
+                        padding: 0rem;
+                    }
+
+                    .bigButtonLHU .sapMBtnContent {
+                        white-space: wrap;
+                        padding-inline: 0.2rem;
+                        line-height: 1.70rem;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+
+                    .redBoldedRow .sapMText {
+                        color: red !important;
+                        font-weight: bold !important;
+                    }
+
+                    .fontTextHuDialog {
+                        font-size: 2rem;
+                        font-weight: bold !important;
+                        color: black !important;
+                    }
+
+                    .fontTextQuanDialog {
+                        font-size: 1.7rem;
+                    }
+
+
+                    .sapMBtn.bigButtonDialogHu .sapMBtnInner {
+                        font-size: 2rem;
+                        height: 3.3rem;
+                        text-align: center;
+                        background-color: #107E3E;
+                        color: white;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        /* transform: scale(2); */
+                    }
+
+                    .sapMInputBase.inputFontDialog {
+                        height: 2.5rem;
+                    }
+
+                    .sapMInputBase.inputFontDialog .sapMInputBaseContentWrapper {
+                        height: 2.5rem;
+                    }
+
+                    .sapMInputBase.inputFontDialog .sapMInputBaseContentWrapper .sapMInputBaseInner {
+                        font-size: 2rem;
+                    }
