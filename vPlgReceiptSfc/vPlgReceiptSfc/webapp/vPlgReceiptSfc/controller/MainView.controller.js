@@ -92,6 +92,7 @@ sap.ui.define([
                 let aSelections = oPodSelectionModel.getSelections();
                 if(!aSelections || aSelections.length < 1 ){ return; }
                 let oFirstSelection = aSelections[0];
+                this._setInternalVariables();
 
                 if(oFirstSelection.getSfc().getSfc() !== this._oCurrentSfc||this._reloadQ1Plugin || true){
                     this.getView().setBusyIndicatorDelay(0);
@@ -121,6 +122,24 @@ sap.ui.define([
                 bNotificationsEnabled = oConfiguration.notificationsEnabled;
             }
             return bNotificationsEnabled;
+        },
+
+        _setInternalVariables: function(){
+            try{
+                let oPodSelectionModel = this.getPodSelectionModel();
+                let oSelections = oPodSelectionModel.getSelections(); 
+                let oFirstSelection = oSelections[0]; 
+                this._oPlant = this.getPodController().getUserPlant();
+                this._oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
+                this._oWorkCenter = oPodSelectionModel.workCenter;
+                this._oResource = oPodSelectionModel.resource.resource;
+                this._oSfc = oFirstSelection.getSfc().getSfc();
+                this._operation = oFirstSelection.getSfcData().getOperation();
+                this._routing = oFirstSelection.getSfcData().getRouting();
+                this._routingVersion = oFirstSelection.getSfcData().getRoutingVersion();
+            }catch(error){
+                this._oErrorHandler.throwErrorNoDisplay("");
+            }
         },
 
         /*
@@ -220,6 +239,9 @@ sap.ui.define([
                     oError.displayType = "POPUP";
                 }
                 this.getView().setBusy(false);
+                this._oErrorHandler.setErrorContext({ sfc: this._oSfc, 
+                                                      plant: this._oPlant,
+                                                      resource: this._oResource });
                 this._oErrorHandler.handleError(oError);
             }
             

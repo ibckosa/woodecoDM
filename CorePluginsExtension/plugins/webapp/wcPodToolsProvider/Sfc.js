@@ -128,6 +128,7 @@ sap.ui.define([
                         resolve();
                     },
                     (oError) => { 
+                        oError.sendAlert = true;
                         reject(oError);
                     }
                 );

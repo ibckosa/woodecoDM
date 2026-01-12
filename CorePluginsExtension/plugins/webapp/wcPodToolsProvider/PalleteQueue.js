@@ -53,7 +53,7 @@ sap.ui.define([
             let oReturnQueue = [];
 
             let oRequestParameters = await this._getRequestParameters();
-            let oPalletes = await this._readPalletesApiCall(oRequestParameters);
+            let oPalletes = await this._readPalletesApiCalls(oRequestParameters);
 
             if(this._isReadForOrderPosition){
                 oReturnQueue = await this._getQueueForPosition(oPalletes);
@@ -104,14 +104,37 @@ sap.ui.define([
             }
             return queue;
         },
+        _readPalletesApiCalls: async function(oRequestParamteres){
+          let result = [];
+          let additionalApiCalls = [];
+          oRequestParamteres.page = 0;
+          let firstResults = await this._readPalletesApiCall(oRequestParamteres);
+          result = result.concat(firstResults.content);
 
+
+          if(firstResults.totalPages>0){
+            for(let i=1;i<firstResults.totalPages;i++){
+              oRequestParamteres.page = i;
+              additionalApiCalls.push(this._readPalletesApiCall(oRequestParamteres));
+            }
+          }
+
+          if(additionalApiCalls.length>0){
+            let additionalResults = await Promise.all(additionalApiCalls);
+            for(const additionalResult of additionalResults){
+              result = result.concat(additionalResult.content);
+            }
+          }
+
+          return result;
+        },
         _readPalletesApiCall: async function(oRequestParamteres){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventories";
 
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxGetRequest(sUrl, oRequestParamteres,
                     (oResponseData) => {
-                        resolve(oResponseData.content);
+                        resolve(oResponseData);
                     },
                     (oError, sHttpErrorMessage) => {
                         reject(oError);
@@ -125,8 +148,8 @@ sap.ui.define([
             let oWorkCenter = new WorkCenter(this._oController, this._oPlant, this._oWorkCenter);
             await oWorkCenter.readData();
             oParameters.plant = this._oPlant;
-            oParameters.size = 700;
-            oParameters.productionSupplyArea = oWorkCenter.getPsa();;
+            oParameters.size = 50;
+            oParameters.productionSupplyArea = oWorkCenter.getPsa();
 
             if(this._isReadForOrderPosition === true || this._isReadForQueueManager === true ){
                 oParameters.material = this._oAdditionalData.material;

@@ -1,13 +1,18 @@
 sap.ui.define([
     "sap/ui/base/ManagedObject",
-    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (ManagedObject, TextHandler) {
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
+    "ibc/dm/plugins/wcPodToolsProvider/ErrorAlert"
+], function (ManagedObject, TextHandler, ErrorAlert) {
     "use strict";
     return ManagedObject.extend("ibc.dm.plugins.wcPodToolsProvider.ErrorHandler", {
         constructor: function(oController){
             //Object.prototype.constructor.apply(this, arguments);
             this._oController = oController;
             this._textHandler = new TextHandler();
+        },
+
+        setErrorContext: function(parameters){
+          this._errorContext = parameters;
         },
 
         handleError: function(oError){
@@ -20,7 +25,18 @@ sap.ui.define([
             }else if(oError.displayType === "POPUP"){ 
                 this.showErrorAsPopup(oErrorText);
             }else{}
-            
+
+            if(oError.sendAlert){
+              this._sendAlert(oErrorText);
+            }
+        },
+        _sendAlert: function(errorText){
+          if(this._errorContext){
+            ErrorAlert.createAlert(this._oController, { PLANT: this._errorContext.plant,
+                                                        SFC: this._errorContext.sfc,
+                                                        ErrorDesc: errorText,
+                                                        Resource: this._errorContext.resource });
+          } 
         },
         showError: function(oErrorText){
             this._oController.showErrorMessage(oErrorText, true, true);
@@ -62,6 +78,13 @@ sap.ui.define([
                            displayType: "POPUP" };
             throw oError;
         },
+        throwErrorPopupWithAlert: function(oTextId, ...args){
+            let oError = { errorMessage: this._textHandler.getText(oTextId, ...args),
+                           displayType: "POPUP",
+                           sendAlert: true };
+            throw oError;
+        },
+
         throwErrorNoDisplay: function(oTextId, ...args){
             let oError = { errorMessage: this._textHandler.getText(oTextId, ...args),
                            displayType: "NO_DISPLAY" };

@@ -243,7 +243,7 @@ sap.ui.define([
                     operation: this._parameters.SFC_STEP.operation.operation,
                     productionProcessType: this._parameters["Q1/Q3"],
                     q3Code: this._parameters.Q3_CODE,
-                    quantity: `${this._parameters.QUANTITY}`,
+                    quantity: this._parameters.QUANTITY?`${this._parameters.QUANTITY}`:undefined,
                     uom: this._parameters.UOM,
                     material: this._parameters.MATERIAL,
                     itemNo: this._parameters.ITEM_NO,

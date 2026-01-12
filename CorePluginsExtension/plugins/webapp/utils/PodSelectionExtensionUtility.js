@@ -653,7 +653,7 @@ sap.ui.define([
                     }catch(oError){ 
                         this._oErrorHandler.handleError(oError);
                      }
-                }f
+                }
                 await this._loadDataQ23();
                 this._oDialogQ23.setBusy(false);
             }catch(oError){

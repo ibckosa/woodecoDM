@@ -112,6 +112,7 @@ sap.ui.define([
             try {
                 this.getView().setBusyIndicatorDelay(0);
                 this.getView().setBusy(true);
+                
                 var oPodSelectionModel = this.getPodSelectionModel();
                 var aSelections = oPodSelectionModel.getSelections(); 
                 var oFirstSelection = aSelections[0]; 
@@ -119,8 +120,10 @@ sap.ui.define([
                 this._oOrderNumber = oFirstSelection.getShopOrder().getShopOrder();
                 this._oWorkCenter = oPodSelectionModel.workCenter;
                 this._oResource = oPodSelectionModel.resource.resource;
+                this._oSfc = oFirstSelection.getSfc().getSfc();
                 this._oResourceInstance = await ResourceRepository.getResourceInstance(this, this._oPlant, this._oResource);
                 this._oOrder = await OrderRepository.readOrderByPassBuffer(this, this._oPlant, this._oOrderNumber);
+                
                 this._routing = oFirstSelection.getSfcData().getRouting(),
                 this._routingVersion = oFirstSelection.getSfcData().getRoutingVersion() 
                 let oPositions = await this._oOrder.getOrderPositions(this._routing, this._routingVersion);
@@ -257,6 +260,12 @@ sap.ui.define([
                     
 
             }catch(oError){
+                if(!oError.displayType){
+                    oError.displayType = "POPUP";
+                }
+                this._oErrorHandler.setErrorContext({ sfc: this._oSfc, 
+                                                      plant: this._oPlant,
+                                                      resource: this._oResource });
                 this.getView().setBusy(false);
                 this._oErrorHandler.handleError(oError);
             }

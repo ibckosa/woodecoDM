@@ -196,7 +196,7 @@ sap.ui.define([
                 );
             });
         },
-        w: async function(){
+        _clearOrderReservationsCap: async function(){
             var sUrl = this._controller.getPublicApiRestDataSourceUri() + "/pe/api/v1/process/processDefinitions/start?key=REG_af1c11ca-bdfe-443c-886c-102bc3173dfd";
             var oRequestParameters = { plant: this._parameters.plant,
                                        order: this._order.getOrderNumber(),

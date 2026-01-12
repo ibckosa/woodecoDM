@@ -453,7 +453,8 @@ sap.ui.define([
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {      
-                        oError.apiName = "sfc/complete";                  
+                        oError.apiName = "sfc/complete";    
+                        oError.sendAlert = true;         
                         reject(oError);
                     }
                 );
@@ -483,6 +484,7 @@ sap.ui.define([
                     },
                     (oError, sHttpErrorMessage) => {
                         oError.apiName = "packingUnits"; 
+                        oError.sendAlert = true; 
                         reject(oError);
                     }
                 );

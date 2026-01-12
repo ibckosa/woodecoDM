@@ -95,7 +95,7 @@ sap.ui.define([
             for(let i=0; i<this._oReceiptParameters.palletesNumber;i++){
                 this._oReceiptParameters.sfc = await Sfc.splitSfc(this._oController, this._oReceiptParameters.plant, sourceSfc , this._oReceiptParameters.quantity, true);
                 let sfc = await SfcRepository.ReadSfcBypassBuffer(this._oController, this._oReceiptParameters.plant, this._oReceiptParameters.sfc, this._oReceiptParameters.routing, this._oReceiptParameters.routingVersion );
-                await sfc.complete(this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource);
+                await sfc.complete(this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource, this._oReceiptParameters.quantity);
                 //await this._executeQuantityConfirmation();
                 if(oStorageLocation.isEWMManagedStorageLocation === true){
                     await this._executeEwmReceipt();
@@ -156,6 +156,11 @@ sap.ui.define([
                         confirmDialog.setContentText("information.q1.exceedPlannedReceipts", leftPlannedPalletes);
                         await confirmDialog.show();
                 }
+            }
+
+            let oCurrentStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
+            if(oCurrentStep.resource&&oCurrentStep.resource!==this._oReceiptParameters.resource){
+                this._oErrorHandler.throwErrorPopup("error.q1.wrongResource", oCurrentStep.resource);
             }
         },
         _getStorageLocation: async function(){
@@ -291,11 +296,12 @@ sap.ui.define([
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPostRequest(sUrl, oParameters,
                     (oResponseData) => {
-                        this._oController.showSuccessMessage(this._oTextHandler.getText("messageReceiptSuccess"), true, true);
-                        resolve();
+                      this._oController.showSuccessMessage(this._oTextHandler.getText("messageReceiptSuccess"), true, true);
+                      resolve();
                     },
                     (oError, sHttpErrorMessage) => {
-                        reject(oError);
+                      oError.sendAlert = true;     
+                      reject(oError);
                     }
                 );
 
