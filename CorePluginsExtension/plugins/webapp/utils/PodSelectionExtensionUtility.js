@@ -33,10 +33,12 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader",
     "ibc/dm/plugins/wcPodToolsProvider/DataCollectionQ2DestinationSaver",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader"
+    "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader",
+    "ibc/dm/plugins/wcPodToolsProvider/PodTools",
+    "sap/ui/core/BusyIndicator"
 ], function (BaseObject, Button, Input, MessageBox, MessageToast, ToolbarSpacer, JSONModel, PodUtility , Dialog, Text
     , mobileLibrary, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler, TextHandler,
-    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository, PiqDtUpdate, NonconformanceReader, DataCollectionQ2DestinationSaver, SfcRepository, SfcDataCollectionReader) {
+    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository, PiqDtUpdate, NonconformanceReader, DataCollectionQ2DestinationSaver, SfcRepository, SfcDataCollectionReader, PodTools, BusyIndicator) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
@@ -222,7 +224,10 @@ sap.ui.define([
 
         onUpdateDownTime: async function(event){
             this._oErrorHandler = new ErrorHandler(this.oPluginEventExtension.getController());
+            let controller = this.oPluginEventExtension.getController();
             try{
+                // BusyIndicator.show(0);
+                PodTools.setBusy(controller, true);
                 let oController = this.oPluginEventExtension.getController();
                 let podSelectionModel =  oController.getPodSelectionModel()
                 if(podSelectionModel.workCenter === undefined || podSelectionModel.workCenter === ""){
@@ -243,9 +248,19 @@ sap.ui.define([
                                      resource: this._oResource, };
                 let piqUpdateDt = new PiqDtUpdate(oController, oHandlerData);
                 await piqUpdateDt.execute();
-
+                // setTimeout(function(){
+                //   BusyIndicator.hide();
+                // }, 500);
+                PodTools.setBusy(controller, false);
          
-            }catch(oError){ this._oErrorHandler.handleError(oError);}
+            }catch(oError){
+
+               this._oErrorHandler.handleError(oError);
+                // setTimeout(function(){
+                //   BusyIndicator.hide();
+                // }, 500);
+               PodTools.setBusy(controller, false);
+              }
         },
 
         onLogButtonPress: async function(oEvent){

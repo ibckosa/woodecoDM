@@ -4,10 +4,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "sap/dm/dme/model/AjaxUtil",
-    "ibc/dm/plugins/wcPodToolsProvider/WorkCenterRepository",
     "ibc/dm/plugins/wcPodToolsProvider/MessageDisplay",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
-], function (ObjectUI5, ErrorHandler,  OrderRepository, SfcRepository, AjaxUtil, WorkCenterRepository, MessageDisplay, TextHandler) {
+], function (ObjectUI5, ErrorHandler,  OrderRepository, SfcRepository, AjaxUtil, MessageDisplay, TextHandler) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.PiqDtUpdate", {
         constructor: function(controller, parameters){
@@ -21,8 +20,6 @@ sap.ui.define([
             
             let codes = [];
             try{
-                this._controller.getPodController().getView().setBusyIndicatorDelay(0);
-                this._controller.getPodController().getView().setBusy(true);
                 this._getDummyOrder();
                 await this._getResources();
                 await this._getSfcs();
@@ -30,7 +27,7 @@ sap.ui.define([
                 let sfcDtDataCollections = await this._getDataCollections();
 
                 if(!sfcDtDataCollections||sfcDtDataCollections.length === 0){
-                    this._errorHandler.throwError("error.piq.anyDtToUpdate");
+                  this._errorHandler.throwError("error.piq.anyDtToUpdate");
                 }
 
 
@@ -43,8 +40,12 @@ sap.ui.define([
                         dataCollection.READINGS.CODE = dataCollection.READINGS.CODE1;
                     }
                     if(dataCollection.READINGS.CODE){
-                        codes.push({ code: dataCollection.READINGS.CODE,
-                                     resource: dataCollection.READINGS.RESOURCE });
+                        let codeInserted = codes.find(code=>{return code.code === dataCollection.READINGS.CODE && 
+                                                                    code.resource === dataCollection.READINGS.RESOURCE  });
+                        if(!codeInserted){
+                          codes.push({ code: dataCollection.READINGS.CODE,
+                                      resource: dataCollection.READINGS.RESOURCE });
+                        }
                     }
                 }
 
@@ -123,28 +124,15 @@ sap.ui.define([
                             }
                         }
                     }
-                // }catch(error){
-                //     if(!error.displayType){
-                //         let errorMessage = this._errorHandler.getTextFromError(error);
-                //         messages.push({ messageType: "E",
-                //                         messageValue: errorMessage  });
-                //     }
-                    
-                // }
-                this._controller.getPodController().getView().setBusy(false);
             }catch(error){
-                this._controller.getPodController().getView().setBusy(false);
-                let errorMessage = this._errorHandler.getTextFromError(error);
-                messages.push({messageType: "E",
-                messageValue: errorMessage  });
+              let errorMessage = this._errorHandler.getTextFromError(error);
+              messages.push({messageType: "E",
+              messageValue: errorMessage  });
             }
             if(messages.length>0){
                 let messageDisplay = new MessageDisplay(messages);
                 await messageDisplay.displayAsPopup();
             }
-
-
-
 
         },
         _getDummyOrder: function(){

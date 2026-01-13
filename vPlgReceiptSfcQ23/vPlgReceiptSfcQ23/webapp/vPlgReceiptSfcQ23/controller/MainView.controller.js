@@ -16,9 +16,10 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader",
     "ibc/dm/plugins/wcPodToolsProvider/PiqQ23",
     "ibc/dm/plugins/wcPodToolsProvider/ConfirmDialog",
-    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver",
+    "ibc/dm/plugins/wcPodToolsProvider/PodTools"
 ], function (PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManagerV2, ResourceRepository, NcCodesReader, Sfc, TextHandler, 
-             OrderRepository, NonconformanceReader, PiqQ23, ConfirmDialog, DataCollectionSaver) {
+             OrderRepository, NonconformanceReader, PiqQ23, ConfirmDialog, DataCollectionSaver, PodTools) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView", {
@@ -256,8 +257,7 @@ sap.ui.define([
 
         onWasteButton: async function(oEvent){
             try{
-                this.getView().setBusyIndicatorDelay(0);
-                this.getView().setBusy(true);
+                PodTools.setBusy(this, true);
                 let aSelection = this.getPodSelectionModel().getSelections()[0];
                 this._oOrder = await OrderRepository.readOrder(this, this.getPodController().getUserPlant(), aSelection.getShopOrder().getShopOrder());
                 let oSfcFirst = aSelection.getSfc().getSfc();
@@ -319,9 +319,9 @@ sap.ui.define([
                         await this.loadData()
                     }
                 }
-                this.getView().setBusy(false);
+                PodTools.setBusy(this, false);
             }catch(error){ 
-                this.getView().setBusy(false);
+                PodTools.setBusy(this, false);
                 if(!error.displayType){
                     error.displayType = "POPUP";
                 }

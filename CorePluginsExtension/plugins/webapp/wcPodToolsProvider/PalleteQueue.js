@@ -269,6 +269,8 @@ sap.ui.define([
         },
         _getQueueForResource: async function(oPalletes){ 
             let oReturn = [];
+            await this._callMaterialsInstances(oPalletes);
+
             for(const pallete of oPalletes){
                 let oMaterial = await MaterialRepository.getMaterialInstance(this._oController, this._oPlant, pallete.material);
                 let reservationValue = ""
@@ -316,6 +318,22 @@ sap.ui.define([
 
 
             return oReturn;
+        },
+
+        _callMaterialsInstances: async function( palletes){
+          let materialInstancePromises = [];
+          let calledMaterials = [];
+          for(const pallete of palletes){
+            let materialCalled = calledMaterials.find(calledMaterial => {return calledMaterial === pallete.material});
+            if(!materialCalled){
+              calledMaterials.push(pallete.material);
+              materialInstancePromises.push(MaterialRepository.getMaterialInstance(this._oController, this._oPlant, pallete.material));
+            }
+          }
+
+          if(materialInstancePromises.length>0){
+            await Promise.all(materialInstancePromises);
+          }
         },
 
         _getQueueForQueueManager:  async function(oPalletes){ 

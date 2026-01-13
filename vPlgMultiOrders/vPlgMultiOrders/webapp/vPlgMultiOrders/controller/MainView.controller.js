@@ -11,8 +11,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcQ23",
     "sap/ui/core/Fragment",
     "sap/m/library",
-    "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader"
-], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader, SfcMOReceipt, ResourceRepository, SfcQ23, Fragment, mobileLibrary, NonconformanceReader) {
+    "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader",
+    "ibc/dm/plugins/wcPodToolsProvider/PodTools"
+], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader, SfcMOReceipt, ResourceRepository, SfcQ23, Fragment, mobileLibrary, NonconformanceReader, PodTools) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders.controller.MainView", {
@@ -200,15 +201,17 @@ sap.ui.define([
         onButtonReceipt: async function () {
             // Logika zatwierdzania dla Q1
             try{
-                this.getView().setBusyIndicatorDelay(0);
-                this.getView().setBusy(true); 
+                // this.getView().setBusyIndicatorDelay(0);
+                // this.getView().setBusy(true); 
+                PodTools.setBusy(this, true);
                 this._checkTimeLastReceipt();
                 let selectedOrder = this.getView().getModel("viewModel").getData();
                 let oPodController = this.getPodController();
                 let oPodSelectionModel = this.getPodSelectionModel();
                 let aSelections = oPodSelectionModel.getSelections();  
                 if(aSelections.length < 1){ 
-                    this.getView().setBusy(false); 
+                    // this.getView().setBusy(false); 
+                    PodTools.setBusy(this, false);
                     return; };
                 let aSelectionFirstRow = aSelections[0];
                 let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
@@ -250,7 +253,8 @@ sap.ui.define([
                     this.getView().getModel("viewModel").setData(selectedOrder);
                     this._setLastReceiptTime();
                     this._selectPositionAfterReceipt();
-                    this.getView().setBusy(false);
+                    // this.getView().setBusy(false);
+                    PodTools.setBusy(this, false);
                     // setTimeout( async ()=> { 
                     //     if(this._oResourceInstance.getMOSelectionMode().toUpperCase()==="AUTOMATIC"){
                     //         this._oOrderNumberPrevious = "";
@@ -266,20 +270,22 @@ sap.ui.define([
                 this._oErrorHandler.setErrorContext({ sfc: this._oSfc, 
                                                       plant: this._oPlant,
                                                       resource: this._oResource });
-                this.getView().setBusy(false);
+                // this.getView().setBusy(false);
+                PodTools.setBusy(this, false);
                 this._oErrorHandler.handleError(oError);
             }
         },
         onButtonQ23: async function(oEvent){
             try{
-                this.getView().setBusyIndicatorDelay(0);
-                this.getView().setBusy(true);
+                // this.getView().setBusyIndicatorDelay(0);
+                // this.getView().setBusy(true);
+                PodTools.setBusy(this, true);
                 let selectedCode = this.getView().byId("q23ReasonsList").getSelectedItem().getBindingContext("multiOrdersModel").getObject();
                 let selectedOrder = this.getView().getModel("viewModel").getData();
                 let oPodController = this.getPodController();
                 let oPodSelectionModel = this.getPodSelectionModel();
                 let aSelections = oPodSelectionModel.getSelections();  
-                if(aSelections.length < 1){ return; };
+                if(aSelections.length < 1){ PodTools.setBusy(this, false); return; };
                 let aSelectionFirstRow = aSelections[0];
     
                 let q23Parameters = {   quantity: parseInt(this.byId("inputQ23").getValue()),
@@ -312,9 +318,11 @@ sap.ui.define([
                 this._updateModelAfterQ23(selectedOrder, q23Parameters.quantity);
                 this.byId("inputQ23").setValue("");
  
-                this.getView().setBusy(false);
+                // this.getView().setBusy(false);
+                PodTools.setBusy(this, false);
             }catch(oError){
-                this.getView().setBusy(false);
+                // this.getView().setBusy(false);
+                PodTools.setBusy(this, false);
                 this._oErrorHandler.handleError(oError);
             }            
         },
