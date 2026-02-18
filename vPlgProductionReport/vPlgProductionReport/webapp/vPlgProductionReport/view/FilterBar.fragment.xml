@@ -1,0 +1,29 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:l="sap.ui.layout"
+  xmlns:core="sap.ui.core">
+		<l:VerticalLayout
+				width="100%"
+				class="sapUiSmallMarginTop sapUiSmallMarginBottom">
+			<l:Grid	containerQuery="true"
+					hSpacing="1"
+					vSpacing="1"
+					position="Center">
+				<VBox>
+					<Label text="Etykieta pola1:" labelFor="input1" />
+					<Input id="input1" type="Text"/>
+					<layoutData>
+						<l:GridData span="XL4 L4 M4 S12" />
+					</layoutData>
+				</VBox>
+
+				<VBox>
+					<Label text="Etykieta pola2:" labelFor="input2" />
+					<Input id="input2" type="Text"/>
+					<layoutData>
+						<l:GridData span="XL4 L4 M4 S12" />
+					</layoutData>
+				</VBox>
+			</l:Grid>
+		</l:VerticalLayout>
+</core:FragmentDefinition>

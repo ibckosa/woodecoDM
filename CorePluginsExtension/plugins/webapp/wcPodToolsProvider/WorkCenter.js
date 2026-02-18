@@ -9,14 +9,14 @@ sap.ui.define([
             this.oWorkCenter = oWorkCenter;
         },
         readData: async function(){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "workcenter/v2/workcenters";
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "workcenter/v3/workcenter";
 
             let oParameters = { plant: this._oPlant,
                                 workCenter:  this.oWorkCenter};
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxGetRequest(sUrl, oParameters,
                     (oResponseData) => {
-                        this._oDetails = oResponseData[0];
+                        this._oDetails = oResponseData;
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {

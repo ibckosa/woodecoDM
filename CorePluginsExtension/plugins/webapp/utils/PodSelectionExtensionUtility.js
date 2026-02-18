@@ -34,11 +34,10 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/DataCollectionQ2DestinationSaver",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader",
-    "ibc/dm/plugins/wcPodToolsProvider/PodTools",
-    "sap/ui/core/BusyIndicator"
+    "ibc/dm/plugins/wcPodToolsProvider/PodTools"
 ], function (BaseObject, Button, Input, MessageBox, MessageToast, ToolbarSpacer, JSONModel, PodUtility , Dialog, Text
     , mobileLibrary, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler, TextHandler,
-    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository, PiqDtUpdate, NonconformanceReader, DataCollectionQ2DestinationSaver, SfcRepository, SfcDataCollectionReader, PodTools, BusyIndicator) {
+    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository, PiqDtUpdate, NonconformanceReader, DataCollectionQ2DestinationSaver, SfcRepository, SfcDataCollectionReader, PodTools) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
@@ -125,6 +124,14 @@ sap.ui.define([
                 press: this.onUpdateDownTime.bind(this)
             });
             oToolbar.addContent(oUpdateDownTime);
+
+            let productionReportButton = new Button({
+                type: sType,
+                visible: true,
+                text: this._oTextHandler.getText("Production report"),
+                press: this.onProductionReportPress.bind(this)
+            });
+            oToolbar.addContent(productionReportButton);
         },
 
         createInputFilter: function(sId, sType, sBinding, sPlaceHolder, sMaxLength, sWidth, sSuggestionPath, sItemTextBinding, fnFunction, fnContext) {
@@ -189,6 +196,11 @@ sap.ui.define([
             oModel.loadData(sap.ui.require.toUrl(sPath), null, false);
             return oModel.getData();
         },
+        onProductionReportPress: function(){
+            let controller = this.oPluginEventExtension.getController();
+            debugger;
+            controller.navigateToPage("PRODUCTIONREPORT");
+        },
         onPaletteQueuePress: async function(oEvent){
             this._oErrorHandler = new ErrorHandler(this.oPluginEventExtension.getController());
             try{
@@ -226,8 +238,7 @@ sap.ui.define([
             this._oErrorHandler = new ErrorHandler(this.oPluginEventExtension.getController());
             let controller = this.oPluginEventExtension.getController();
             try{
-                // BusyIndicator.show(0);
-                PodTools.setBusy(controller, true);
+                PodTools.setCustomBusyIndicator(true);
                 let oController = this.oPluginEventExtension.getController();
                 let podSelectionModel =  oController.getPodSelectionModel()
                 if(podSelectionModel.workCenter === undefined || podSelectionModel.workCenter === ""){
@@ -248,19 +259,13 @@ sap.ui.define([
                                      resource: this._oResource, };
                 let piqUpdateDt = new PiqDtUpdate(oController, oHandlerData);
                 await piqUpdateDt.execute();
-                // setTimeout(function(){
-                //   BusyIndicator.hide();
-                // }, 500);
-                PodTools.setBusy(controller, false);
+                PodTools.setCustomBusyIndicator(false);
          
             }catch(oError){
 
-               this._oErrorHandler.handleError(oError);
-                // setTimeout(function(){
-                //   BusyIndicator.hide();
-                // }, 500);
-               PodTools.setBusy(controller, false);
-              }
+              this._oErrorHandler.handleError(oError);
+              PodTools.setCustomBusyIndicator(false);
+            }
         },
 
         onLogButtonPress: async function(oEvent){
@@ -656,14 +661,15 @@ sap.ui.define([
                         await this._closeNonconformance(oLine);
                         oLine.HU = await this._generateHuNumber(oLine);
                         await this._callCustomApi("RETURN", oLine);
-                        await this._executeLabelPrint(oLine, oPrinter);
+                        let printingDetails = await this._executeLabelPrint(oLine, oPrinter);
                         await DataCollectionQ2DestinationSaver.saveQ2DestinationDC(this._oSelController, { guid: guid,
                                                                                                           plant: oLine.plant,
                                                                                                           resource: this._oResource,
                                                                                                           sfc: oLine.sfc,
                                                                                                           q2Destination: "RETURN",
                                                                                                           operation: oLine.operation,
-                                                                                                          operationVersion: oLine.operationVersion } );
+                                                                                                          operationVersion: oLine.operationVersion, 
+                                                                                                          printingDetails: printingDetails } );
                         this._showSuccessMessage("q23.success.returnNonconformance");
                     }catch(oError){ 
                         this._oErrorHandler.handleError(oError);
@@ -947,6 +953,7 @@ sap.ui.define([
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oSelController, oPrintingDetails);
             await oSfcReceiptPrint.print();
+            return oPrintingDetails;
         },
         _getPrinter: async function(){
             let oPrinter = this._resourceInstance.getPrinterId();

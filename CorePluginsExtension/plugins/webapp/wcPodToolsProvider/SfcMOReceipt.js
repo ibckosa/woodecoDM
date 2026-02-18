@@ -43,8 +43,7 @@ sap.ui.define([
             //     sales_item_position ""
             //     itemNumberErp
             //     routing
-            //     routingVersion
-            
+            //     routingVersion  
             //     plant: plant
             //     automaticIssues: false/true
         },
@@ -108,8 +107,9 @@ sap.ui.define([
                 }
                 OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
                 this._oReceiptParameters.receiptCount = this._oReceiptParameters.receiptCount + 1;
-                await this._saveDataCollection(new Date().toISOString().slice(0, 19) + 'Z', issueManager);                        
-                await this._printLabel();
+                let printingParameters = await this._printLabel();
+                await this._saveDataCollection(issueManager, printingParameters);                        
+                
 
                 if(automaticIssues){
                     await this.sleep(4000);
@@ -286,12 +286,14 @@ sap.ui.define([
                                 order: this._oReceiptParameters.order,
                                 plant: this._oReceiptParameters.plant,
                                 additionalParameters: [ { parameterName: "SALES_ORDER",
-                                                          parameterValue: this._oReceiptParameters.salesOrder },
-                                                        { parameterName: "ITEM_NUMBER",
-                                                          parameterValue: this._oReceiptParameters.itemNumberErp },
-                                                        { parameterName: "SALES_ORDER_ITEM",
-                                                          parameterValue: this._oReceiptParameters.salesOrderItem } ]
-             };
+                                                            parameterValue: this._oReceiptParameters.salesOrder },
+                                                            { parameterName: "ITEM_NUMBER",
+                                                            parameterValue: this._oReceiptParameters.itemNumberErp },
+                                                            { parameterName: "SALES_ORDER_ITEM",
+                                                            parameterValue: this._oReceiptParameters.salesOrderItem },
+                                                            { parameterName: "SFC",
+                                                            parameterValue: this._oReceiptParameters.sfc } ]
+                };
 
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPostRequest(sUrl, oParameters,
@@ -364,6 +366,8 @@ sap.ui.define([
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oController, oPrintingDetails);
             await oSfcReceiptPrint.print();
+
+            return oPrintingDetails;
         },
 
         _checkConfirmTolerance: async function(){
@@ -400,85 +404,11 @@ sap.ui.define([
                this.oToleranceDialog.open();
             });
         },
-        _saveDataCollection: async function(postingDate, issueManager){
-            let parameterValues = [];
+        _saveDataCollection: async function(issueManager, printingParameters){
 
             let guid = crypto.randomUUID();
             let date = new Date();
-            debugger;
 
-            // parameterValues.push({ name: "GUID",
-            //                        comment: guid,
-            //                        value: guid });
-
-            // parameterValues.push({ name: "DATE_CREATED",
-            //                        comment: guid,
-            //                        value: date.toJSON() });
-
-            // parameterValues.push({ name: "Q1/Q3",
-            //                        comment: guid,
-            //                        value: "Q1" });
-
-            // parameterValues.push({ name: "QUANTITY",
-            //                        comment: guid,
-            //                        value: `${this._oReceiptParameters.quantity}` });
-
-            // parameterValues.push({ name: "UOM",
-            //                        comment: guid,
-            //                        value: this._oReceiptParameters.unitOfMeasure });
-
-            // parameterValues.push({ name: "MATERIAL",
-            //                        comment: guid,
-            //                        value: this._oReceiptParameters.material });
-
-            // parameterValues.push({ name: "ITEM_NO",
-            //                        comment: guid,
-            //                        value: `${this._oReceiptParameters.itemNumberErp}` });
-                                   
-
-            // if(this._oReceiptParameters.handlingUnit){
-            //     parameterValues.push({
-            //         name: "HU",
-            //         comment: guid,
-            //         value: this._oReceiptParameters.handlingUnit });
-            // }else{
-            //     parameterValues.push({ 
-            //         name: "HU",
-            //         comment: guid,
-            //         value: "" });
-            // }
-
-                                   
-            // parameterValues.push({ name: "SALES_ORDER",
-            //                        comment: guid,
-            //                        value: this._oReceiptParameters.salesOrder });
-
-            // parameterValues.push({ name: "SALES_ORDER_ITEM",
-            //                        comment: guid,
-            //                        value: this._oReceiptParameters.salesOrderItem });
-
-            // parameterValues.push({ name: "USER",
-            //                        comment: guid,
-            //                        value: this._oController.getUserId() });
-
-            // parameterValues.push({ name: "Q3_CODE",
-            //                        comment: guid,
-            //                        value: "" });
-
-            // parameterValues.push({ name: "NC_CODE",
-            //                        comment: guid,
-            //                        value: "" });
-
-            // parameterValues.push({ name: "NC_CODE_DESCRIPTION",
-            //                        comment: guid,
-            //                        value: "" });
-
-            // parameterValues.push({ name: "CANCELLED",
-            //                        comment: guid,
-            //                        value: false });
-
-            
-            //let issueAsString = "";
             let issuesAsString = [];
             if(issueManager){
                 let issuesCreated = issueManager.getCreatedIssues();
@@ -487,38 +417,8 @@ sap.ui.define([
                                             .map(([key, value]) => `${key}:${value}`)
                                             .join('||');
                     issuesAsString.push(issueAsString);
-
-                    // parameterValues.push({ name: `CONSUMPTION`,
-                    //                        comment: guid,
-                    //                        value: issueAsString });
                 }
             }
-
-            
-            // let sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/log";
-            // let oRequestParameters = {
-            //     plant: this._oReceiptParameters.plant,
-            //     group: { dcGroup: "WOODECO_PROD_ACTIVITY",
-            //              version: "A" },
-            //     operation: { operation: this._oReceiptParameters.operationActivity,
-            //                   version: "ERP001" },
-            //     parameterValues: parameterValues,
-            //     stepId: this._oReceiptParameters.stepId,
-            //     workCenter: this._oReceiptParameters.workCenter,
-            //     resource: this._oReceiptParameters.resource,
-            //     sfcs: [ this._oReceiptParameters.sfc ]
-            // };
-
-            // return await new Promise((resolve,reject)=>{
-            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-            //         oResponseData => {
-            //             resolve();
-            //         },
-            //         (oError, sHttpErrorMessage) => {                        
-            //             resolve();
-            //         }
-            //     );
-            // });
 
             await DataCollectionSaver.saveProductionDC(
                 this._oController,
@@ -544,7 +444,8 @@ sap.ui.define([
                     processStop: "",
                     ncCode: "",
                     ncCodeDescription: "",
-                    guid: guid
+                    guid: guid,
+                    printingParameters: printingParameters
                 }
 
             );

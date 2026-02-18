@@ -7,8 +7,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
     "ibc/dm/plugins/wcPodToolsProvider/IssueReader",
-    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver"
-], function (ObjectUI5, ErrorHandler, OrderRepository, SfcRepository, mobileLibrary, TextHandler, OrderReceiptsFromProgressIndicator, IssueReader, DataCollectionSaver) {
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver",
+    "ibc/dm/plugins/wcPodToolsProvider/Issue"
+], function (ObjectUI5, ErrorHandler, OrderRepository, SfcRepository, mobileLibrary, TextHandler, OrderReceiptsFromProgressIndicator, IssueReader, DataCollectionSaver, Issue) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.SfcMovementReverse", {
         constructor: function(controller, plant, workCenter, resource, parameters, orderNumber, currentSfcNumber, routing, routingVersion){
@@ -367,12 +368,13 @@ sap.ui.define([
         _findInventories: async function(){
             let request = { plant: this._plant,
                             handlingUnit: this._parameters.HU,
-                            material: this._parameters.MATERIAL };
+                            material: this._parameters.MATERIAL,
+                            status: "UNRESTRICTED" };
 
-            let url = this._controller.getPublicApiRestDataSourceUri() + "inventory/v1/inventories";
+            let url = this._controller.getPublicApiRestDataSourceUri() + "inventory/v2/inventories/query";
 
             return await new Promise((resolve,reject)=>{
-                this._controller.ajaxGetRequest(url, request,
+                this._controller.ajaxPostRequest(url, request,
                     (oResponseData) => {
                         resolve(oResponseData.content);
                     },
@@ -383,50 +385,67 @@ sap.ui.define([
             });
         },
         _consumeInventory: async function(inventory){
-            let request = {
-                "shopOrder": this._dummyOrder,///numer zlecenia
-                "batchId": this._dummySfc, ///SFC
-                "operationActivity": "DUMMY_OPERATION",//operation activity
-                // "bomComponentRef": this.consumeData.bomComponentRef,
-                "material": inventory.material,
-                "batchNumber": null,
-                "shopOrderLocationRef": null,
-                "workCenter": this._workCenter,
-                "inventory": inventory.inventoryId, //inventory id
-                "isBomComponent": false, //true or false
-                "quantity": {
-                    "value": inventory.quantityOnHand.value,
-                    "unitOfMeasure": {
-                        "uom": inventory.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,//As the API does not support UoM yet
-                        "internalUom": inventory.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
-                        "shortText": null,
-                        "longText": null,
-                        "numerator": null,
-                        "denominator": null,
-                    }
-                },
-                "useFullHandlingUnit": false, //true or false
-                "handlingUnitNumber": inventory.handlingUnit,
-                "storageLocation":inventory.storageLocation,
-                "isInventoryManaged": true,
-                "userId": this._controller.getUserId(),
-                "dateTime": this._getIssueDt(),
-                "comments": "",
-                "calculatedData": null,
-                "customFieldData":  null
-            };
+
+            let issueResponse = await Issue.execute(this._controller, {    plant: this._plant,
+                                                                           order: this._dummyOrder,
+                                                                           sfc: this._dummySfc,
+                                                                           operation: "DUMMY_OPERATION",
+                                                                           workCenter: this._workCenter,
+                                                                           material: inventory.material,
+                                                                           materialVersion: inventory.materialVersion,
+                                                                           componentSequence: "",
+                                                                           inventoryId: inventory.inventoryId,
+                                                                           quantity: inventory.quantityOnHand.value,
+                                                                           uom: inventory.quantityOnHand.internalUnitOfMeasure,
+                                                                           bom: "",
+                                                                           bomVersion: "",
+                                                                           isAI: true,
+                                                                           isBomComponent: false });
+
+            // let request = {
+            //     "shopOrder": this._dummyOrder,///numer zlecenia
+            //     "batchId": this._dummySfc, ///SFC
+            //     "operationActivity": "DUMMY_OPERATION",//operation activity
+            //     // "bomComponentRef": this.consumeData.bomComponentRef,
+            //     "material": inventory.material,
+            //     "batchNumber": null,
+            //     "shopOrderLocationRef": null,
+            //     "workCenter": this._workCenter,
+            //     "inventory": inventory.inventoryId, //inventory id
+            //     "isBomComponent": false, //true or false
+            //     "quantity": {
+            //         "value": inventory.quantityOnHand.value,
+            //         "unitOfMeasure": {
+            //             "uom": inventory.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,//As the API does not support UoM yet
+            //             "internalUom": inventory.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
+            //             "shortText": null,
+            //             "longText": null,
+            //             "numerator": null,
+            //             "denominator": null,
+            //         }
+            //     },
+            //     "useFullHandlingUnit": false, //true or false
+            //     "handlingUnitNumber": inventory.handlingUnit,
+            //     "storageLocation":inventory.storageLocation,
+            //     "isInventoryManaged": true,
+            //     "userId": this._controller.getUserId(),
+            //     "dateTime": this._getIssueDt(),
+            //     "comments": "",
+            //     "calculatedData": null,
+            //     "customFieldData":  null
+            // };
             
-            let url = this._controller.getAssemblyDataSourceUri() + "order/goodsIssue";
-            return await new Promise((resolve,reject)=>{
-                this._controller.ajaxPostRequest(url, request,
-                    (oResponseData) => {
-                        resolve();
-                    },
-                    (oError, sHttpErrorMessage) => {
-                        resolve();
-                    }   
-                );
-            });
+            // let url = this._controller.getAssemblyDataSourceUri() + "order/goodsIssue";
+            // return await new Promise((resolve,reject)=>{
+            //     this._controller.ajaxPostRequest(url, request,
+            //         (oResponseData) => {
+            //             resolve();
+            //         },
+            //         (oError, sHttpErrorMessage) => {
+            //             resolve();
+            //         }   
+            //     );
+            // });
         },
         _getIssueDt(){
             let today = new Date();

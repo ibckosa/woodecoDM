@@ -15,7 +15,6 @@ sap.ui.define([
             //sfc
             //plant
             //orderNumber
-            //sfc
             //operation
             //sequence
             //bomRef

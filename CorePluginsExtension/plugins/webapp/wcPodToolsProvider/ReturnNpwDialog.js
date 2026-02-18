@@ -90,6 +90,7 @@ sap.ui.define([
             let oCode = this._oComboBox.getSelectedKey();
             if(!oCode||oCode===""){ this._oErrorHandler.throwError("error.logHU.ncCodeNotSelected");}
             this._oDialogNpw.close();
+            
             this._resolveQuanNpwDialog( { quantity: this._oInput.getValue(),
                                           code: oCode
              });
@@ -97,6 +98,7 @@ sap.ui.define([
     };
     ReturnNpwDialog.onButtonCancel = function (oEvent) {
         this._oDialogNpw.close();
+        this._oDialogNpw.destroy();
         this._resolveQuanNpwDialog({ quantity: 0,
                                      ncCode: ""  });
     };

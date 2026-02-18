@@ -94,7 +94,7 @@ sap.ui.define([
 
                 if(oFirstSelection.getSfc().getSfc() !== this._oCurrentSfc||this._reloadQ1Plugin || true){
                     this.getView().setBusyIndicatorDelay(0);
-                    PodTools.setBusy(this, true);
+                    PodTools.setCustomBusyIndicator(true);
                     //await this._setVisibilityOfPalleteNumber();
                     let oCustomQuan = await this._getCustomQuan( oFirstSelection );
                     await this._setInputQuantity(oFirstSelection,oCustomQuan)
@@ -102,9 +102,9 @@ sap.ui.define([
                     this._reloadQ1Plugin = false;
                     await this._setFieldVisibility();
                 }
-                PodTools.setBusy(this, false);
+                PodTools.setCustomBusyIndicator(false);
             }catch(oError){
-                PodTools.setBusy(this, false);
+                PodTools.setCustomBusyIndicator(false);
                 //this._oErrorHandler.handleError(oError); 
             }            
         },
@@ -195,14 +195,14 @@ sap.ui.define([
 
             try{
                 //this.setBusy(true);
-                PodTools.setBusy(this, true);
+                PodTools.setCustomBusyIndicator(true);
                 // this.getPodController().getView().setBusyIndicatorDelay(0);
                 // this.getPodController().getView().setBusy(true);
                 this._checkTimeLastReceipt();
                 let oPodController = this.getPodController();
                 let oPodSelectionModel = this.getPodSelectionModel();
                 let aSelections = oPodSelectionModel.getSelections();  
-                if(aSelections.length < 1){ PodTools.setBusy(this, false);  return; };
+                if(aSelections.length < 1){ PodTools.setCustomBusyIndicator(false);  return; };
 
                 let aSelectionFirstRow = aSelections[0];
                 let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
@@ -231,7 +231,7 @@ sap.ui.define([
 
                     await this._checkClearInput(oReceiptParameters);
                     this._setLastReceiptTime();
-                    PodTools.setBusy(this, false);
+                    PodTools.setCustomBusyIndicator(false);
                     //this.getPodController().getView().setBusy(false);
                     
                     //await this.loadModel();
@@ -240,7 +240,7 @@ sap.ui.define([
                 if(!oError.displayType){
                     oError.displayType = "POPUP";
                 }
-                PodTools.setBusy(this, false);
+                PodTools.setCustomBusyIndicator(false);
                 // this.getPodController().getView().setBusy(false);
                 this._oErrorHandler.setErrorContext({ sfc: this._oSfc, 
                                                       plant: this._oPlant,

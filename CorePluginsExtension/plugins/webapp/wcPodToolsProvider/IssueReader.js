@@ -40,7 +40,7 @@ sap.ui.define([
     };
 
     issueReader._callApiGetIssue = async function(controller, parameters, page=0){
-            let sUrl = controller.getPublicApiRestDataSourceUri() + "inventory/v1/inventory/goodsIssues";
+            let sUrl = controller.getPublicApiRestDataSourceUri() + "inventory/v2/inventory/goodsIssues";
 
             let requestParameters = {  plant: parameters.plant,
                                 material: parameters.materialNumber,

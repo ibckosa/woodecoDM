@@ -46,25 +46,25 @@ sap.ui.define([
         }
         
     };
+// commented 22.01.2026 - to delete after 1 month
+    // oSfcRepository.readSfcForOrderApi = async function(oController, oPlant, oOrderNumber, oWorkCenterNumber){
+    //     let sUrl = this._oController.getPublicApiRestDataSourceUri() + "sfc/v1/worklist/sfcs";
 
-    oSfcRepository.readSfcForOrderApi = async function(oController, oPlant, oOrderNumber, oWorkCenterNumber){
-        let sUrl = this._oController.getPublicApiRestDataSourceUri() + "sfc/v1/worklist/sfcs";
-
-        let oParameters = { plant: oPlant,
-                            order:  oOrderNumber,
-                            workCenter: oWorkCenterNumber,
-                            allSfcSteps: true };
-        return await new Promise((resolve,reject)=>{
-            this._oController.ajaxGetRequest(sUrl, oParameters,
-                (oResponseData) => {
-                    resolve(oResponseData);
-                },
-                (oError, sHttpErrorMessage) => {
-                    reject(oError);
-                }   
-            );
-        });
-    };
+    //     let oParameters = { plant: oPlant,
+    //                         order:  oOrderNumber,
+    //                         workCenter: oWorkCenterNumber,
+    //                         allSfcSteps: true };
+    //     return await new Promise((resolve,reject)=>{
+    //         this._oController.ajaxGetRequest(sUrl, oParameters,
+    //             (oResponseData) => {
+    //                 resolve(oResponseData);
+    //             },
+    //             (oError, sHttpErrorMessage) => {
+    //                 reject(oError);
+    //             }   
+    //         );
+    //     });
+    // };
     oSfcRepository.getSfcsInstances = async function(controller, plant, sfcs, routing, routingVersion){
         let sfcsDetailsPromises = [];
         for(const sfc of sfcs){

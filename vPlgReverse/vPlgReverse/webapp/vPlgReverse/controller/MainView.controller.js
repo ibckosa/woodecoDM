@@ -7,8 +7,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
     "ibc/dm/plugins/wcPodToolsProvider/BomRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader",
-    "ibc/dm/plugins/wcPodToolsProvider/SfcMovementReverse"
-], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, BomRepository, SfcDataCollectionReader, SfcMovementReverse) {
+    "ibc/dm/plugins/wcPodToolsProvider/SfcMovementReverse",
+    "ibc/dm/plugins/wcPodToolsProvider/Reprinter"
+], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, BomRepository, SfcDataCollectionReader, SfcMovementReverse, Reprinter) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReverse.vPlgReverse.controller.MainView", {
@@ -120,6 +121,7 @@ sap.ui.define([
             for(const collection of sfcCollectionData){
                 collection.confText = "";
                 collection.issueText = "";
+                collection.Q1_Q3 = collection["Q1/Q3"];
                 if(collection.QUANTITY&&collection.QUANTITY>0){
                     if(collection.HU){
                         collection.confText = `${collection["Q1/Q3"]}: ${collection.MATERIAL}: ${collection.HU} - ${collection.QUANTITY} ${collection.UOM}`
@@ -144,61 +146,6 @@ sap.ui.define([
             return sfcCollectionData;
 
 
-            // let oSfcsStepDetails = await this._getSfcsStepDetails(oSfcs);
-            // let orderIssues = await this._getOrderIssues();
-            
-
-            // for(const sfcStep of oSfcsStepDetails){
-            //     if(sfcStep.lastCompleteTime){
-            //         let confText = "";
-            //         let issueText = "";
-
-
-            //         let stepIssues = orderIssues.filter( issue => {return issue.sfc === sfcStep.sfc &&
-            //                                                               issue.stepId === sfcStep.stepId &&
-            //                                                               issue.comments !== "ADDITIONAL_ISSUE";});
-            //         let stepAdditionalIssues = orderIssues.filter( issue => {return issue.sfc === sfcStep.sfc &&
-            //                                                                  issue.stepId === sfcStep.stepId &&
-            //                                                                 issue.comments === "ADDITIONAL_ISSUE";});
-
-            //         confText = `${this._oOrder.getHeaderMaterial()}: ${sfcStep.sfc} - ${sfcStep.quantityCompleted} ${this._oOrder.getUom()}`;
-            //         for(const issue of stepIssues){
-            //             if(issueText === ""){
-            //                 issueText =  `${issue.material}: ${issue.handlingUnit} - ${issue.quantityInBaseUnit.value} ${issue.quantityInBaseUnit.unitOfMeasure}`;
-            //             }else{
-            //                 issueText =  issueText + `\n${issue.material}: ${issue.handlingUnit} - ${issue.quantityInBaseUnit.value} ${issue.quantityInBaseUnit.unitOfMeasure}`;
-            //             }
-            //         }
-            //         confText = 
-            //         oReturn.push(
-            //             {
-            //                 dateTime: sfcStep.lastCompleteTime,
-            //                 confText: confText,
-            //                 issueText: issueText,
-            //                 sfc: sfcStep.sfc,
-            //                 user: "",
-            //                 stepId: sfcStep.stepId,
-            //                 stepDetails: sfcStep,
-            //                 issues: stepIssues
-            //             }
-            //         );
-
-            //         for(const stepIssue of stepAdditionalIssues){
-            //             oReturn.push(
-            //                 {
-            //                     dateTime: stepIssue.postingDateTime,
-            //                     confText: "",
-            //                     issueText: `${stepIssue.material}: ${stepIssue.handlingUnit} - ${stepIssue.quantityInBaseUnit.value} ${stepIssue.quantityInBaseUnit.unitOfMeasure}`,
-            //                     sfc: stepIssue.sfc,
-            //                     user: stepIssue.postedBy,
-            //                     stepId: sfcStep.stepId,
-            //                     stepDetails: sfcStep,
-            //                     issues: [stepIssue],
-            //                 }
-            //             );
-            //         }
-            //     }
-            // }
 
 
             return oReturn;
@@ -206,47 +153,6 @@ sap.ui.define([
         _loadDataMO: async function(){
             debugger;
             let oReturn = [];
-            // let orderReceipts = await this._oOrder.getReceipts();
-            // let orderIssues = await this._getOrderIssues();
-
-            // let oSfcsStepDetails = await this._getSfcsStepDetails([this._oSfc]);
-
-            // let sfcsDataCollections = await this._getSfcsDataCollections([this._oSfc]);
-
-
-            // for(const sfcStep of oSfcsStepDetails){
-            //         let stepOrderReceipts = orderReceipts.filter( receipt=>{return receipt.sfc === sfcStep.sfc;});
-
-            //         for(const receipt of stepOrderReceipts){
-            //             oReturn.push(
-            //                 {
-            //                     dateTime: receipt.postingDateTime,
-            //                     confText: `${receipt.material}: ${receipt.handlingUnit} - ${receipt.quantityInBaseUnit.value} ${receipt.quantityInBaseUnit.unitOfMeasure}`,
-            //                     issueText: "",
-            //                     user: receipt.postedBy,
-            //                     sfc: receipt.sfc,
-            //                     stepId: sfcStep.stepId,
-            //                     stepDetails: sfcStep,
-            //                     issues: [],
-            //                 }
-            //             );
-            //         }
-
-            //        for(const stepIssue of orderIssues){
-            //         oReturn.push(
-            //             {
-            //                 dateTime: stepIssue.postingDateTime,
-            //                 confText: "",
-            //                 issueText: `${stepIssue.material}: ${stepIssue.handlingUnit} - ${stepIssue.quantityInBaseUnit.value} ${stepIssue.quantityInBaseUnit.unitOfMeasure}`,
-            //                 user: stepIssue.postedBy,
-            //                 sfc: stepIssue.sfc,
-            //                 stepId: sfcStep.stepId,
-            //                 stepDetails: sfcStep,
-            //                 issues: [stepIssue],
-            //             }
-            //         );
-            //     }
-            // }
             debugger;
             let oSfcs = this._oOrder.getSfcs();
             let sfcCollectionData = await SfcDataCollectionReader.readCollections(this, this._oPlant, oSfcs, this._operation, true, false, this._routing, this._routingVersion);
@@ -254,6 +160,7 @@ sap.ui.define([
             for(const collection of sfcCollectionData){
                 collection.confText = "";
                 collection.issueText = "";
+                collection.Q1_Q3 = collection["Q1/Q3"];
                 if(collection.QUANTITY&&collection.QUANTITY>0){
                     if(collection.HU){
                         collection.confText = `${collection["Q1/Q3"]}: ${collection.MATERIAL}: ${collection.HU} - ${collection.QUANTITY} ${collection.UOM}`
@@ -383,7 +290,7 @@ sap.ui.define([
             result.push( new sap.m.Text({ text: "{stornoModel>issueText}" }) );
             result.push( new sap.m.Text({ text: "{stornoModel>USER}"}) );
             result.push( new sap.m.Button({ text: "Storno", press: this.onReverseButton.bind(this), visible: "{= ${stornoModel>CANCELLED} !== 'true' && ${stornoModel>stornoFunctionAvailable} }" }) );
-
+            result.push( new sap.m.Button({ text: "Ponowny wydruk", icon: "sap-icon://print", press: this.onPrint.bind(this), visible: "{= ${stornoModel>Q1_Q3} !== 'AI' && ${stornoModel>PRINTING_PARAMETERS} !== undefined && ${stornoModel>PRINTING_PARAMETERS} !== null && ${stornoModel>PRINTING_PARAMETERS} !== '' || ${stornoModel>Q1_Q3} === 'Q3' }" }) );
             return result;
         },
         onReverseButton: async function(event){
@@ -411,6 +318,22 @@ sap.ui.define([
                 result = oConfiguration.stornoButtonVisible;
             }
             return result;
+        },
+        onPrint: async function(event){
+            try{
+                this.getView().setBusyIndicatorDelay(0);
+                this.getView().setBusy(true);
+                const selectedItem = event.getSource().getParent().getBindingContext("stornoModel").getObject();
+                let reprinter = new Reprinter(this, selectedItem);
+                await reprinter.execute();
+                this.getView().setBusy(false);
+            }catch(error){
+                if(!error.displayType){
+                    error.displayType = "POPUP";
+                }
+                this.getView().setBusy(false);
+                this._oErrorHandler.handleError(error);
+            }
         }
 
 	});

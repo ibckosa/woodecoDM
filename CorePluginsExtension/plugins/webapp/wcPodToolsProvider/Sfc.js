@@ -12,10 +12,11 @@ sap.ui.define([
             this._routingVersion = routingVersion;
         },
         readData: async function(){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "sfc/v1/sfcdetail";
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "sfc/v2/sfcdetail";
 
             let oParameters = { plant: this._oPlant,
-                                sfc:  this._oSfcNumber};
+                                sfc:  this._oSfcNumber, 
+                                includeSfcSteps: true };
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxGetRequest(sUrl, oParameters,
                     (oResponseData) => {
@@ -58,9 +59,6 @@ sap.ui.define([
         },
         getStatusCode(){
             return this._oDetails.status.code;
-        },
-        getSfcNumber(){
-            return this._oDetails.sfc;
         },
         getQuantityInQueue: function(oOperation){
             let oStep = this.getStepByOperation(oOperation);
@@ -234,25 +232,25 @@ sap.ui.define([
                          "filter.order": this._oReceiptParameters.order };
         let oSfcs = this.getSfcsListApi(oController, oRequest);
     }
+// commented 22.01.2026 - to delete after 22.02.2026
+    // oSfc.getSfcsListApi = async function(oController, oRequest, oPage = 0){
+    //     let sUrl = oController.getPublicApiRestDataSourceUri()  + "sfc/v1/worklist/sfcs";
 
-    oSfc.getSfcsListApi = async function(oController, oRequest, oPage = 0){
-        let sUrl = oController.getPublicApiRestDataSourceUri()  + "sfc/v1/worklist/sfcs";
-
-        let oParameters = { plant: this._oReceiptParameters.plant,
-                            workCenter: this._oReceiptParameters.workCenter,
-                            "filter.operation": this._oReceiptParameters.operationActivity,
-                            "filter.order": this._oReceiptParameters.order 
-                            };
-        return await  new Promise((resolve,reject)=>{
-            oController.ajaxGetRequest(sUrl, oParameters,
-                (oResponseData) => {
-                    resolve(oResponseData);
-                },
-                (oError, sHttpErrorMessage) => {
-                    reject(oError);
-                }
-            );
-        });
-    }
+    //     let oParameters = { plant: this._oReceiptParameters.plant,
+    //                         workCenter: this._oReceiptParameters.workCenter,
+    //                         "filter.operation": this._oReceiptParameters.operationActivity,
+    //                         "filter.order": this._oReceiptParameters.order 
+    //                         };
+    //     return await  new Promise((resolve,reject)=>{
+    //         oController.ajaxGetRequest(sUrl, oParameters,
+    //             (oResponseData) => {
+    //                 resolve(oResponseData);
+    //             },
+    //             (oError, sHttpErrorMessage) => {
+    //                 reject(oError);
+    //             }
+    //         );
+    //     });
+    // }
     return oSfc;
 });

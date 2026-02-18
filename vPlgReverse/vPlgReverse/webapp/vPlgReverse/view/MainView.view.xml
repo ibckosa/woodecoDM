@@ -44,6 +44,9 @@
                     <Column>
                         <Text text="" />
                     </Column>
+                    <Column>
+                        <Text text="" />
+                    </Column>
                 </columns>
 
                 </Table>

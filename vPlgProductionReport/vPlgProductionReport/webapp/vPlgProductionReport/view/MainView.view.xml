@@ -1,0 +1,36 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form" xmlns:core="sap.ui.core" xmlns:html="http://www.w3.org/1999/xhtml" controllerName="ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.controller.MainView" width="100%" height="100%">	
+    <Panel
+        width="100%"
+        height="100%"
+        expandable="false"
+        expanded="false"
+        accessibleRole="Region"
+        backgroundDesign="Transparent"
+        class="sapUiNoContentPadding">  
+        <headerToolbar>
+            <Toolbar height="3rem" class="sapUiSmallMarginTop">
+                <core:Fragment fragmentName="ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.view.FilterBar" type="XML"/>
+            </Toolbar>
+        </headerToolbar>
+        <content> 
+            <IconTabBar
+                id="reportTabBar"
+                expanded="{device>/isNoPhone}"
+                class="sapUiResponsiveContentPadding">
+                <items>
+                    <IconTabFilter 
+                        icon="sap-icon://cart" 
+                        text="Produkcja" key="production">
+                        <core:Fragment fragmentName="ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.view.Production" type="XML"/>
+                    </IconTabFilter>
+                    <IconTabFilter
+                        icon="sap-icon://pause"
+                        text="Przestoje"
+                        key="downtimes">
+                        <core:Fragment fragmentName="ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.view.Downtimes" type="XML"/>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+	</Panel>		
+</mvc:View>

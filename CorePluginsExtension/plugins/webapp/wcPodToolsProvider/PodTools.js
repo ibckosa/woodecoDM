@@ -1,6 +1,7 @@
 sap.ui.define([
-    "sap/ui/base/Object"
-], function (ObjectUI5) {
+    "sap/ui/base/Object",
+    "sap/ui/core/BusyIndicator"
+], function (ObjectUI5, BusyIndicator) {
     "use strict";
     let podTools = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.PodTools", {
 
@@ -14,6 +15,15 @@ sap.ui.define([
       }catch(error){
 
       }
+    },
+
+    podTools.setCustomBusyIndicator = function(isBusy){
+      if(isBusy){
+        BusyIndicator.show(0);
+      }else{
+        BusyIndicator.hide();
+      }
+
     }
     return podTools;
 

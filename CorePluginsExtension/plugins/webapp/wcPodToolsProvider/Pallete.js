@@ -14,16 +14,16 @@ sap.ui.define([
         },
 
         palleteReservation: async function(oPalleteDetails, oPlant, oOrder, oSequence){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventories/"+`${oPalleteDetails.inventoryId}?plant=${oPlant}`;
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v2/inventories/"+`${oPalleteDetails.inventoryId}?plant=${oPlant}`;
             this._checkBeforeReservation(oPalleteDetails);
 
-            let oAssemblyData = oPalleteDetails.assemblyData.filter( assemblyData => { return assemblyData.dataField !== "RES_ITEM" } );
+            let oAssemblyData = oPalleteDetails.dataFields.filter( assemblyData => { return assemblyData.dataField !== "RES_ITEM" } );
             
 
             oAssemblyData.push({ dataField: "RES_ITEM",
                                  dataAttribute: `${oOrder}_${oSequence}`  });
 
-            let oParameters = { assemblyData: oAssemblyData,
+            let oParameters = { dataFields: oAssemblyData,
                 lastModifiedDateTime: oPalleteDetails.modifiedDateTime
             };
 
@@ -41,7 +41,7 @@ sap.ui.define([
             });
         },
         palleteEndReservation: async function(oPalleteDetails, oPlant){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventories/"+`${oPalleteDetails.inventoryId}?plant=${oPlant}`;
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v2/inventories/"+`${oPalleteDetails.inventoryId}?plant=${oPlant}`;
 
            // this._checkBeforeEndReservation(oPalleteDetails);
             let oAssemblyData = oPalleteDetails.assemblyData.filter( assemblyData => { return assemblyData.dataField !== "RES_ITEM" && assemblyData.dataField !== "CONS_START" } );
@@ -50,7 +50,7 @@ sap.ui.define([
             oAssemblyData.push({ dataField: "CONS_START",
                                  dataAttribute: null });
 
-            let oParameters = { assemblyData: oAssemblyData,
+            let oParameters = { dataFields: oAssemblyData,
                 lastModifiedDateTime: oPalleteDetails.modifiedDateTime
             };
 
@@ -66,17 +66,24 @@ sap.ui.define([
 
             });
         },
-        palleteReturn: async function(oLine, oEndPoint){
+        palleteReturn: async function(oLine, oEndPoint , quantity){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + oEndPoint;
             let oSapDateTime = this._getCurrentSapDateTime();
             let oParameters = {};
             this._checkBeforeReturn(oLine.palleteDetails);
             let oBatchNumber = '';
+            let quantityToReturn = oLine.quantity;
+            if(quantity){
+                quantityToReturn = quantity;
+                oLine.handlingUnit = oLine.palleteDetails.handlingUnit = await this.generateHuNumber(oLine.palleteDetails.material, oLine.palleteDetails.materialVersion, oLine.plant);
+            }
+
             if(!oLine.palleteDetails.batchNumber){
                 oBatchNumber = oLine.palleteDetails.handlingUnit;
             }else{
                 oBatchNumber = oLine.palleteDetails.batchNumber;
             }
+
 
             oParameters = { WERK: oLine.plant,
                 BEWART: "988",
@@ -86,7 +93,7 @@ sap.ui.define([
                 CHARGE: oBatchNumber,
                 MATNR: oLine.palleteDetails.material,
                 MATTYP: "PACKAGES",
-                MENGE: parseFloat(oLine.quantity),
+                MENGE: parseFloat(quantityToReturn),
                 MENGE_EINH: oLine.uom,
                 END_LIEF: "N",
                 VVDAT: oSapDateTime.sapDate,
@@ -120,7 +127,7 @@ sap.ui.define([
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + oEndPoint;
             let oSapDateTime = this._getCurrentSapDateTime();
             let oParameters = {};
-            this._checkBeforeReturnNpw(oLine ,oEndPoint, oQuantity);
+            this._checkBeforeReturnNpw(oLine , oQuantity);
             let oGeneratedHu = await this.generateHuNumber(oLine.palleteDetails.material, oLine.palleteDetails.materialVersion, oLine.plant);
             oLine.handlingUnit = oGeneratedHu;
 
@@ -201,7 +208,7 @@ sap.ui.define([
                 this._oErrorHandler.throwError("error.logHu.ReturnPaletteReserved", oPalleteDetails.handlingUnit);
             }
         },
-        _checkBeforeReturnNpw: function(oLine, oEndPoint, oQuantity){
+        _checkBeforeReturnNpw: function(oLine, oQuantity){
             let oReservation = oLine.palleteDetails.assemblyData.find( assemblyData => { return assemblyData.dataField === "RES_ITEM" } );
             if(oReservation&&oReservation.dataAttribute!==null&&oReservation.dataAttribute){
                 this._oErrorHandler.throwError("error.logHu.ReturnPaletteReserved", oLine.palleteDetails.handlingUnit);
@@ -232,50 +239,70 @@ sap.ui.define([
                 });
         },
         reducePalleteQuan: async function(oLine, oQuantityToReduce, oDummyOrder, oDummySfc){
-            let oRequestParameters = {
-                "shopOrder": oDummyOrder,///numer zlecenia
-                "batchId": oDummySfc, ///SFC
-                "operationActivity": "DUMMY_OPERATION",//operation activity
-                // "bomComponentRef": this.consumeData.bomComponentRef,
-                "material": oLine.materialId,
-                "batchNumber": null,
-                "shopOrderLocationRef": null,
-                "workCenter": oLine.workCenter,
-                "inventory": oLine.inventoryId, //inventory id
-                "isBomComponent": false, //true or false
-                "quantity": {
-                    "value": parseFloat(oQuantityToReduce),
-                    "unitOfMeasure": {
-                        "uom": oLine.uom,//As the API does not support UoM yet
-                        "internalUom": oLine.uom,
-                        "shortText": null,
-                        "longText": null,
-                        "numerator": null,
-                        "denominator": null,
-                    }
-                },
-                "useFullHandlingUnit": false, //true or false
-                "handlingUnitNumber": oLine.palleteDetails.handlingUnit,
-                "storageLocation": oLine.storageLocation,
-                "isInventoryManaged": true,
-                "userId": this._oController.getUserId(),
-                "dateTime": this._getIssueDt(),
-                "comments": "",
-                "calculatedData": null,
-                "customFieldData":  null
-            };
+
+            let issueResponse = await Issue.execute(this._oController,{    plant: oLine.plant,
+                                                                           order: oDummyOrder,
+                                                                           sfc: oDummySfc,
+                                                                           operation: "DUMMY_OPERATION",
+                                                                           workCenter: oLine.workCenter,
+                                                                           material: oLine.materialId,
+                                                                           materialVersion: oLine.palleteDetails.materialVersion,
+                                                                           componentSequence: "",
+                                                                           inventoryId: oLine.inventoryId,
+                                                                           quantity: oQuantityToReduce,
+                                                                           uom: oLine.uom,
+                                                                           bom: "",
+                                                                           bomVersion: "",
+                                                                           isAI: true,
+                                                                           isBomComponent: false });
+
+
+            // let oRequestParameters = {
+            //     "shopOrder": oDummyOrder,///numer zlecenia
+            //     "batchId": oDummySfc, ///SFC
+            //     "operationActivity": "DUMMY_OPERATION",//operation activity
+            //     // "bomComponentRef": this.consumeData.bomComponentRef,
+            //     "material": oLine.materialId,
+            //     "batchNumber": null,
+            //     "shopOrderLocationRef": null,
+            //     "workCenter": oLine.workCenter,
+            //     "inventory": oLine.inventoryId, //inventory id
+            //     "isBomComponent": false, //true or false
+            //     "quantity": {
+            //         "value": parseFloat(oQuantityToReduce),
+            //         "unitOfMeasure": {
+            //             "uom": oLine.uom,//As the API does not support UoM yet
+            //             "internalUom": oLine.uom,
+            //             "shortText": null,
+            //             "longText": null,
+            //             "numerator": null,
+            //             "denominator": null,
+            //         }
+            //     },
+            //     "useFullHandlingUnit": false, //true or false
+            //     "handlingUnitNumber": oLine.palleteDetails.handlingUnit,
+            //     "storageLocation": oLine.storageLocation,
+            //     "isInventoryManaged": true,
+            //     "userId": this._oController.getUserId(),
+            //     "dateTime": this._getIssueDt(),
+            //     "comments": "",
+            //     "calculatedData": null,
+            //     "customFieldData":  null
+            // };
             
-            let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
-            return await new Promise((resolve,reject)=>{
-                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-                    (oResponseData) => {
-                        resolve(oResponseData);
-                    },
-                    (oError, sHttpErrorMessage) => {
-                        reject(oError);
-                    }   
-                );
-            });
+            // let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
+            // return await new Promise((resolve,reject)=>{
+            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+            //         (oResponseData) => {
+            //             debugger;
+            //             resolve(oResponseData);
+            //         },
+            //         (oError, sHttpErrorMessage) => {
+            //             debugger;
+            //             reject(oError);
+            //         }   
+            //     );
+            // });
         },
         additionalIssue: async function(oLine, oQuantity, oSfc, oBomRef, oOperation, componentSequence){
             this._additionalIssueChecks(oLine, oQuantity, oSfc, oBomRef, oOperation);
@@ -298,7 +325,8 @@ sap.ui.define([
                                                                            uom: oLine.uom,
                                                                            bom: bom.bom,
                                                                            bomVersion: bom.version,
-                                                                           isAI: true });
+                                                                           isAI: true,
+                                                                           isBomComponent: true });
 
             if(!issueResponse){
                 this._oErrorHandler.throwErrorPopup("error.issue.aiFailed");
@@ -334,9 +362,9 @@ sap.ui.define([
 
         },
         palleteReservationAndConsumption: async function(oPalleteDetails, oPlant, oOrder, oSequence, isReservation, isConsumption){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventories/"+`${oPalleteDetails.inventoryId}?plant=${oPlant}`;
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v2/inventories/"+`${oPalleteDetails.inventoryId}?plant=${oPlant}`;
 
-            let oAssemblyData = oPalleteDetails.palleteDetails.assemblyData.filter( assemblyData => { return ! ( ( assemblyData.dataField === "RES_ITEM" && isReservation ) || ( assemblyData.dataField === "CONS_START" && isConsumption ) ) } );
+            let oAssemblyData = oPalleteDetails.palleteDetails.dataFields.filter( assemblyData => { return ! ( ( assemblyData.dataField === "RES_ITEM" && isReservation ) || ( assemblyData.dataField === "CONS_START" && isConsumption ) ) } );
             if(isConsumption){
                 oAssemblyData.push({ dataField: "CONS_START",
                     dataAttribute: `X`  });
@@ -348,7 +376,7 @@ sap.ui.define([
             }
 
 
-            let oParameters = { assemblyData: oAssemblyData,
+            let oParameters = { dataFields: oAssemblyData,
                 lastModifiedDateTime: oPalleteDetails.modifiedDateTime
             };
 
@@ -365,7 +393,6 @@ sap.ui.define([
             });
         },
         _saveDataCollection: async function(oLine, oQuantity, oSfc, oOperation, issueResponse, stepId){
-            let parameterValues = [];
             let guid = crypto.randomUUID();
             let date = new Date();
 

@@ -34,9 +34,9 @@ sap.ui.define([
                             new sap.m.Button({
                                 text: this._textHandler.getText("labels.loghu.button.close"),
                                 press: function () {
+                                    this._resolveLogDialog();
                                     this._oDialogLog.destroy();
                                     this._oDialogLog.close();
-                                    this._resolveLogDialog();
                                 }.bind(this)
                             })
                         ]
@@ -56,7 +56,8 @@ sap.ui.define([
 
 
             let oTable = new sap.m.Table({
-                growing: false,
+                growing: true,
+                growingThreshold: 100,
                 sticky: ["ColumnHeaders", "HeaderToolbar"],
                 width: "70rem",
                 inset: false,

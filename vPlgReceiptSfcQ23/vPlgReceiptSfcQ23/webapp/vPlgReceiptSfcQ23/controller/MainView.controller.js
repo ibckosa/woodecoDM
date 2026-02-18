@@ -257,7 +257,7 @@ sap.ui.define([
 
         onWasteButton: async function(oEvent){
             try{
-                PodTools.setBusy(this, true);
+                PodTools.setCustomBusyIndicator(true);
                 let aSelection = this.getPodSelectionModel().getSelections()[0];
                 this._oOrder = await OrderRepository.readOrder(this, this.getPodController().getUserPlant(), aSelection.getShopOrder().getShopOrder());
                 let oSfcFirst = aSelection.getSfc().getSfc();
@@ -319,9 +319,9 @@ sap.ui.define([
                         await this.loadData()
                     }
                 }
-                PodTools.setBusy(this, false);
+                PodTools.setCustomBusyIndicator(false);
             }catch(error){ 
-                PodTools.setBusy(this, false);
+                PodTools.setCustomBusyIndicator(false);
                 if(!error.displayType){
                     error.displayType = "POPUP";
                 }

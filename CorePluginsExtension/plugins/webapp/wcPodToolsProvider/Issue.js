@@ -1,6 +1,7 @@
 sap.ui.define([
-    "sap/ui/base/Object"
-], function (ObjectUI5) {
+    "sap/ui/base/Object",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+], function (ObjectUI5, TextHandler) {
     "use strict";
     let issue =  ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.Issue", {
     });
@@ -8,7 +9,9 @@ sap.ui.define([
             let sUrl = controller.getPublicApiRestDataSourceUri() + "/pe/api/v1/process/processDefinitions/start?key=REG_4628ba8b-6431-4c61-a36b-e75601786139";// "processorder/v1/goodsissue";
             let issueGuid = crypto.randomUUID();
 
-
+            if(typeof parameters.isBomComponent === 'undefined' || parameters.isBomComponent === null ){
+                parameters.isBomComponent = true;
+            }
 
             let requestParameters = {  
                                 plant: parameters.plant,
@@ -23,11 +26,7 @@ sap.ui.define([
                                     },
                                     sequence: parameters.componentSequence
                                 },
-                                isBomComponent: true,
-                                bom: {
-                                    bom: parameters.bom,
-                                    version: parameters.bomVersion
-                                },
+                                isBomComponent: parameters.isBomComponent,
                                 inventoryId: parameters.inventoryId,
                                 quantity: parameters.quantity,
                                 unitOfMeasure: parameters.uom,
@@ -35,6 +34,10 @@ sap.ui.define([
                                 postingDateTime: this._getIssueDt(),
                                 comments: `${parameters.componentSequence}//${issueGuid}`,
                                 isAI: false };
+            if(parameters.bom){
+                requestParameters.bom = { bom: parameters.bom,
+                                          version: parameters.bomVersion }
+            }
 
             if(parameters.isAI){
                 requestParameters.isAI = true;
@@ -44,6 +47,10 @@ sap.ui.define([
             return await new Promise((resolve,reject)=>{
                 controller.ajaxPostRequest(sUrl, requestParameters,
                     (oResponseData) => {
+                        if(requestParameters.isAI&&!oResponseData.ev_material){
+                            let textHandler = new TextHandler();
+                            reject({message: textHandler.getText("error.issue.aiFailed")});
+                        }
                         if(requestParameters.isAI&&!oResponseData.ev_material){
                             resolve(undefined);
                         }

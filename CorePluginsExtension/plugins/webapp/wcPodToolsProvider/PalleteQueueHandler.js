@@ -14,20 +14,17 @@ sap.ui.define([
     "sap/m/Button",
     "sap/m/Text",
     "sap/m/library",
-    "sap/m/TextArea",
     "sap/m/Table",
     "sap/m/Column",
     "sap/m/ColumnListItem",
     "sap/m/CheckBox",
     "sap/m/HBox",
-    "sap/m/DateTimePicker",
     "sap/m/VBox",
-    "sap/ui/core/date/UI5Date",
     "sap/m/Panel",
-    "sap/m/OverflowToolbar",
     "sap/f/DynamicPage",
-    "sap/m/Label"
-], function (ObjectUI5,TextHandler, Palette, ResourceRepository, ErrorHandler, PalleteQueue, ReturnNpwDialog, AdditionalIssueDialog, MaterialRepository, SfcReceiptPrint, JSONModel, Dialog, Button, Text, mobileLibrary, TextArea, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label){
+    "ibc/dm/plugins/wcPodToolsProvider/PartialPalleteReturnDialog"
+], function (ObjectUI5,TextHandler, Palette, ResourceRepository, ErrorHandler, PalleteQueue, ReturnNpwDialog, AdditionalIssueDialog, MaterialRepository, SfcReceiptPrint, JSONModel, Dialog, Button, Text,
+     mobileLibrary, Table, Column, ColumnListItem, CheckBox, HBox, VBox, Panel, DynamicPage, PartialPalleteReturnDialog){
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.PalleteQueueHandler", {
         constructor: function(){
@@ -60,8 +57,12 @@ sap.ui.define([
                     let oVBox = new VBox({ alignItems: "Center", height: "45rem", width: "100rem" });
                     let oTableLog = this._getTableLog();
                     let oActionButtons = await this._getActionButtons();
+                    let printCountGrounp = this._getPrintCountGroup();
+            
                     oVBox.addItem(oTableLog);
                     oVBox.addItem(oActionButtons);
+                    oVBox.addItem(printCountGrounp);
+                    
                     this._oDialogLog = new Dialog({
                         type: mobileLibrary.DialogType.Message,
                         verticalScrolling: false,
@@ -71,7 +72,7 @@ sap.ui.define([
                                 text: this._textHandler.getText("labels.loghu.button.close"),
                                 press: function () {
                                     this._oDialogLog.close();
-
+                                    this._oDialogLog.destroy();
                                         try{
                                             let model = this._oPluginViewController.byId("componentList").getModel();
                                             let modelData = this._oPluginViewController.byId("componentList").getModel().getData();
@@ -107,18 +108,20 @@ sap.ui.define([
         },
         _getColumns: function(){
             let oReturn = [];
+
+            this._columnQuantity = new Column();
             if(this._oMode === "RESOURCE"){
                 oReturn.push(new Column({ header: new Text({ text: "" }), width: "3rem" }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.material") }) }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.materialDesc") }) }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.handlingUnit") }) }));
-                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.quantity") }) }));
+                oReturn.push(this._columnQuantity);
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.reservation") }) }));
 
             }else{
                 oReturn.push(new Column({ header: new Text({ text: "" }) , width: "3rem"  }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.handlingUnit") }) }));
-                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.quantity") }) }));
+                oReturn.push(this._columnQuantity);
                 //oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("Materiał") }) }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.reservation") }) }));
             }
@@ -152,7 +155,7 @@ sap.ui.define([
             let oTable = new Table({
                 growing: true,
                 sticky: ["ColumnHeaders", "HeaderToolbar"],
-                width: "112rem",
+                width: "100rem",
                 inset: false,
                 columns: oColumns,
                 items: {
@@ -189,7 +192,8 @@ sap.ui.define([
                                     endReservation: true,
                                     return: true,
                                     returnNpw: true,
-                                    additionIssue: true  };
+                                    additionIssue: true,
+                                    partialReturn: true };
 
             let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
             let consumptionButtons = oResource.getConsumptionButtons();
@@ -199,7 +203,8 @@ sap.ui.define([
                                     return: false,
                                     returnNpw: false,
                                     additionIssue: false,
-                                    issue: false  };
+                                    issue: false,
+                                    partialReturn: false  };
                 let consumptionButtonsSplitted = consumptionButtons.split(",");
 
                 for(const button of consumptionButtonsSplitted){
@@ -222,13 +227,16 @@ sap.ui.define([
                         case '6':
                             oButtonsVisible.issue = true;
                             break;
+                        case '7':
+                            oButtonsVisible.partialReturn = true;
+                            break;
                     }
                 }
             }
 
             if(this._oMode === "RESOURCE"){
                 oButtonsVisible.reservation = false;
-                oButtonsVisible.endReservation = false;
+                //oButtonsVisible.endReservation = false;
                 oButtonsVisible.additionIssue = false;
                 oButtonsVisible.issue = false;
             }
@@ -236,35 +244,42 @@ sap.ui.define([
             let oHBoxBtn = new HBox({});
             let oButtonReservation = new Button({
                 text: this._textHandler.getText("labels.loghu.button.reservation"),
-                width: "15rem",
+                width: "12rem",
                 press: this.onButtonReservation.bind(this),
                 visible: oButtonsVisible.reservation
             });
 
             let oButtonEndReservation = new Button({
                 text: this._textHandler.getText("labels.loghu.button.endReservation"),
-                width: "15rem",
+                width: "12rem",
                 press: this.onButtonEndReservation.bind(this),
                 visible: oButtonsVisible.endReservation
             });
 
             let oButtonReturn = new Button({
                 text: this._textHandler.getText("labels.loghu.button.return"),
-                width: "15rem",
+                width: "12rem",
                 press: this.onButtonReturn.bind(this),
                 visible: oButtonsVisible.return
             });
 
             let oButtonReturnNpw = new Button({
                 text: this._textHandler.getText("labels.loghu.button.returnNpw"),
-                width: "15rem",
+                width: "12rem",
                 press: this.onButtonReturnNpw.bind(this),
                 visible: oButtonsVisible.returnNpw
             });
 
+            let oButtonPartialReturn = new Button({
+                text: this._textHandler.getText("labels.loghu.button.partialReturn"),
+                width: "12rem",
+                press: this.onButtonPartialReturn.bind(this),
+                visible: oButtonsVisible.partialReturn
+            });
+
             let oButtonAdditionIssue = new Button({
                 text: this._textHandler.getText("labels.loghu.button.additionalIssue"),
-                width: "15rem",
+                width: "12rem",
                 press: this.onButtonAdditionIssue.bind(this),
                 visible: oButtonsVisible.additionIssue
             });
@@ -275,15 +290,17 @@ sap.ui.define([
                 press: this.onButtonAdditionMHuIssue.bind(this),
                 visible: oButtonsVisible.issue
             });
-            oButtonReservation.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
-            oButtonEndReservation.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
-            oButtonReturn.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
-            oButtonReturnNpw.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
-            oButtonAdditionIssue.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
-            oButtonAdditionMHuIssue.addStyleClass("bigButtonLHU sapUiMediumMarginEnd");
+            oButtonReservation.addStyleClass("bigButtonLHU sapUiSmallMarginEnd sapUiSmallMarginBegin");
+            oButtonEndReservation.addStyleClass("bigButtonLHU sapUiSmallMarginEnd");
+            oButtonReturn.addStyleClass("bigButtonLHU sapUiSmallMarginEnd");
+            oButtonReturnNpw.addStyleClass("bigButtonLHU sapUiSmallMarginEnd");
+            oButtonAdditionIssue.addStyleClass("bigButtonLHU sapUiSmallMarginEnd");
+            oButtonAdditionMHuIssue.addStyleClass("bigButtonLHU sapUiSmallMarginEnd");
+            oButtonPartialReturn.addStyleClass("bigButtonLHU sapUiSmallMarginEnd");
             oHBoxBtn.addItem(oButtonReservation);
             oHBoxBtn.addItem(oButtonEndReservation);
             oHBoxBtn.addItem(oButtonReturn);
+            oHBoxBtn.addItem(oButtonPartialReturn);
             oHBoxBtn.addItem(oButtonReturnNpw);
             oHBoxBtn.addItem(oButtonAdditionIssue);
             oHBoxBtn.addItem(oButtonAdditionMHuIssue);
@@ -303,6 +320,12 @@ sap.ui.define([
             let oLogData = { items: [] };
 
             oLogData.items = await oPalleteQueue.readPalletesQueue();
+
+            let palletesQuantitySum = 0;
+            for(const item of oLogData.items){
+                palletesQuantitySum = palletesQuantitySum + item.quantity;
+            }
+            this._columnQuantity.setHeader(new Text({ text: this._textHandler.getText("labels.loghu.column.quantity", palletesQuantitySum) }) );
 
             let oLogModel = new JSONModel();
             oLogModel.setData(oLogData);
@@ -354,14 +377,43 @@ sap.ui.define([
                     for(const item of oSelectedItems){
                         let oPallete  = new Palette(this._oPluginViewController);
                         item.erpResourceId = oResource.getResourceErpId();
-                        await oPallete.palleteReturn(item, oZweiEndpoint);
                         await oPallete.reducePalleteQuan(item, item.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
+                        await oPallete.palleteReturn(item, oZweiEndpoint);
                         await this._executeLabelPrint(item, oPrinter, item.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN);
                         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     }
                 }catch(oError){this._oErrorHandler.handleError(oError);}
                 setTimeout( async ()=> {    await this._getDialogData();
                                             this._oDialogLog.setBusy(false);},1500);
+            }catch(oError){
+                this._oDialogLog.setBusy(false);
+                this._oErrorHandler.handleError(oError);
+            }
+        },
+
+        onButtonPartialReturn: async function(){
+            try{
+                this._oDialogLog.setBusyIndicatorDelay(0);
+                this._oDialogLog.setBusy(true);
+                let oDummyOrderSfc = this._getDummyOrderSfc();
+                let oResource = await ResourceRepository.getResourceInstance(this._oPluginViewController,this._oHandlerData.plant, this._oHandlerData.resource);
+                let oZweiEndpoint = this._getZweiEndpoint();
+                let oPrinter = await this._getPrinter();
+                let item = this._getSelectedItem();
+                let oDialogReturn = await PartialPalleteReturnDialog.showDialog(item, this._oPluginViewController);
+
+                if(oDialogReturn.quantity > 0){
+                    let oPallete  = new Palette(this._oPluginViewController);
+                    item.erpResourceId = oResource.getResourceErpId();
+                    await oPallete.reducePalleteQuan(item, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
+                    await oPallete.palleteReturn(item, oZweiEndpoint, oDialogReturn.quantity);
+                    await this._executeLabelPrint(item, oPrinter, oDialogReturn.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN);
+                    this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
+                    setTimeout( async ()=> {    await this._getDialogData();
+                                                this._oDialogLog.setBusy(false);},1500);
+                }else{
+                    this._oDialogLog.setBusy(false);
+                }
             }catch(oError){
                 this._oDialogLog.setBusy(false);
                 this._oErrorHandler.handleError(oError);
@@ -385,12 +437,12 @@ sap.ui.define([
             
                 if(oDialogReturn.quantity>0){ 
                     oItem.erpResourceId = oResource.getResourceErpId();
+                    await oPallete.reducePalleteQuan(oItem, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc );
                     await oPallete.palleteReturnNpw(oItem, oZweiEndpoint, oDialogReturn.quantity);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturnNpw"),true,true);
-                    await oPallete.reducePalleteQuan(oItem, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc );
                     await this._executeLabelPrint(oItem, oPrinter, oDialogReturn.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN_NPW);
-                    setTimeout( async ()=> {                    await this._getDialogData();
-                        this._oDialogLog.setBusy(false);},1500);
+                    setTimeout( async ()=> {    await this._getDialogData();
+                                                this._oDialogLog.setBusy(false);},1500);
                 }else{
                     this._oDialogLog.setBusy(false);
                 }
@@ -555,7 +607,7 @@ sap.ui.define([
             oPrintingDetails.printer = printer;
             oPrintingDetails.operation = "";
             oPrintingDetails.document = 'DM_INFO';
-            oPrintingDetails.printingCopies = this._resourceInstance.getComponentLabelCopies();
+            oPrintingDetails.printingCopies = this._getPrintingCopies();
             oPrintingDetails.printType = printType;
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oPluginViewController, oPrintingDetails);
@@ -608,9 +660,81 @@ sap.ui.define([
                 const aFilters = [];
                 aFilters.push(new sap.ui.model.Filter({ filters: searchFilters, and: false }));
                 oBinding.filter(aFilters);
+
+                const lengthAfterFiltering = oBinding.getLength();
+                const bindingContextAfterFiltering = oBinding.getContexts(0, lengthAfterFiltering);
+
+                const itemsAfterFiltering = bindingContextAfterFiltering.map(c => c.getObject());
+                let quantityColumnAfterFiltering = 0;
+                for(const item of itemsAfterFiltering){
+                    quantityColumnAfterFiltering = quantityColumnAfterFiltering + item.quantity;
+                }
+                this._columnQuantity.setHeader(new Text({ text: this._textHandler.getText("labels.loghu.column.quantity", quantityColumnAfterFiltering) }) );
             }catch(error){
                 debugger;
             }
+        },
+        _getPrintCountGroup: function(){
+            let label = new sap.m.Label({
+                id: "sdasd",
+                text: "Liczba wydruków",
+                labelFor: "rbg1"
+            });
+
+            label.addStyleClass("sapUiSmallMarginEnd fontText");
+
+            let radioButton0 = new sap.m.RadioButton({ id: "rg0", text: "0" });
+            radioButton0.addStyleClass("myRadioButtonGroup");
+
+            let radioButton1 = new sap.m.RadioButton({ id: "rg1", text: "1" });
+            radioButton1.addStyleClass("myRadioButtonGroup");
+
+            let radioButton2 = new sap.m.RadioButton({ id: "rg2", text: "2" });
+            radioButton2.addStyleClass("myRadioButtonGroup");
+
+            let radioButton3 = new sap.m.RadioButton({ id: "rg3", text: "3" });
+            radioButton3.addStyleClass("myRadioButtonGroup");
+
+            let radioButton4 = new sap.m.RadioButton({ id: "rg4", text: "4" });
+            radioButton4.addStyleClass("myRadioButtonGroup");
+
+            let radioButton5 = new sap.m.RadioButton({ id: "rg5", text: "5" });
+            radioButton5.addStyleClass("myRadioButtonGroup");
+
+            this._radioButtonGroup = new sap.m.RadioButtonGroup({
+                id: "rbg1",
+                columns: 6,
+                buttons: [
+                    radioButton0,
+                    radioButton1,
+                    radioButton2,
+                    radioButton3,
+                    radioButton4,
+                    radioButton5
+                ]
+            });
+            this._radioButtonGroup.addStyleClass("printRadioButtonGroup");
+            let componentLabelCopies = this._resourceInstance.getComponentLabelCopies();
+            this._radioButtonGroup.setSelectedIndex(componentLabelCopies);
+
+            let oHBox = new sap.m.HBox({
+                justifyContent: "Center",
+                alignItems: "Center",
+                width: "100%",
+                items: [ label, this._radioButtonGroup ]
+            });
+
+            oHBox.addStyleClass("sapUiSmallMarginTop");
+            return oHBox;
+        },
+        _getPrintingCopies: function(){
+            let result = 1;
+            try{
+                result = parseInt(this._radioButtonGroup.getSelectedButton().getText());
+            }catch(oError){
+            }
+
+            return result;
         }
     })
 

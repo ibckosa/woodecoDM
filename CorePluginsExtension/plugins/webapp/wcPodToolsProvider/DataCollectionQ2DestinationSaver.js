@@ -1,34 +1,11 @@
 sap.ui.define([
-    "sap/ui/base/Object"
-], function (ObjectUI5) {
+    "sap/ui/base/Object",
+    "ibc/dm/plugins/wcPodToolsProvider/GeneralTools"
+], function (ObjectUI5, GeneralTools) {
     "use strict";
     let saver = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.DataCollectionQ2DestinationSaver", {
 
     });
-
-// paramteres expected values
-// plant
-// sfc
-// resource
-// operation
-// productionProcessType ["Q1","Q3","AI"]
-// q3Code
-// quantity
-// uom
-// material
-// itemNo
-// salesOrder    
-// saledOrderItem
-// hu
-// cancelled true/false
-// user
-// consumption
-// dateCreated
-// processStart
-// processStop  
-// ncCode
-// ncCodeDescription
-// guid
 
     saver.saveQ2DestinationDC = async function(controller, parameters){
         let url = controller.getPublicApiRestDataSourceUri() + "/pe/api/v1/process/processDefinitions/start?key=REG_dfa24a23-2ada-42a8-89ae-e3835822fa76";
@@ -45,6 +22,15 @@ sap.ui.define([
             group: { dcGroup: "Q2_DESTINATION",
                      version: "1" }
         };
+
+        if(parameters.printingDetails){
+            let PRINTING_PARAMETERS = GeneralTools.convertPrintingDetailsStuctureToString(parameters.printingDetails);
+
+            requestParameters.parameterValues.push({
+                name: "PRINTING_PARAMETERS",
+                value: PRINTING_PARAMETERS,
+                comment: parameters.guid });
+        }
 
         await this._callApi(controller, url, requestParameters);
     },

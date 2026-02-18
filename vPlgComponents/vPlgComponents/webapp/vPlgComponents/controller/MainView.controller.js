@@ -127,10 +127,10 @@ sap.ui.define([
                     let materialIssuesForSeq = materialIssues.filter( issue=>{return issue.comments === sfcComponent.componentSequence.toString() && issue.cancellationTriggered === false});
                     for(let issue of materialIssuesForSeq){
 
-                        if(sfcComponent.zuom===issue.quantityInBaseUnit.unitOfMeasure.internalUnitOfMeasure){
+                        if(sfcComponent.zuom===issue.quantityInBaseUnit.internalUnitOfMeasure){
                             issuedQuantity = Math.round((issuedQuantity + issue.quantityInBaseUnit.value) * 1000)/1000;
                         }else{
-                            let quantityConverted = materialInstance.convertUom(issue.quantityInBaseUnit.value, issue.quantityInBaseUnit.unitOfMeasure.internalUnitOfMeasure, sfcComponent.zuom);
+                            let quantityConverted = materialInstance.convertUom(issue.quantityInBaseUnit.value, issue.quantityInBaseUnit.internalUnitOfMeasure, sfcComponent.zuom);
                             issuedQuantity = Math.round((issuedQuantity + quantityConverted) * 1000)/1000;
                         }
                         

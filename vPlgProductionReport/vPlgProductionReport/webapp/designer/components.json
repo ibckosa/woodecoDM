@@ -1,0 +1,15 @@
+{
+	"components": [
+		{
+			"id": "vPlgProductionReport",
+			"type": "VIEW_PLUGIN",
+			"allowMultipleInstances": false,
+			"name": "ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport",
+			"propertyEditor": "ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.builder.PropertyEditor",
+			"i18n": "ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.i18n.i18n",
+            "productionProcessEnabled": true,
+           "productionProcessTitle": "vPlgProductionReport",
+			"supportedPodTypes": ["WORK_CENTER"]
+		}   
+	]
+}

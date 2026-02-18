@@ -143,8 +143,8 @@ sap.ui.define([
                 }
 
                 OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
-                await this._printLabel();
-                await this._saveDataCollection(issueManager);                        
+                let printingParameters = await this._printLabel();
+                await this._saveDataCollection(issueManager, printingParameters);                        
             }
 
         },
@@ -184,8 +184,9 @@ sap.ui.define([
                 await issueManager.executeIssues(this._oReceiptParameters.quantity, this._oReceiptParameters.sfc);
             }
             OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
-            await this._saveDataCollection(issueManager);    
-            await this._printLabel();
+            let printingParameters = await this._printLabel();
+            await this._saveDataCollection(issueManager, printingParameters);    
+            
 
         },
 
@@ -210,7 +211,9 @@ sap.ui.define([
             
             
             if(oSfcAvailQuan < this._oReceiptParameters.quantity){
-                await this._executeSfcMerge();
+                await this._executeSfcMerge(true);
+                await this._oSfc.readData();
+                oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
             }else if(oSfcStep.quantityInWork < this._oReceiptParameters.quantity){
                 await Sfc.startSfcs(this._oController, this._oReceiptParameters.plant, [this._oSfc.getSfcNumber()], this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource );
                 oSfcStep.quantityInWork = oSfcAvailQuan;
@@ -238,8 +241,9 @@ sap.ui.define([
                 await issueManager.executeIssues(this._oReceiptParameters.quantity, this._oReceiptParameters.sfc);
             }
             OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);  
-            await this._saveDataCollection(issueManager);  
-            await this._printLabel();
+            let printingParamters = await this._printLabel();
+            await this._saveDataCollection(issueManager, printingParamters);  
+            
             
         },
 
@@ -527,6 +531,7 @@ sap.ui.define([
             }
         },
         _executeSfcMerge: async function(askNotEnoughQuan = true){
+            let sfcsToGetSteps = [];
             let oSfcsToMerge = [];
             let oSfcsToOff = [];
             let oSfcStep = this._oSfc.getStepByOperation(this._oReceiptParameters.operationActivity);
@@ -536,6 +541,25 @@ sap.ui.define([
             };
 
             let oSfcsOrder = await this._getSfcListForOperation();
+            if(oSfcsOrder.length === 0){ return; }
+            for(const sfcOrder of oSfcsOrder){
+                sfcsToGetSteps.push(sfcOrder.sfc);
+            }
+            let sfcInstances = await SfcRepository.getSfcsInstances(this._oController, this._oReceiptParameters.plant, sfcsToGetSteps, this._oReceiptParameters.routing, this._oReceiptParameters.routingVersion);
+            for(const sfcInstance of sfcInstances){
+                sfcInstance.sfc = sfcInstance.getSfcNumber();
+            }
+            
+
+            for(const sfcOrder of oSfcsOrder){
+                let sfcInstance = sfcInstances.find(instance => { return instance.sfc === sfcOrder.sfc });
+                if(sfcInstance){
+                    sfcOrder.steps = sfcInstance.getSteps().filter(step=>{ return step.operation.operation === this._oReceiptParameters.operationActivity });
+                }else{
+                    sfcOrder.steps = [];
+                }
+            }
+
 
             let oSfcsAvailToMerge = oSfcsOrder.filter( sfc=>{ return ( sfc.steps[0].resource === null || sfc.steps[0].resource === this._oReceiptParameters.resource ) && sfc.sfc !== this._oSfc.getSfcNumber() });
 
@@ -584,17 +608,16 @@ sap.ui.define([
             await Sfc.startSfcs(this._oController, this._oReceiptParameters.plant, [this._oSfc.getSfcNumber()], this._oReceiptParameters.operationActivity, this._oReceiptParameters.resource );
         },
         _getSfcListForOperation: async function(){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri()  + "sfc/v1/worklist/sfcs";
+            let sUrl = this._oController.getPublicApiRestDataSourceUri()  + "sfc/v2/worklist/sfcs";
 
             let oParameters = { plant: this._oReceiptParameters.plant,
                                 workCenter: this._oReceiptParameters.workCenter,
-                                "filter.operation": this._oReceiptParameters.operationActivity,
-                                "filter.order": this._oReceiptParameters.order 
-                                };
+                                operation: this._oReceiptParameters.operationActivity,
+                                orders: this._oReceiptParameters.order };
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxGetRequest(sUrl, oParameters,
                     (oResponseData) => {
-                        resolve(oResponseData);
+                        resolve(oResponseData.content);
                     },
                     (oError, sHttpErrorMessage) => {
                         oError.apiName = "sfc/v1/worklist/sfcs"; 
@@ -651,6 +674,7 @@ sap.ui.define([
             
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oController, oPrintingDetails);
             await oSfcReceiptPrint.print();
+            return oPrintingDetails;
         },
         _issueMultiLastOperMutliPalletes: async function(){
             let oSfcsToProcess = [];
@@ -720,8 +744,8 @@ sap.ui.define([
                     await issueManager.executeIssues(this._oReceiptParameters.quantity, this._oReceiptParameters.sfc);
                 }
                 OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
-                await this._printLabel();
-                await this._saveDataCollection(issueManager);                   
+                let printingParamters = await this._printLabel();
+                await this._saveDataCollection(issueManager, printingParamters);                   
             }
         },
         _issueMultiNotLastOperMutliPalletes: async function(){
@@ -758,8 +782,9 @@ sap.ui.define([
                     await issueManager.executeIssues(this._oReceiptParameters.quantity, this._oReceiptParameters.sfc);
                 }
                 OrderReceiptsFromProgressIndicator.addQuantityToProgress(this._oReceiptParameters.order, this._oReceiptParameters.quantity);
-                await this._saveDataCollection(issueManager);    
-                await this._printLabel();
+                let printingParameters = await this._printLabel();
+                await this._saveDataCollection(issueManager, printingParameters);    
+                
             }            
         },
 
@@ -794,7 +819,7 @@ sap.ui.define([
                 this._oErrorHandler.throwError("errorSfcNotInWork");
             }
         },
-        _saveDataCollection: async function(issueManager){
+        _saveDataCollection: async function(issueManager, printingParameters){
             // let parameterValues = [];
 
             let guid = crypto.randomUUID();
@@ -846,7 +871,8 @@ sap.ui.define([
                     ncCode: "",
                     ncCodeDescription: "",
                     guid: guid,
-                    errors: errorsAsString
+                    errors: errorsAsString,
+                    printingParameters: printingParameters
                 }
 
             );

@@ -1,6 +1,7 @@
 sap.ui.define([
-    "sap/ui/base/Object"
-], function (ObjectUI5) {
+    "sap/ui/base/Object",
+    "ibc/dm/plugins/wcPodToolsProvider/GeneralTools"
+], function (ObjectUI5, GeneralTools) {
     "use strict";
     let saver = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.DataCollectionSaver", {
 
@@ -59,6 +60,9 @@ sap.ui.define([
             ERRORS: parameters.errors
         };
 
+        if(parameters.printingParameters){
+            requestParameters.PRINTING_PARAMETERS = GeneralTools.convertPrintingDetailsStuctureToString(parameters.printingParameters);
+        }
         await this._callApi(controller, url, requestParameters);
     },
 

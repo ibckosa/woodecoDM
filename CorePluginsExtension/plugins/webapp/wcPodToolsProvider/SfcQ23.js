@@ -22,7 +22,6 @@ sap.ui.define([
             this._oTextHandler = new TextHandler();
 
             //quantity <--- to Q2/Q3
-            //leftQuantity
             //quantityInWork
             //plant
             //work center
@@ -30,7 +29,6 @@ sap.ui.define([
             //order
             //sfc
             //operationActivity
-            //isMultiOrder
             //isLastOperation
             //isCommentRequired
             //nonconformanceCode

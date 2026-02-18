@@ -620,15 +620,14 @@ sap.ui.define([
             return result;
         },
         getOpenSfcs: async function(){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + 'sfc/v1/worklist/sfcs';
-            var oParameters = { "filter.order": this._oOrderNumber,
-                                "page.size": 20,
-                                plant: this._oPlant,
-                                allSfcSteps: true };
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + 'sfc/v2/worklist/sfcs';
+            var oParameters = { orders: this._oOrderNumber,
+                                size: 20,
+                                plant: this._oPlant };
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxGetRequest(sUrl, oParameters,
                      (oResponseData) => {
-                        resolve(oResponseData);
+                        resolve(oResponseData.content);
                     },
                     (oError, sHttpErrorMessage) => {
                         reject(oError);

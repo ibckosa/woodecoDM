@@ -19,7 +19,8 @@ sap.ui.define([
             this._oAdditionalData = { order : oOrder,
                                       sequence: oSequence,
                                       material: oMaterial,
-                                      storageMaterial: oStorageLocation
+                                      storageMaterial: oStorageLocation,
+                                      status: "UNRESTRICTED"
             };
 
         },
@@ -126,13 +127,22 @@ sap.ui.define([
             }
           }
 
+          // w wersji V1 nazwa była assemblyData stąd podmieniamy nazwę by zachować kompatybilność wsteczną
+          for(const resultLine of result){
+            if(resultLine.dataFields){
+              resultLine.assemblyData = resultLine.dataFields;
+            }else{
+              resultLine.assemblyData = [];
+            }
+          }
+
           return result;
         },
         _readPalletesApiCall: async function(oRequestParamteres){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v1/inventories";
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v2/inventories/query";
 
             return await new Promise((resolve,reject)=>{
-                this._oController.ajaxGetRequest(sUrl, oRequestParamteres,
+                this._oController.ajaxPostRequest(sUrl, oRequestParamteres,
                     (oResponseData) => {
                         resolve(oResponseData);
                     },
@@ -185,7 +195,7 @@ sap.ui.define([
                             materialId: pallete.material,
                             materialDesc: oMaterial.getDescription(),
                             quantity: pallete.quantityOnHand.value,
-                            uom: pallete.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
+                            uom: pallete.quantityOnHand.internalUnitOfMeasure,
                             reservation: "",
                             storageLocation: pallete.storageLocation,
                             createdDateTime: pallete.createdDateTime,
@@ -214,7 +224,7 @@ sap.ui.define([
                                     materialId: pallete.material,
                                     materialDesc: oMaterial.getDescription(),
                                     quantity: pallete.quantityOnHand.value,
-                                    uom: pallete.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
+                                    uom: pallete.quantityOnHand.internalUnitOfMeasure,
                                     reservation: oResevationNumber,
                                     storageLocation: pallete.storageLocation,
                                     createdDateTime: pallete.createdDateTime,
@@ -240,7 +250,7 @@ sap.ui.define([
                                     materialId: pallete.material,
                                     materialDesc: oMaterial.getDescription(),
                                     quantity: pallete.quantityOnHand.value,
-                                    uom: pallete.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
+                                    uom: pallete.quantityOnHand.internalUnitOfMeasure,
                                     reservation: oResevationNumber,
                                     storageLocation: pallete.storageLocation,
                                     createdDateTime: pallete.createdDateTime,
@@ -299,7 +309,7 @@ sap.ui.define([
                         materialId: pallete.material,
                         materialDesc: oMaterial.getDescription(),
                         quantity: pallete.quantityOnHand.value,
-                        uom: pallete.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
+                        uom: pallete.quantityOnHand.internalUnitOfMeasure,
                         reservation: reservationValue,
                         storageLocation: pallete.storageLocation,
                         createdDateTime: pallete.createdDateTime,
@@ -362,7 +372,7 @@ sap.ui.define([
                             materialId: pallete.material,
                             materialDesc: oMaterial.getDescription(),
                             quantity: pallete.quantityOnHand.value,
-                            uom: pallete.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
+                            uom: pallete.quantityOnHand.internalUnitOfMeasure,
                             reservation: "",
                             storageLocation: pallete.storageLocation,
                             createdDateTime: pallete.createdDateTime,
@@ -391,7 +401,7 @@ sap.ui.define([
                                     materialId: pallete.material,
                                     materialDesc: oMaterial.getDescription(),
                                     quantity: pallete.quantityOnHand.value,
-                                    uom: pallete.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
+                                    uom: pallete.quantityOnHand.internalUnitOfMeasure,
                                     reservation: oReservation.dataAttribute,
                                     storageLocation: pallete.storageLocation,
                                     createdDateTime: pallete.createdDateTime,
@@ -418,7 +428,7 @@ sap.ui.define([
                                     materialId: pallete.material,
                                     materialDesc: oMaterial.getDescription(),
                                     quantity: pallete.quantityOnHand.value,
-                                    uom: pallete.quantityOnHand.unitOfMeasure.internalUnitOfMeasure,
+                                    uom: pallete.quantityOnHand.internalUnitOfMeasure,
                                     reservation: oReservation.dataAttribute,
                                     storageLocation: pallete.storageLocation,
                                     createdDateTime: pallete.createdDateTime,

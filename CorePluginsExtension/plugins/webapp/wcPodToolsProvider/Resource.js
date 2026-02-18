@@ -11,14 +11,14 @@ sap.ui.define([
             this._oErrorHandler = new ErrorHandler(this._oController);
         },
         readResourceData: async function(){
-            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "resource/v2/resources";
+            let sUrl = this._oController.getPublicApiRestDataSourceUri() + "resource/v3/resource";
 
             let oParameters = { plant: this._oPlant,
                                 resource: this._oResourceNumber};
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxGetRequest(sUrl, oParameters,
                     (oResponseData) => {
-                        this._oDetails = oResponseData[0];
+                        this._oDetails = oResponseData;
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {

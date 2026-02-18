@@ -203,7 +203,7 @@ sap.ui.define([
             try{
                 // this.getView().setBusyIndicatorDelay(0);
                 // this.getView().setBusy(true); 
-                PodTools.setBusy(this, true);
+                PodTools.setCustomBusyIndicator(true);
                 this._checkTimeLastReceipt();
                 let selectedOrder = this.getView().getModel("viewModel").getData();
                 let oPodController = this.getPodController();
@@ -211,7 +211,7 @@ sap.ui.define([
                 let aSelections = oPodSelectionModel.getSelections();  
                 if(aSelections.length < 1){ 
                     // this.getView().setBusy(false); 
-                    PodTools.setBusy(this, false);
+                    PodTools.setCustomBusyIndicator(false);
                     return; };
                 let aSelectionFirstRow = aSelections[0];
                 let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
@@ -254,7 +254,7 @@ sap.ui.define([
                     this._setLastReceiptTime();
                     this._selectPositionAfterReceipt();
                     // this.getView().setBusy(false);
-                    PodTools.setBusy(this, false);
+                    PodTools.setCustomBusyIndicator(false);
                     // setTimeout( async ()=> { 
                     //     if(this._oResourceInstance.getMOSelectionMode().toUpperCase()==="AUTOMATIC"){
                     //         this._oOrderNumberPrevious = "";
@@ -271,7 +271,7 @@ sap.ui.define([
                                                       plant: this._oPlant,
                                                       resource: this._oResource });
                 // this.getView().setBusy(false);
-                PodTools.setBusy(this, false);
+                PodTools.setCustomBusyIndicator(false);
                 this._oErrorHandler.handleError(oError);
             }
         },
@@ -279,13 +279,13 @@ sap.ui.define([
             try{
                 // this.getView().setBusyIndicatorDelay(0);
                 // this.getView().setBusy(true);
-                PodTools.setBusy(this, true);
+                PodTools.setCustomBusyIndicator(true);
                 let selectedCode = this.getView().byId("q23ReasonsList").getSelectedItem().getBindingContext("multiOrdersModel").getObject();
                 let selectedOrder = this.getView().getModel("viewModel").getData();
                 let oPodController = this.getPodController();
                 let oPodSelectionModel = this.getPodSelectionModel();
                 let aSelections = oPodSelectionModel.getSelections();  
-                if(aSelections.length < 1){ PodTools.setBusy(this, false); return; };
+                if(aSelections.length < 1){ PodTools.setCustomBusyIndicator(false); return; };
                 let aSelectionFirstRow = aSelections[0];
     
                 let q23Parameters = {   quantity: parseInt(this.byId("inputQ23").getValue()),
@@ -319,10 +319,10 @@ sap.ui.define([
                 this.byId("inputQ23").setValue("");
  
                 // this.getView().setBusy(false);
-                PodTools.setBusy(this, false);
+                PodTools.setCustomBusyIndicator(false);
             }catch(oError){
                 // this.getView().setBusy(false);
-                PodTools.setBusy(this, false);
+                PodTools.setCustomBusyIndicator(false);
                 this._oErrorHandler.handleError(oError);
             }            
         },

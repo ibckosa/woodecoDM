@@ -1,0 +1,37 @@
+ID: vPlgProductionReport
+_schema-version: '3.2'
+version: 0.0.1
+
+modules:
+ - name: ibc-dm-vPlgProductionReport
+   type: html5
+   path: vPlgProductionReport
+   parameters:
+      disk-quota: 512M
+      memory: 256M
+   properties:
+    httpHeaders:
+       - X-Frame-Options: deny
+    CORS: "[{\"uriPattern\": \"^/vPlgProductionReport/(.*)$\",\"allowedOrigin\": [
+           {\"host\": \"woodeco-dmc-qas-oiyz0u0q.execution.eu20-quality.web.dmc.cloud.sap\",\"protocol\": \"https\"},
+           {\"host\": \"woodeco-dmc-prd.execution.eu20-prod.web.dmc.cloud.sap\",\"protocol\": \"https\"}],
+           \"allowedMethods\": [\"GET\",\"OPTIONS\"],
+           \"allowedHeaders\":[\"Origin\", \"Accept\",\"X-Requested-With\",\"Content-Type\",
+           \"Access-Control-Request-Method\",\"Access-Control-Request-Headers\",\"Authorization\",
+           \"X-Sap-Cid\",\"X-Csrf-Token\",\"x-dme-industry-type\",\"x-dme-plant\",\"x-features\"],
+           \"exposeHeaders\": [\"Accept\",\"Authorization\",\"X-Requested-With\",\"X-Sap-Cid\",
+           \"Access-Control-Allow-Origin\",\"Access-Control-Allow-Credentials\",\"X-Csrf-Token\",
+           \"Content-Type\",\"x-dme-industry-type\",\"x-dme-plant\",\"x-features\"]}]"
+   #build-parameters:
+      #builder: grunt
+   requires:
+    - name: uaa_pr_suite
+
+resources:
+ - name: uaa_pr_suite
+   parameters:
+      path: ./xs-security.json
+      service-plan: application
+      service: xsuaa
+   type: org.cloudfoundry.managed-service
+

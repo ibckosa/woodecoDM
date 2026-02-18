@@ -50,8 +50,8 @@ sap.ui.define([
                     }
 
                     .sapMBtn.bigButtonLHU .sapMBtnInner {
-                        font-size: 2rem;
-                        height: 4.5rem;
+                        font-size: 1.5rem;
+                        height: 3.5rem;
                         padding-top: 0rem;
                         text-align: center;
                         background-color: #107E3E;
@@ -59,18 +59,18 @@ sap.ui.define([
                     }
 
                     .bigButtonLHU .sapMBtnInner {
-                        height: 4rem;
+                        height: 3rem;
                     }
 
                     .sapMBtn.bigButtonLHU {
-                        height: 3rem;
+                        height: 2.5rem;
                         padding: 0rem;
                     }
 
                     .bigButtonLHU .sapMBtnContent {
                         white-space: wrap;
-                        padding-inline: 0.2rem;
-                        line-height: 1.70rem;
+                        padding-inline: 0.15rem;
+                        line-height: 1.6rem;
                         display: flex;
                         align-items: center;
                         justify-content: center;
@@ -115,6 +115,25 @@ sap.ui.define([
                     .sapMInputBase.inputFontDialog .sapMInputBaseContentWrapper .sapMInputBaseInner {
                         font-size: 2rem;
                     }
+
+
+                    .sapMInputBase.inputFont{
+                        height: 3rem;
+                    }
+                    .sapMInputBase.inputFont .sapMInputBaseContentWrapper{
+                        height: 3rem;
+                    }
+                    .sapMInputBase.inputFont .sapMInputBaseContentWrapper .sapMInputBaseInner{
+                        font-size: 2.5rem;
+                    }
+                    .printRadioButtonGroup .sapMLabel {
+                        font-size: 2rem;
+                    }
+
+                    .fontText{
+                        font-size: 2.5rem;
+                    }
+
                     `;
                 oHead.appendChild(oStyle);
             }catch(error){}
