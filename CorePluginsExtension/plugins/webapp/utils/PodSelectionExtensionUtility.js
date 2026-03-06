@@ -127,7 +127,7 @@ sap.ui.define([
 
             let productionReportButton = new Button({
                 type: sType,
-                visible: true,
+                visible: false,
                 text: this._oTextHandler.getText("Production report"),
                 press: this.onProductionReportPress.bind(this)
             });
@@ -198,8 +198,19 @@ sap.ui.define([
         },
         onProductionReportPress: function(){
             let controller = this.oPluginEventExtension.getController();
-            debugger;
-            controller.navigateToPage("PRODUCTIONREPORT");
+            this._oErrorHandler = new ErrorHandler(controller);
+            try{
+                let podSelectionModel =  controller.getPodSelectionModel()
+                if(podSelectionModel.workCenter === undefined || podSelectionModel.workCenter === ""){
+                    this._throwError("q23.error.emptyWorkCenter");
+                }
+                if(podSelectionModel.resource === null ||podSelectionModel.resource === undefined || podSelectionModel.resource.resource === undefined){
+                    this._throwError("q23.error.emptyResource");
+                }
+                controller.navigateToPage("PRODUCTIONREPORT");
+            }catch(error){
+                this._oErrorHandler.handleError(error);
+            }
         },
         onPaletteQueuePress: async function(oEvent){
             this._oErrorHandler = new ErrorHandler(this.oPluginEventExtension.getController());

@@ -14,6 +14,7 @@ modules:
        - X-Frame-Options: deny
     CORS: "[{\"uriPattern\": \"^/vPlgReceiptSfc/(.*)$\",\"allowedOrigin\": [
            {\"host\": \"woodeco-dmc-qas-oiyz0u0q.execution.eu20-quality.web.dmc.cloud.sap\",\"protocol\": \"https\"},
+           {\"host\": \"dmc-demo.execution.eu20-quality.web.dmc.cloud.sap\",\"protocol\": \"https\"},
            {\"host\": \"digital-manufacturing-cloud-test-and-demo-had3qynk.execution.eu10-quality.web.dmc.cloud.sap\",\"protocol\": \"https\"},
            {\"host\": \"woodeco-dmc-prd.execution.eu20-prod.web.dmc.cloud.sap\",\"protocol\": \"https\"}],
            \"allowedMethods\": [\"GET\",\"OPTIONS\"],

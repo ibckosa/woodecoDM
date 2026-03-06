@@ -3,25 +3,70 @@
   xmlns:l="sap.ui.layout"
   xmlns:core="sap.ui.core">
 		<l:VerticalLayout
-				width="100%"
-				class="sapUiSmallMarginTop sapUiSmallMarginBottom">
-			<l:Grid	containerQuery="true"
-					hSpacing="1"
-					vSpacing="1"
-					position="Center">
-				<VBox>
-					<Label text="Etykieta pola1:" labelFor="input1" />
-					<Input id="input1" type="Text"/>
+				width="100%">
+			<l:Grid	>
+				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
+					<Label text="Data:" labelFor="datePicer" />
+					<DatePicker id="datePicer"/>
 					<layoutData>
-						<l:GridData span="XL4 L4 M4 S12" />
+						<l:GridData span="XL2 L2 M2 S12" />
 					</layoutData>
 				</VBox>
 
-				<VBox>
-					<Label text="Etykieta pola2:" labelFor="input2" />
-					<Input id="input2" type="Text"/>
+				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
+					<Label text="Zmiana:" labelFor="shift" />
+					<ComboBox
+						id="shift"
+						selectedKey="ALL">
+						<items>
+							<core:Item key="ALL" text="Wszystkie" />
+							<core:Item key="1" text="1" />
+							<core:Item key="2" text="2" />
+							<core:Item key="3" text="3" />
+						</items>
+
+					</ComboBox>
 					<layoutData>
-						<l:GridData span="XL4 L4 M4 S12" />
+						<l:GridData span="XL1 L1 M1 S12" />
+					</layoutData>
+				</VBox>
+
+				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
+					<Label text="Zlecenie produkcyjne" labelFor="orderNumber" />
+					<Input id="orderNumber" type="Text"/>
+					<layoutData>
+						<l:GridData span="XL2 L2 M2 S12" />
+					</layoutData>
+				</VBox>
+
+				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
+					<Label text="Czy agregować?" labelFor="aggregationFilter" />
+					<SegmentedButton id="aggregationFilter" selectedKey="no" class="sapUiSmallMarginBottom">
+						<items>
+							<SegmentedButtonItem text="TAK" key="yes" />
+							<SegmentedButtonItem text="NIE" key="no" />
+						</items>
+					</SegmentedButton>
+					<layoutData>
+						<l:GridData span="XL1 L1 M1 S12" />
+					</layoutData>
+				</VBox>
+
+				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
+					<Text ></Text>	
+					<Input id="searchField" type="Text" placeholder="Wyszukaj"/>
+					<layoutData>
+						<l:GridData span="XL3 L3 M3 S12" />
+					</layoutData>
+				</VBox>
+
+
+
+				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
+					<Text ></Text>	
+					<Button text="Start"/>
+					<layoutData>
+						<l:GridData span="XL1 L1 M1 S12" />
 					</layoutData>
 				</VBox>
 			</l:Grid>

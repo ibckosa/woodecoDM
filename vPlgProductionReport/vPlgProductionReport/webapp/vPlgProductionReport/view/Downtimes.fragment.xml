@@ -1,7 +1,125 @@
 <core:FragmentDefinition
   xmlns="sap.m"
-  xmlns:core="sap.ui.core">
-  <HBox>
-    <Text text="Downtimes"/>
-  </HBox>
+  xmlns:core="sap.ui.core"
+  xmlns:ct="sap.suite.ui.microchart"
+  xmlns:unified="sap.ui.unified">
+
+		<ct:BulletMicroChart scale="%" targetValue="95" forecastValue="95" press="press" width="20rem">
+			<ct:actual>
+				<ct:BulletMicroChartData value="91" color="Error"/>
+			</ct:actual>
+			<ct:thresholds>
+				<ct:BulletMicroChartData value="0" color="Error"/>
+				<ct:BulletMicroChartData value="33" color="Critical"/>
+				<ct:BulletMicroChartData value="66" color="Critical"/>
+				<ct:BulletMicroChartData value="100" color="Error"/>
+			</ct:thresholds>
+		</ct:BulletMicroChart>
+
+			<unified:CalendarLegend id="PCLegend">
+				<unified:items>
+					<unified:CalendarLegendItem
+						text="Produkcyjne"
+						type="Type01" />
+
+					<unified:CalendarLegendItem
+						text="Niezależne"
+						type="Type18" />
+
+					<unified:CalendarLegendItem
+						text="Przezbrojenie"
+						type="Type02" />
+
+					<unified:CalendarLegendItem
+						text="Ekonomiczne"
+						type="Type10" />
+
+					<unified:CalendarLegendItem
+						text="Naprawa"
+						type="Type07" />
+
+					<unified:CalendarLegendItem
+						text="Techniczne"
+						type="Type06" />
+
+					<unified:CalendarLegendItem
+						text="Technologiczne"
+						type="Type05" />
+
+					<unified:CalendarLegendItem
+						text="Logistyczne"
+						type="Type19" />
+				</unified:items>
+			</unified:CalendarLegend>
+		<PlanningCalendar
+			id="PC1"
+			viewKey="A"
+			legend="PCLegend"
+			appointmentsVisualization="Filled"
+			rows="{path: '/downtimesCalendarItems'}">
+			<views>
+				<PlanningCalendarView
+					key="A"
+					intervalType="Hour"
+					description="Custom"
+					intervalsS="24"
+					intervalsM="24"
+					intervalsL="24">
+				</PlanningCalendarView>
+			</views>
+
+			<rows>
+				<PlanningCalendarRow
+					icon="{pic}"
+					title="{name}"
+					text="{role}"
+					appointments="{path : 'items', templateShareable: false}"
+					intervalHeaders="{path: 'headers', templateShareable: false}">
+					<customData>
+						<core:CustomData key="emp-name" value="{name}" writeToDom="true"/>
+					</customData>
+					<appointments>
+						<unified:CalendarAppointment
+							startDate="{start}"
+							endDate="{end}"
+							icon="{pic}"
+							title="{categoryDescription}"
+							text="{info}"
+							type="{type}"
+							tentative="{tentative}">
+						</unified:CalendarAppointment>
+					</appointments>
+					<intervalHeaders>
+						<unified:CalendarAppointment
+							startDate="{start}"
+							endDate="{end}"
+							icon="{pic}"
+							title="{categoryDescription}"
+							type="{type}">
+						</unified:CalendarAppointment>
+					</intervalHeaders>
+				</PlanningCalendarRow>
+			</rows>
+		</PlanningCalendar>
+
+<HBox>
+	<Table id="dtCategoryTable" class="sapUiLargeMarginTop sapUiSmallMarginLeft" width="40%" items="{path:'/downTimesCategories'}" inset="false">
+		<columns>
+			<Column>
+				<Text text="Kategoria" />
+			</Column>
+			<Column>
+				<Text text="Ilość minut" />
+			</Column>
+		</columns>
+		<items>
+			<ColumnListItem vAlign="Middle">
+				<cells>
+					<FormattedText htmlText="{categoryDescription}" />
+					<FormattedText htmlText="{value}" />
+				</cells>
+			</ColumnListItem>
+		</items>
+	</Table>
+</HBox>
 </core:FragmentDefinition>

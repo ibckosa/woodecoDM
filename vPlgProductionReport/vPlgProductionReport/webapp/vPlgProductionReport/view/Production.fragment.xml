@@ -1,7 +1,59 @@
 <core:FragmentDefinition
   xmlns="sap.m"
+  xmlns:ct="sap.suite.ui.microchart"
   xmlns:core="sap.ui.core">
-  <HBox>
-    <Text text="Production report"/>
-  </HBox>
+  <Table id="componentsTable"   items="{path:'/productionItems'}" inset="false">
+    <columns>
+      <Column width="5%">
+        <Text text="Data produkcji" />
+      </Column>
+      <Column width="5%">
+        <Text text="Zmiana" />
+      </Column>
+      <Column width="5%">
+        <Text text="Numer zlecenia" />
+      </Column>
+      <Column width="5%">
+        <Text text="Numer pozycji" />
+      </Column>
+      <Column width="15%">
+        <Text text="Materiał" />
+      </Column>
+      <Column width="7%">
+        <Text text="Ilość Q1" />
+      </Column>
+      <Column width="30%">
+        <Text text="Ilość Q2/Q3" />
+      </Column>
+      <Column width="auto">
+        <Text text="KPI Q1" />
+      </Column>
+      <Column width="auto">
+        <Text text="KPI M2/M3" />
+      </Column>
+    </columns>
+    <items>
+      <ColumnListItem vAlign="Middle">
+        <cells>
+          <Text text="{productionDateTime}" />
+          <Text text="{shift}" />
+          <Text text="{orderNumber}" />
+          <Text text="{itemNumber}" />
+          <Text text="{material}" />
+          <Text text="{q1Quantity}" />
+          <Text text="{q23Quantity}" />
+          <ct:BulletMicroChart scale="%" targetValue="95" forecastValue="95"> 
+            <ct:actual>
+              <ct:BulletMicroChartData value="91" color="Error"/>
+            </ct:actual>
+          </ct:BulletMicroChart>
+          <ct:BulletMicroChart scale="M2" targetValue="1200" forecastValue="1200"> 
+            <ct:actual>
+              <ct:BulletMicroChartData value="1400" color="Good"/>
+            </ct:actual>
+          </ct:BulletMicroChart>
+        </cells>
+    </ColumnListItem>
+    </items>
+  </Table>
 </core:FragmentDefinition>

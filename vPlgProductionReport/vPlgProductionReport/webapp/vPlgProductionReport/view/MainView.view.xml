@@ -5,18 +5,16 @@
         expandable="false"
         expanded="false"
         accessibleRole="Region"
-        backgroundDesign="Transparent"
-        class="sapUiNoContentPadding">  
+        backgroundDesign="Transparent" >  
         <headerToolbar>
-            <Toolbar height="3rem" class="sapUiSmallMarginTop">
+            <Toolbar height='5rem'>
                 <core:Fragment fragmentName="ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.view.FilterBar" type="XML"/>
             </Toolbar>
         </headerToolbar>
-        <content> 
             <IconTabBar
                 id="reportTabBar"
                 expanded="{device>/isNoPhone}"
-                class="sapUiResponsiveContentPadding">
+                class="sapUiSmallMarginTop sapUiResponsiveContentPadding">
                 <items>
                     <IconTabFilter 
                         icon="sap-icon://cart" 
@@ -31,6 +29,5 @@
                     </IconTabFilter>
                 </items>
             </IconTabBar>
-        </content>
 	</Panel>		
 </mvc:View>

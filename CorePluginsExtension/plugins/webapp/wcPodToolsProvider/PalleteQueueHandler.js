@@ -377,8 +377,7 @@ sap.ui.define([
                     for(const item of oSelectedItems){
                         let oPallete  = new Palette(this._oPluginViewController);
                         item.erpResourceId = oResource.getResourceErpId();
-                        await oPallete.reducePalleteQuan(item, item.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
-                        await oPallete.palleteReturn(item, oZweiEndpoint);
+                        await oPallete.palleteReturn(item, oZweiEndpoint, item.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
                         await this._executeLabelPrint(item, oPrinter, item.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN);
                         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     }
@@ -405,8 +404,8 @@ sap.ui.define([
                 if(oDialogReturn.quantity > 0){
                     let oPallete  = new Palette(this._oPluginViewController);
                     item.erpResourceId = oResource.getResourceErpId();
-                    await oPallete.reducePalleteQuan(item, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
-                    await oPallete.palleteReturn(item, oZweiEndpoint, oDialogReturn.quantity);
+                    await oPallete.palleteReturn(item, oZweiEndpoint, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
+                    //await oPallete.palleteReturn(item, oZweiEndpoint, oDialogReturn.quantity);
                     await this._executeLabelPrint(item, oPrinter, oDialogReturn.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     setTimeout( async ()=> {    await this._getDialogData();
@@ -437,8 +436,8 @@ sap.ui.define([
             
                 if(oDialogReturn.quantity>0){ 
                     oItem.erpResourceId = oResource.getResourceErpId();
-                    await oPallete.reducePalleteQuan(oItem, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc );
-                    await oPallete.palleteReturnNpw(oItem, oZweiEndpoint, oDialogReturn.quantity);
+                    //await oPallete.reducePalleteQuan(oItem, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc );
+                    await oPallete.palleteReturnNpw(oItem, oZweiEndpoint, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturnNpw"),true,true);
                     await this._executeLabelPrint(oItem, oPrinter, oDialogReturn.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN_NPW);
                     setTimeout( async ()=> {    await this._getDialogData();

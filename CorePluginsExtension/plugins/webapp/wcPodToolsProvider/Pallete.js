@@ -8,7 +8,6 @@ sap.ui.define([
     "use strict";
     let Pallete = ManagedObject.extend("ibc.dm.plugins.wcPodToolsProvider.Pallete", {
         constructor: function(oContoller){
-            //ManagedObject.prototype.constructor.apply(this, arguments);
             this._oController = oContoller;
             this._oErrorHandler = new ErrorHandler(this._oController);
         },
@@ -43,7 +42,6 @@ sap.ui.define([
         palleteEndReservation: async function(oPalleteDetails, oPlant){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "inventory/v2/inventories/"+`${oPalleteDetails.inventoryId}?plant=${oPlant}`;
 
-           // this._checkBeforeEndReservation(oPalleteDetails);
             let oAssemblyData = oPalleteDetails.assemblyData.filter( assemblyData => { return assemblyData.dataField !== "RES_ITEM" && assemblyData.dataField !== "CONS_START" } );
             oAssemblyData.push({ dataField: "RES_ITEM",
                                  dataAttribute: null });
@@ -66,14 +64,20 @@ sap.ui.define([
 
             });
         },
-        palleteReturn: async function(oLine, oEndPoint , quantity){
+
+        palleteReturn: async function(oLine, oEndPoint , quantity, dummyOrder, dummySfc){
+            this._checkBeforeReturn(oLine , quantity);
+            await this.reducePalleteQuan(oLine, quantity, dummyOrder, dummySfc);
+            await this._palleteReturnZweiApi(oLine, oEndPoint , quantity);
+        },
+
+        _palleteReturnZweiApi: async function(oLine, oEndPoint , quantity){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + oEndPoint;
             let oSapDateTime = this._getCurrentSapDateTime();
             let oParameters = {};
-            this._checkBeforeReturn(oLine.palleteDetails);
             let oBatchNumber = '';
             let quantityToReturn = oLine.quantity;
-            if(quantity){
+            if(quantity<oLine.quantity){
                 quantityToReturn = quantity;
                 oLine.handlingUnit = oLine.palleteDetails.handlingUnit = await this.generateHuNumber(oLine.palleteDetails.material, oLine.palleteDetails.materialVersion, oLine.plant);
             }
@@ -122,12 +126,16 @@ sap.ui.define([
     
                 });
         },
-
-        palleteReturnNpw: async function(oLine, oEndPoint, oQuantity){
+        palleteReturnNpw: async function(oLine, oEndPoint, oQuantity, dummyOrder, dummySfc){
+            this._checkBeforeReturn(oLine , oQuantity);
+            await this.reducePalleteQuan(oLine, oQuantity, dummyOrder, dummySfc);
+            await this._palleteReturnNpwApiCall(oLine, oEndPoint, oQuantity);
+            
+        },
+        _palleteReturnNpwApiCall: async function(oLine, oEndPoint, oQuantity){
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + oEndPoint;
             let oSapDateTime = this._getCurrentSapDateTime();
             let oParameters = {};
-            this._checkBeforeReturnNpw(oLine , oQuantity);
             let oGeneratedHu = await this.generateHuNumber(oLine.palleteDetails.material, oLine.palleteDetails.materialVersion, oLine.plant);
             oLine.handlingUnit = oGeneratedHu;
 
@@ -202,13 +210,7 @@ sap.ui.define([
                 this._oErrorHandler.throwError("error.logHu.EndReservationConsumptionStarted", oPalleteDetails.handlingUnit);
             }
         },
-        _checkBeforeReturn: function(oPalleteDetails){
-            let oReservation = oPalleteDetails.assemblyData.find( assemblyData => { return assemblyData.dataField === "RES_ITEM" } );
-            if(oReservation&&oReservation.dataAttribute!==null&&oReservation.dataAttribute){
-                this._oErrorHandler.throwError("error.logHu.ReturnPaletteReserved", oPalleteDetails.handlingUnit);
-            }
-        },
-        _checkBeforeReturnNpw: function(oLine, oQuantity){
+        _checkBeforeReturn: function(oLine, oQuantity){
             let oReservation = oLine.palleteDetails.assemblyData.find( assemblyData => { return assemblyData.dataField === "RES_ITEM" } );
             if(oReservation&&oReservation.dataAttribute!==null&&oReservation.dataAttribute){
                 this._oErrorHandler.throwError("error.logHu.ReturnPaletteReserved", oLine.palleteDetails.handlingUnit);
@@ -255,54 +257,6 @@ sap.ui.define([
                                                                            bomVersion: "",
                                                                            isAI: true,
                                                                            isBomComponent: false });
-
-
-            // let oRequestParameters = {
-            //     "shopOrder": oDummyOrder,///numer zlecenia
-            //     "batchId": oDummySfc, ///SFC
-            //     "operationActivity": "DUMMY_OPERATION",//operation activity
-            //     // "bomComponentRef": this.consumeData.bomComponentRef,
-            //     "material": oLine.materialId,
-            //     "batchNumber": null,
-            //     "shopOrderLocationRef": null,
-            //     "workCenter": oLine.workCenter,
-            //     "inventory": oLine.inventoryId, //inventory id
-            //     "isBomComponent": false, //true or false
-            //     "quantity": {
-            //         "value": parseFloat(oQuantityToReduce),
-            //         "unitOfMeasure": {
-            //             "uom": oLine.uom,//As the API does not support UoM yet
-            //             "internalUom": oLine.uom,
-            //             "shortText": null,
-            //             "longText": null,
-            //             "numerator": null,
-            //             "denominator": null,
-            //         }
-            //     },
-            //     "useFullHandlingUnit": false, //true or false
-            //     "handlingUnitNumber": oLine.palleteDetails.handlingUnit,
-            //     "storageLocation": oLine.storageLocation,
-            //     "isInventoryManaged": true,
-            //     "userId": this._oController.getUserId(),
-            //     "dateTime": this._getIssueDt(),
-            //     "comments": "",
-            //     "calculatedData": null,
-            //     "customFieldData":  null
-            // };
-            
-            // let sUrl = this._oController.getAssemblyDataSourceUri() + "order/goodsIssue";
-            // return await new Promise((resolve,reject)=>{
-            //     this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-            //         (oResponseData) => {
-            //             debugger;
-            //             resolve(oResponseData);
-            //         },
-            //         (oError, sHttpErrorMessage) => {
-            //             debugger;
-            //             reject(oError);
-            //         }   
-            //     );
-            // });
         },
         additionalIssue: async function(oLine, oQuantity, oSfc, oBomRef, oOperation, componentSequence){
             this._additionalIssueChecks(oLine, oQuantity, oSfc, oBomRef, oOperation);
@@ -396,7 +350,6 @@ sap.ui.define([
             let guid = crypto.randomUUID();
             let date = new Date();
 
-            //let consumptionValue = `txnId:${issueResponse.txnId}||stepId:${stepId}||order:${oLine.orderNumber}||operation:${oOperation}||quantity:${oQuantity}||uom:${oLine.uom}`;
             let consumptionValue = `issueGuid:${issueResponse}||stepId:${stepId}||order:${oLine.orderNumber}||operation:${oOperation}||quantity:${oQuantity}||uom:${oLine.uom}`;
             consumptionValue = consumptionValue + `||handlingUnit:${oLine.handlingUnit}||storageLocation:${oLine.storageLocation}||material:${oLine.materialId}||sfc:${oSfc}||materialVersion:${oLine.palleteDetails.materialVersion}`;
 
