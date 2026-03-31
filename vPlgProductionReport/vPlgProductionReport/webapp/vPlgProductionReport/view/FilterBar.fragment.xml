@@ -5,24 +5,26 @@
 		<l:VerticalLayout
 				width="100%">
 			<l:Grid	>
-				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
-					<Label text="Data:" labelFor="datePicer" />
-					<DatePicker id="datePicer"/>
+				<VBox class= "sapUiTinyMarginTop">
+					<Label text="{i18n>date}" labelFor="datePicker" />
+					<DatePicker id="datePicker"
+								displayFormat="yyyy-MM-dd" />
 					<layoutData>
 						<l:GridData span="XL2 L2 M2 S12" />
 					</layoutData>
 				</VBox>
 
-				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
-					<Label text="Zmiana:" labelFor="shift" />
+				<VBox class= "sapUiTinyMarginTop">
+					<Label text="{i18n>shift}:" labelFor="shiftCb" />
 					<ComboBox
-						id="shift"
-						selectedKey="ALL">
+						id="shiftCb"
+						selectedKey="">
 						<items>
-							<core:Item key="ALL" text="Wszystkie" />
+							<core:Item key="" text="{i18n>allShifts}" />
 							<core:Item key="1" text="1" />
 							<core:Item key="2" text="2" />
 							<core:Item key="3" text="3" />
+							<core:Item key="onlyDay" text=" " />
 						</items>
 
 					</ComboBox>
@@ -31,20 +33,20 @@
 					</layoutData>
 				</VBox>
 
-				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
-					<Label text="Zlecenie produkcyjne" labelFor="orderNumber" />
+				<VBox class= "sapUiTinyMarginTop">
+					<Label text="{i18n>productionOrder}:" labelFor="orderNumber" />
 					<Input id="orderNumber" type="Text"/>
 					<layoutData>
 						<l:GridData span="XL2 L2 M2 S12" />
 					</layoutData>
 				</VBox>
 
-				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
-					<Label text="Czy agregować?" labelFor="aggregationFilter" />
-					<SegmentedButton id="aggregationFilter" selectedKey="no" class="sapUiSmallMarginBottom">
+				<VBox class= "sapUiTinyMarginTop">
+					<Label text="{i18n>aggregate}" labelFor="aggregationFilter" />
+					<SegmentedButton id="aggregationFilter" selectedKey="yes" class="sapUiSmallMarginBottom" selectionChange="onAggregationChange">
 						<items>
-							<SegmentedButtonItem text="TAK" key="yes" />
-							<SegmentedButtonItem text="NIE" key="no" />
+							<SegmentedButtonItem text="{i18n>yes}" key="yes" />
+							<SegmentedButtonItem text="{i18n>no}" key="no" />
 						</items>
 					</SegmentedButton>
 					<layoutData>
@@ -52,9 +54,9 @@
 					</layoutData>
 				</VBox>
 
-				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
+				<VBox class= "sapUiTinyMarginTop">
 					<Text ></Text>	
-					<Input id="searchField" type="Text" placeholder="Wyszukaj"/>
+					<SearchField id="searchField" placeholder="{i18n>search}" search="onSearch"/>
 					<layoutData>
 						<l:GridData span="XL3 L3 M3 S12" />
 					</layoutData>
@@ -62,9 +64,9 @@
 
 
 
-				<VBox class= "sapUiSmallMarginTop sapUiSmallMarginBottom">
+				<VBox class= "sapUiTinyMarginTop">
 					<Text ></Text>	
-					<Button text="Start"/>
+					<Button text="Start" type="Emphasized" press="onStart"/>
 					<layoutData>
 						<l:GridData span="XL1 L1 M1 S12" />
 					</layoutData>

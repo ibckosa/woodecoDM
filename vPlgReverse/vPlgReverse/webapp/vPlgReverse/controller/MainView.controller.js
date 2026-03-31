@@ -289,8 +289,8 @@ sap.ui.define([
             result.push( new sap.m.Text({ text: "{stornoModel>confText}" }) );
             result.push( new sap.m.Text({ text: "{stornoModel>issueText}" }) );
             result.push( new sap.m.Text({ text: "{stornoModel>USER}"}) );
-            result.push( new sap.m.Button({ text: "Storno", press: this.onReverseButton.bind(this), visible: "{= ${stornoModel>CANCELLED} !== 'true' && ${stornoModel>stornoFunctionAvailable} }" }) );
-            result.push( new sap.m.Button({ text: "Ponowny wydruk", icon: "sap-icon://print", press: this.onPrint.bind(this), visible: "{= ${stornoModel>Q1_Q3} !== 'AI' && ${stornoModel>PRINTING_PARAMETERS} !== undefined && ${stornoModel>PRINTING_PARAMETERS} !== null && ${stornoModel>PRINTING_PARAMETERS} !== '' || ${stornoModel>Q1_Q3} === 'Q3' }" }) );
+            result.push( new sap.m.Button({ text: "{i18n>cancel}", press: this.onReverseButton.bind(this), visible: "{= ${stornoModel>CANCELLED} !== 'true' && ${stornoModel>stornoFunctionAvailable} }" }) );
+            result.push( new sap.m.Button({ text: "{i18n>reprint}", icon: "sap-icon://print", press: this.onPrint.bind(this), visible: "{= ${stornoModel>Q1_Q3} !== 'AI' && ${stornoModel>PRINTING_PARAMETERS} !== undefined && ${stornoModel>PRINTING_PARAMETERS} !== null && ${stornoModel>PRINTING_PARAMETERS} !== '' || ${stornoModel>Q1_Q3} === 'Q3' }" }) );
             return result;
         },
         onReverseButton: async function(event){

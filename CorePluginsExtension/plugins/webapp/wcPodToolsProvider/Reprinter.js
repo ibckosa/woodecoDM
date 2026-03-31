@@ -58,8 +58,8 @@ sap.ui.define([
 
             if(printingParameters.order){
                 let orderItemNumber = 1;
-                if(this._productionDataCollection.itemNo){
-                    orderItemNumber = this._productionDataCollection.itemNo;
+                if(this._productionDataCollection.ITEM_NO){
+                    orderItemNumber = parseInt(this._productionDataCollection.ITEM_NO);
                 }
 
                 let orderInstance = await OrderRepository.readOrder(this._controller, printingParameters.plant, printingParameters.order);

@@ -4,67 +4,43 @@
   xmlns:ct="sap.suite.ui.microchart"
   xmlns:unified="sap.ui.unified">
 
-		<ct:BulletMicroChart scale="%" targetValue="95" forecastValue="95" press="press" width="20rem">
-			<ct:actual>
-				<ct:BulletMicroChartData value="91" color="Error"/>
-			</ct:actual>
-			<ct:thresholds>
-				<ct:BulletMicroChartData value="0" color="Error"/>
-				<ct:BulletMicroChartData value="33" color="Critical"/>
-				<ct:BulletMicroChartData value="66" color="Critical"/>
-				<ct:BulletMicroChartData value="100" color="Error"/>
-			</ct:thresholds>
-		</ct:BulletMicroChart>
 
-			<unified:CalendarLegend id="PCLegend">
-				<unified:items>
-					<unified:CalendarLegendItem
-						text="Produkcyjne"
-						type="Type01" />
+        <VBox visible="{isQ1PercentageIndicatorVisible}">
+			<ObjectStatus
+				class="bigObjectStatus"
+				text="UPTIME: {/availabilityPercentage}%"
+				state="{= ${/availabilityPercentage} >= ${/targetPercentage} ? 'Success' : 'Error' }" />
 
-					<unified:CalendarLegendItem
-						text="Niezależne"
-						type="Type18" />
+			<ObjectStatus
+				text="{i18n>target} {/targetPercentage}"
+				state="{= ${/availabilityPercentage} >= ${/targetPercentage} ? 'Success' : 'Error' }"/>
+        </VBox>
 
-					<unified:CalendarLegendItem
-						text="Przezbrojenie"
-						type="Type02" />
-
-					<unified:CalendarLegendItem
-						text="Ekonomiczne"
-						type="Type10" />
-
-					<unified:CalendarLegendItem
-						text="Naprawa"
-						type="Type07" />
-
-					<unified:CalendarLegendItem
-						text="Techniczne"
-						type="Type06" />
-
-					<unified:CalendarLegendItem
-						text="Technologiczne"
-						type="Type05" />
-
-					<unified:CalendarLegendItem
-						text="Logistyczne"
-						type="Type19" />
-				</unified:items>
-			</unified:CalendarLegend>
 		<PlanningCalendar
 			id="PC1"
 			viewKey="A"
 			legend="PCLegend"
+			class="hideButton"
 			appointmentsVisualization="Filled"
+			appointmentSelect="handleDTSelect"
 			rows="{path: '/downtimesCalendarItems'}">
 			<views>
 				<PlanningCalendarView
 					key="A"
+					
 					intervalType="Hour"
-					description="Custom"
+					description=""
 					intervalsS="24"
 					intervalsM="24"
 					intervalsL="24">
+				</PlanningCalendarView>
+				<PlanningCalendarView
+					key="B"
+					intervalType="Hour"
+					description=""
+					intervalsS="8"
+					intervalsM="8"
+					intervalsL="8">
 				</PlanningCalendarView>
 			</views>
 
@@ -85,37 +61,40 @@
 							icon="{pic}"
 							title="{categoryDescription}"
 							text="{info}"
-							type="{type}"
+							color="{color}"
 							tentative="{tentative}">
 						</unified:CalendarAppointment>
 					</appointments>
-					<intervalHeaders>
-						<unified:CalendarAppointment
-							startDate="{start}"
-							endDate="{end}"
-							icon="{pic}"
-							title="{categoryDescription}"
-							type="{type}">
-						</unified:CalendarAppointment>
-					</intervalHeaders>
+                    <intervalHeaders>
+                        <unified:CalendarAppointment
+                            startDate="{start}"
+                            endDate="{end}"
+                            icon="{pic}"
+                            title="{categoryDescription}"
+                            color="{color}">
+                        </unified:CalendarAppointment>
+                    </intervalHeaders>
 				</PlanningCalendarRow>
 			</rows>
 		</PlanningCalendar>
 
 <HBox>
-	<Table id="dtCategoryTable" class="sapUiLargeMarginTop sapUiSmallMarginLeft" width="40%" items="{path:'/downTimesCategories'}" inset="false">
+	<Table id="dtCategoryTable" class="sapUiTinyMarginTop sapUiSmallMarginLeft" width="40%" items="{path:'/downTimesCategories'}" inset="false">
 		<columns>
 			<Column>
-				<Text text="Kategoria" />
+				<Text text="{i18n>category}" />
 			</Column>
 			<Column>
-				<Text text="Ilość minut" />
+				<Text text="{i18n>numberOfMinutes}" />
 			</Column>
 		</columns>
 		<items>
 			<ColumnListItem vAlign="Middle">
 				<cells>
-					<FormattedText htmlText="{categoryDescription}" />
+					<HBox alignItems="Center">
+						<core:HTML content="{       parts: [ { path: 'categoryName' }, { path: 'color' } ], formatter: '.formatLegendBox'}" />
+						<FormattedText htmlText="{categoryDescription}" />
+					</HBox>
 					<FormattedText htmlText="{value}" />
 				</cells>
 			</ColumnListItem>

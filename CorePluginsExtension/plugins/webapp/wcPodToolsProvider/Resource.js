@@ -198,7 +198,59 @@ sap.ui.define([
             }catch(oError){}
 
             return result;
+        },
+        getQ1PercentagePlan: function(){
+            let result = 100;
+            try{
+                let q1PercentagePlan = this._oDetails.customValues.find(customValue => { return customValue.attribute === "Q1_PERCENTAGE_PLAN"});
+                result = parseInt(q1PercentagePlan.value);
+                if(result>100||result<=0)
+                {
+                    result = 100;
+                }
+            }catch(oError){}
+
+            return result;
+        },
+        getDayPlanQuan: function(){
+            let result = 0;
+            try{
+                let dayPlanQuan = this._oDetails.customValues.find(customValue => { return customValue.attribute === "DAY_PLAN_QUAN"});
+                result = parseInt(dayPlanQuan.value);
+                if(result<0)
+                {
+                    result = 0;
+                }
+            }catch(oError){}
+            return result;
+        },
+        getDayPlanUom: function(){
+            let result = "M2";
+            try{
+                let dayPlanUOM = this._oDetails.customValues.find(customValue => { return customValue.attribute === "DAY_PLAN_UOM"});
+                let uom = dayPlanUOM.value.toUpperCase();
+                if(uom==="M3"){
+                    result = uom;
+                }
+
+            }catch(oError){}
+            return result;
+        },
+        getAvailabilityPlanPercentage: function(){
+            let result = 100;
+            try{
+                let plan = this._oDetails.customValues.find(customValue => { return customValue.attribute === "AVAILABILITY_PLAN_PERCENTAGE"});
+                result = parseInt(plan.value);
+                if(result>100||result<=0)
+                {
+                    result = 100;
+                }
+
+            }catch(oError){}
+            return result;
         }
+
+
 
     });
 });

@@ -3,68 +3,53 @@ sap.ui.define([
 	"sap/dm/dme/podfoundation/controller/PluginViewController",
 	"sap/ui/model/json/JSONModel",
   "sap/ui/core/date/UI5Date",
-  "ibc/dm/plugins/wcPodToolsProvider/ProductionReport/ProductionReportProductionData"
-], function (jQuery, PluginViewController, JSONModel, UI5Date) {
+  "ibc/dm/plugins/wcPodToolsProvider/ProductionReport/ProductionReportModel",
+  "ibc/dm/plugins/wcPodToolsProvider/PodTools",
+  "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
+  'sap/ui/core/Fragment',
+  'sap/ui/core/format/DateFormat',
+], function (jQuery, PluginViewController, JSONModel, UI5Date, ProductionReportModel, PodTools, ErrorHandler, Fragment, DateFormat) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.controller.MainView", {
 		onInit: function () {
 			PluginViewController.prototype.onInit.apply(this, arguments);
-            this.byId("PC1").setStartDate(new Date(2026, 1, 18, 22, 0, 0)); 
-            this.byId("PC1").setMinDate(new Date(2026, 1, 18, 22, 0, 0)); 
-            this.byId("PC1").setMaxDate(new Date(2026, 1, 18, 22, 0, 0)); 
             var oModel = new JSONModel();
-            this.byId("PCLegend").setStandardItems([]); 
-	// oModel.setData({
-	// 				people: [{
-	// 					pic: "",
-	// 					name: "P2_KT11",
-	// 					role: "",
-	// 					appointments: [
-	// 						{
-	// 							start: UI5Date.getInstance("2026", "1", "19", "08", "30"),
-	// 							end: UI5Date.getInstance("2026", "1", "19", "09", "30"),
-	// 							title: "Przestój planowany",
-	// 							type: "Type02",
-	// 							tentative: true
-	// 						}
-	// 					],
-	// 					headers: []
-	// 				}
-	// 				]
-	// 			});
-				
+            //this.byId("PCLegend").setStandardItems([]);
+            this._errorHandler = new ErrorHandler(this);
+            this.byId("shiftCb").setSelectedKey("onlyDay");
+            //this.byId("PC1").setShowViewSelection(false)
 
 
                 let downTimesCategories = [ { categoryName: "PRODUCTION",
                                               categoryDescription: "Produkcyjne",
-                                              value: "10" },
+                                              value: "0" },
                                             { categoryName: "INDEPENDENT",
                                               categoryDescription: "Niezależne",
-                                              value: "20" },
+                                              value: "0" },
                                             { categoryName: "CHANGEOVER",
                                               categoryDescription: "Przezbrojenie",
-                                              value: "30" },
+                                              value: "0" },
                                             { categoryName: "ECONOMIC_DOWN",
                                               categoryDescription: "Ekonomiczne",
-                                              value: "40" },
+                                              value: "0" },
                                             { categoryName: "REPAIRS",
                                               categoryDescription: "Naprawa",
-                                              value: "50" },
+                                              value: "0" },
                                             { categoryName: "TECHNICAL",
                                               categoryDescription: "Techniczne",
-                                              value: "60" },
+                                              value: "0" },
                                             { categoryName: "TECHNOLOGICAL",
                                               categoryDescription: "Technologiczne",
-                                              value: "70" },
+                                              value: "0" },
                                             { categoryName: "LOGISTICS",
                                               categoryDescription: "Logistyczne",
-                                              value: "80" },
+                                              value: "0" },
                                             { categoryName: "TOTAL",
                                               categoryDescription: "<strong>Łącznie</strong>",
-                                              value: "<strong>255</strong>" },
+                                              value: "<strong>0</strong>" },
                  ];
-                let productionItems = [ { productionDateTime: "2026-02-20",
+                let productionItems = [ { productionDate: "2026-02-20",
                                         shift: "",
                                          q1Quantity: "6000 SZT\n6000 M2\n3600 M3",
                                          q23Quantity: "150SZT/144M2/240M3 - Q3 - Wady cięcia\n400SZT/400M2/500M3 - Q2 - Zsiwienia / Niezamknięta powierzchnia",
@@ -75,7 +60,7 @@ sap.ui.define([
                                          kpiM23Visible: true,
                                          itemNumber: "1",
                                          orderNumber: "3664551"},
-                                        { productionDateTime: "2026-02-20",
+                                        { productionDate: "2026-02-20",
                                          shift: "1",
                                          q1Quantity: "2000 SZT\n2000 M2\n1200 M3",
                                          q23Quantity: "75SZT/72M2/120M3 - Q3 - Wady cięcia\n200SZT/200M2/250M3 - Q2 - Zsiwienia / Niezamknięta powierzchnia - zwrot NPW",
@@ -86,7 +71,7 @@ sap.ui.define([
                                          kpiM23Visible: false,
                                          itemNumber: "1",
                                          orderNumber: "3664551"},
-                                         { productionDateTime: "2026-02-20",
+                                         { productionDate: "2026-02-20",
                                          shift: "2",
                                          q1Quantity: "2000 SZT\n2000 M2\n1200 M3",
                                          q23Quantity: "200SZT/100M2/120M3 - Q2 - Wady szlifowania - Zwrot\n200SZT/100M2/120M3 - Q3 - Zsiwienia / Niezamknięta powierzchnia",
@@ -97,7 +82,7 @@ sap.ui.define([
                                          kpiM23Visible: true,
                                          itemNumber: "1",
                                          orderNumber: "3664551"},
-                                         { productionDateTime: "2026-02-20",
+                                         { productionDate: "2026-02-20",
                                         shift: "3",
                                          q1Quantity: "2000 SZT\n2000 M2\n1200 M3",
                                          q23Quantity: "",
@@ -113,61 +98,15 @@ sap.ui.define([
                                         
                                         
                                         ];
-                let downtimesCalendarItems = [ { pic: "",
-                                                 name: "P2_KT11",
-                                                 role: "",
-                                                 items: [{ start: UI5Date.getInstance("2026", "1", "19", "08", "30"),
-                                                           end: UI5Date.getInstance("2026", "1", "19", "09", "30"),
-                                                           categoryName: "TECHNOLOGICAL",
-                                                           categoryDescription: "",
-                                                           type: "Type01",
-                                                           tentative: false },
-                                                          { start: UI5Date.getInstance("2026", "1", "19", "10", "31"),
-                                                           end: UI5Date.getInstance("2026", "1", "19", "11", "30"),
-                                                           categoryName: "TECHNOLOGICAL",
-                                                           categoryDescription: "",
-                                                           type: "Type18",
-                                                           tentative: false },
-                                                          { start: UI5Date.getInstance("2026", "1", "19", "12", "31"),
-                                                           end: UI5Date.getInstance("2026", "1", "19", "13", "29"),
-                                                           categoryName: "TECHNOLOGICAL",
-                                                           type: "Type02",
-                                                           tentative: false },
-                                                          { start: UI5Date.getInstance("2026", "1", "19", "16", "31"),
-                                                           end: UI5Date.getInstance("2026", "1", "19", "17", "29"),
-                                                           categoryName: "TECHNOLOGICAL",
-                                                           categoryDescription: "",
-                                                           type: "Type10",
-                                                           tentative: false },
-                                                          { start: UI5Date.getInstance("2026", "1", "19", "18", "31"),
-                                                           end: UI5Date.getInstance("2026", "1", "19", "19", "29"),
-                                                           categoryName: "TECHNOLOGICAL",
-                                                           categoryDescription: "",
-                                                           type: "Type07",
-                                                           tentative: false },
-                                                          { start: UI5Date.getInstance("2026", "1", "19", "19", "31"),
-                                                           end: UI5Date.getInstance("2026", "1", "19", "20", "29"),
-                                                           categoryName: "TECHNOLOGICAL",
-                                                           categoryDescription: "",
-                                                           type: "Type06",
-                                                           tentative: false },
-                                                          { start: UI5Date.getInstance("2026", "1", "19", "20", "31"),
-                                                           end: UI5Date.getInstance("2026", "1", "19", "21", "29"),
-                                                           categoryName: "TECHNOLOGICAL",
-                                                           categoryDescription: "",
-                                                           type: "Type05",
-                                                           tentative: false },
-                                                          { start: UI5Date.getInstance("2026", "1", "19", "1", "31"),
-                                                           end: UI5Date.getInstance("2026", "1", "19", "2", "29"),
-                                                           categoryName: "TECHNOLOGICAL",
-                                                           categoryDescription: "",
-                                                           type: "Type19",
-                                                           tentative: false }
-                                                             ]}];
+                let downtimesCalendarItems = [ ];
 
-                let modelData = {   productionItems: productionItems,
-                                    downTimesCategories: downTimesCategories,
-                                    downtimesCalendarItems: downtimesCalendarItems };
+                let modelData = {   productionItems: [],
+                                    downTimesCategories: [],
+                                    downtimesCalendarItems: downtimesCalendarItems,
+                                    productionAggregated: [],
+                                    productionUnAggregated: [],
+                                    availabilityPercentage: 0,
+                                    targetPercentage: 95  };
                 oModel.setData(modelData);
                 this.getView().setModel(oModel);
 
@@ -235,6 +174,164 @@ sap.ui.define([
 			PluginViewController.prototype.onExit.apply(this, arguments);
 
 
-		}
+		},
+    onStart: async function(){
+      try{
+        PodTools.setCustomBusyIndicator(true);
+        let date  = this.byId("datePicker").getDateValue();
+        let oPodSelectionModel = this.getPodSelectionModel();
+        let oPodController = this.getPodController();
+
+        let selectedShift = this.byId("shiftCb").getSelectedKey();
+
+        let productionReportModel = new ProductionReportModel(this, {
+              plant: oPodController.getUserPlant(),
+              workCenter: oPodSelectionModel.workCenter,
+              resource: oPodSelectionModel.resource.resource,
+              date: date,
+              orderNumber: "",
+              shiftNumber: selectedShift
+        });
+        let reportData = await productionReportModel.getReportData();
+        //reportData.shiftDates.viewKey
+
+        let oDate = new Date(reportData.shiftDates.startDate.getTime());
+        debugger;
+        this.byId("PC1").setMinDate(null); 
+        this.byId("PC1").setMaxDate(null); 
+
+        this.byId("PC1").setViewKey(reportData.shiftDates.viewKey);
+        this.byId("PC1").setStartDate(oDate); 
+        this.byId("PC1").setMinDate(oDate); 
+        this.byId("PC1").setMaxDate(oDate); 
+        console.log("viewKey:", this.byId("PC1").getViewKey());
+        console.log("startDate:", this.byId("PC1").getStartDate());
+
+        let model = this.getView().getModel();
+        let modelData = model.getData();
+        modelData.downTimesCategories = reportData.downtimesCategories;
+        modelData.downtimesCalendarItems = reportData.dataModel;
+        modelData.availabilityPercentage = reportData.availabilityPercentage;
+        modelData.targetPercentage = reportData.targetPercentage;
+        modelData.productionAggregated = reportData.productionAggregated;
+        modelData.productionUnAggregated = reportData.productionUnAggregated;
+        model.setData(modelData);
+        this.getView().setModel(model);
+        this.onAggregationChange();
+        PodTools.setCustomBusyIndicator(false);
+      }catch(error){
+        PodTools.setCustomBusyIndicator(false);
+        this._errorHandler.handleError(error);
+      }
+
+    },
+    onAggregationChange: function(){
+      let model = this.getView().getModel();
+      let modelData = model.getData();
+      let selectedKey = this.byId("aggregationFilter").getSelectedKey();
+      if(selectedKey==="no"){
+        modelData.productionItems = modelData.productionUnAggregated;
+      }else{
+        modelData.productionItems = modelData.productionAggregated;
+      }
+      model.setData(modelData);
+      this.getView().setModel(model);
+    },
+    formatLegendBox: function (categoryName, color) {
+      debugger;
+      if (categoryName === "TOTAL") {
+        return "";
+      }
+
+      return "<span style='display:inline-block;" +
+        "width:12px;height:12px;" +
+        "background:" + color + ";" +
+        "border:1px solid rgba(0,0,0,.2);" +
+        "border-radius:2px;" +
+        "margin-right:8px;vertical-align:middle;'></span>";
+    },
+    onSearch: function(){
+            try{
+                const oBinding = this.byId("componentsTable").getBinding("items");
+
+                let sQuery = this.byId("searchField").getValue();
+
+                if (!sQuery) {
+                    oBinding.filter([]);
+                    return;
+                }
+
+                const searchFilters =   [ new sap.ui.model.Filter("productionDate", sap.ui.model.FilterOperator.Contains, sQuery),
+                                          new sap.ui.model.Filter("shift", sap.ui.model.FilterOperator.Contains, sQuery),
+                                          new sap.ui.model.Filter("orderNumber", sap.ui.model.FilterOperator.Contains, sQuery),
+                                          new sap.ui.model.Filter("itemNumber", sap.ui.model.FilterOperator.Contains, sQuery),
+                                          new sap.ui.model.Filter("material", sap.ui.model.FilterOperator.Contains, sQuery),
+                                          new sap.ui.model.Filter("q1Quantity", sap.ui.model.FilterOperator.Contains, sQuery),
+                                          new sap.ui.model.Filter("q23Quantity", sap.ui.model.FilterOperator.Contains, sQuery)];
+                                            
+                // if (!isNaN(sQuery)) {
+                //     searchFilters.push(new sap.ui.model.Filter("quantity", sap.ui.model.FilterOperator.EQ, Number(sQuery)));
+                // } 
+
+                
+                const aFilters = [];
+                aFilters.push(new sap.ui.model.Filter({ filters: searchFilters, and: false }));
+                oBinding.filter(aFilters);
+            }catch(error){
+                debugger;
+            }
+    },
+    handleDTSelect: function(oEvent){
+				var selectedDownTime = oEvent.getParameter("appointment");
+        var oView = this.getView();
+        debugger;
+        if(!selectedDownTime){
+          return;
+        }
+
+				if (!selectedDownTime.getSelected() && this._pDetailsPopover) {
+					this._pDetailsPopover.then(function(oDetailsPopover){
+						oDetailsPopover.close();
+					});
+					return;
+				}
+
+				if (!this._pDetailsPopover) {
+					this._pDetailsPopover = Fragment.load({
+						id: oView.getId(),
+						name: "ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.view.Details",
+						controller: this
+					}).then(function(oDetailsPopover){
+						oView.addDependent(oDetailsPopover);
+						return oDetailsPopover;
+					});
+				}
+
+				this._pDetailsPopover.then(function(oDetailsPopover){
+					this._setDetailsDialogContent(selectedDownTime, oDetailsPopover);
+				}.bind(this));
+    },
+
+    _setDetailsDialogContent: function(downTime, oDetailsPopover){
+				oDetailsPopover.setBindingContext(downTime.getBindingContext());
+				oDetailsPopover.openBy(downTime);
+		},
+    handleClosePopup: function(){
+      var oDetailsPopover = this.byId("detailsPopover");
+      oDetailsPopover.close();
+    },
+    formatDate: function(oDate){
+				if(oDate) {
+					var iHours = oDate.getHours(),
+						iMinutes = oDate.getMinutes(),
+						iSeconds = oDate.getSeconds();
+
+					if (iHours !== 0 || iMinutes !== 0 || iSeconds !== 0) {
+						return DateFormat.getDateTimeInstance({ style: "medium" }).format(oDate);
+					} else  {
+						return DateFormat.getDateInstance({ style: "medium" }).format(oDate);
+					}
+				}
+    }
 	});
 });

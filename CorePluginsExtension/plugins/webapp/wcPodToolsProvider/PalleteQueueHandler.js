@@ -150,7 +150,7 @@ sap.ui.define([
             let oPanel = new Panel({ height: "38rem", width: "100rem" });
             let oColumns = this._getColumns();
 
-            this._searchMaterialField = new sap.m.SearchField({placeholder: "Wyszukaj", search: this.onMaterialSearch.bind(this) });
+            this._searchMaterialField = new sap.m.SearchField({placeholder: this._textHandler.getText("labels.loghu.search"), search: this.onMaterialSearch.bind(this) });
 
             let oTable = new Table({
                 growing: true,
@@ -676,7 +676,7 @@ sap.ui.define([
         _getPrintCountGroup: function(){
             let label = new sap.m.Label({
                 id: "sdasd",
-                text: "Liczba wydruków",
+                text:  this._textHandler.getText("labels.loghu.printoutNumber"),
                 labelFor: "rbg1"
             });
 

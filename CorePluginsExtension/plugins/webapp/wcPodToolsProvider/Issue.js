@@ -33,6 +33,8 @@ sap.ui.define([
                                 postedBy: controller.getUserId(),
                                 postingDateTime: this._getIssueDt(),
                                 comments: `${parameters.componentSequence}//${issueGuid}`,
+                                dataFields: [{fieldName: "ISSUE_GUID",
+                                              fieldValue: issueGuid }],
                                 isAI: false };
             if(parameters.bom){
                 requestParameters.bom = { bom: parameters.bom,

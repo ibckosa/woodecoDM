@@ -135,6 +135,8 @@ sap.ui.define([
                         case "ITEM_TOL-":
                             itemToleranceMinus = attribute.field_value;
                             break;
+                        case "PEG_ZDELMON":
+                            oMoStructure.pegZdelmon = attribute.field_value;
 
                     }
                 }
@@ -237,6 +239,7 @@ sap.ui.define([
                 salesText: "",
                 packagingCode: "",
                 packagingDescription: "",
+                pegZdelmon: "",
                 quantityPerPallet: 0,
                 quantityPerPalletMax: 0,
                 quantityPerPalletMin: 0,
@@ -548,6 +551,18 @@ sap.ui.define([
 
                 return parseInt(packagingMaterial.field_value); 
             }           
+        },
+        getPegZdelmonHeader: function(){
+            let result = "";
+
+            try{
+                let pegZdelmon = this._oDetails.customValues.find(customValues => {return customValues.attribute === `PEG_ZDELMON`; })
+                result = pegZdelmon.value;
+            }catch(error){
+
+            }
+            
+            return result;        
         },
         getIssuesNonBackflush: async function(){
             let result = [];

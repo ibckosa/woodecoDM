@@ -127,8 +127,8 @@ sap.ui.define([
 
             let productionReportButton = new Button({
                 type: sType,
-                visible: false,
-                text: this._oTextHandler.getText("Production report"),
+                visible: true,
+                text: this._oTextHandler.getText("labels.productionReport.productionReportButton"),
                 press: this.onProductionReportPress.bind(this)
             });
             oToolbar.addContent(productionReportButton);
@@ -207,7 +207,11 @@ sap.ui.define([
                 if(podSelectionModel.resource === null ||podSelectionModel.resource === undefined || podSelectionModel.resource.resource === undefined){
                     this._throwError("q23.error.emptyResource");
                 }
-                controller.navigateToPage("PRODUCTIONREPORT");
+                try{
+                    controller.navigateToPage("PRODUCTIONREPORT");
+                }catch(error){
+                    this._oErrorHandler.throwErrorPopup("error.podSelection.functionalityNotAvailable", podSelectionModel.resource.resource);
+                }
             }catch(error){
                 this._oErrorHandler.handleError(error);
             }
@@ -769,7 +773,8 @@ sap.ui.define([
                     KLASSE: "A",
                     STATUS: "F",
                     QSTMANU: "I",
-                    TST: "F" };
+                    TST: "F",
+                    FU_65: crypto.randomUUID() };
             }else{
                 oParameters = { WERK: oLine.plant,
                     BEWART: "521",
@@ -796,7 +801,8 @@ sap.ui.define([
                     MATST: "U",
                     QST: "O",
                     QSTMANU: "I",
-                    TST: "F" };
+                    TST: "F",
+                    FU_65: crypto.randomUUID() };
             }
 
             return await new Promise((resolve,reject)=>{

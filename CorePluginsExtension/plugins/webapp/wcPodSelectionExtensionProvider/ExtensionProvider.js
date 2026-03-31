@@ -134,6 +134,45 @@ sap.ui.define([
                         font-size: 2.5rem;
                     }
 
+
+                    @keyframes blink {
+                        0% {
+                            color: red;
+                        }
+
+                        50% {
+                            color: black;
+                        }
+
+
+                        100% {
+                            color: red;
+                        }
+                    }
+
+                    .blinking .sapMObjStatusIcon {
+                        animation: blink 1s infinite;
+                        font-weight: bold;
+                        width: 2rem;
+                        height: auto;
+                    }
+
+                    .blinking .sapMObjStatusText {
+                        animation: blink 1s infinite;
+                        font-weight: bold;
+                        font-size: 1.5rem;
+
+                    }
+
+                    .blinking .sapUiIcon {
+                        font-size: 1.5rem;
+                    }
+
+                    .blinking .sapMObjStatus {
+                        width: 2rem;
+                        height: 2rem;
+                    }
+
                     `;
                 oHead.appendChild(oStyle);
             }catch(error){}

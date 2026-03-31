@@ -303,6 +303,36 @@ sap.ui.define([
             }catch(error){}
 
             return result;
+        },
+        getUomProductionReport: function(){
+            let result = [];
+
+            if(this.getBaseUom()==='ST'){
+                result.push({uom: 'ST', uomDesc:"SZT"});
+            }else if(this.getBaseUom()==='KG'){
+                result.push({uom: 'KG', uomDesc:"KG"});
+            }
+
+            // let huUomConverterST = this._oDetails.alternateUnitsOfMeasure.find( alternateUom => { return alternateUom.uom === "ST" });
+            // if(huUomConverterST){
+            //     result.push({uom: 'ST', uomDesc:"SZT"});
+            // }
+
+            // let huUomConverterKG = this._oDetails.alternateUnitsOfMeasure.find( alternateUom => { return alternateUom.uom === "KG" });
+            // if(huUomConverterKG){
+            //     result.push({uom: 'KG', uomDesc:"KG"});
+            // }
+
+            let huUomConverterM2 = this._oDetails.alternateUnitsOfMeasure.find( alternateUom => { return alternateUom.uom === "M2" });
+            if(huUomConverterM2){
+                result.push({uom: 'M2', uomDesc:"M2"});
+            }
+
+            let huUomConverterM3 = this._oDetails.alternateUnitsOfMeasure.find( alternateUom => { return alternateUom.uom === "M3" });
+            if(huUomConverterM3){
+                result.push({uom: 'M3', uomDesc:"M3"});
+            }
+            return result;
         }
     });
 

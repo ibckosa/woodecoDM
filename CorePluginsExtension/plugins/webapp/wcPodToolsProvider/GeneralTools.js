@@ -33,6 +33,35 @@ sap.ui.define([
     };
 
 
+    generalTools.convertDateToIsoFormat = function(date){
+        let isoDate = date.toISOString().split('.')[0] + 'Z';
+        return isoDate;
+    };
+
+    generalTools.getProductionShift = function(dateString) {
+        const date = new Date(dateString);
+        const hour = date.getHours();
+
+        if (hour >= 6 && hour < 14) {
+            return 1; 
+        } else if (hour >= 14 && hour < 22) {
+            return 2;
+        } else {
+            return 3; 
+        }
+    };
+    generalTools.roundQuantity = function(quantity, unit) {
+        const value = Number(quantity);
+
+        if (Number.isNaN(value)) return null;
+
+        if (unit === "ST") {
+            return Math.round(value);
+        }
+
+        return Number(value.toFixed(3));
+    }
+
     return generalTools;
 
 });

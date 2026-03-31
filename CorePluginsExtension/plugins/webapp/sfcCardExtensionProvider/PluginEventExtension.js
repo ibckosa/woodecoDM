@@ -3,13 +3,13 @@ sap.ui.define([
     "sap/ui/core/mvc/OverrideExecution",
     "sap/dm/dme/plugins/headerInformationPlugin/controller/extensions/PluginEventExtensionConstants",
     "sap/ui/model/json/JSONModel",
-    "ibc/dm/plugins/wcPodToolsProvider/SmartEditGraphicRepository",
     "ibc/dm/plugins/wcPodToolsProvider/MaterialRepository",
     "ibc/dm/plugins/wcPodToolsProvider/OrderRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader",
-    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator"
-], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, JSONModel, SmartEditGraphicRepository, MaterialRepository, OrderRepository, SfcRepository, SfcDataCollectionReader, OrderReceiptsFromProgressIndicator) {
+    "ibc/dm/plugins/wcPodToolsProvider/OrderReceiptsFromProgressIndicator",
+    "ibc/dm/plugins/wcPodToolsProvider/TextHandler"
+], function (PluginControllerExtension, OverrideExecution, PluginEventConstants, JSONModel,  MaterialRepository, OrderRepository, SfcRepository, SfcDataCollectionReader, OrderReceiptsFromProgressIndicator, TextHandler) {
     "use strict";
 
     return PluginControllerExtension.extend("ibc.dm.plugins.sfcCardExtensionProvider.PluginEventExtension", {
@@ -106,6 +106,7 @@ sap.ui.define([
                                                         percentProgress: "0",
                                                         quantityPerPallet: "",
                                                         packagingDescription: "",
+                                                        productionWarning: "",
                                                         decors: []
                                                      },
                                                      sfcCardCustomVisibility: this._getVisibilityStructure()
@@ -123,7 +124,8 @@ sap.ui.define([
                 
             }
         },
-        _getCustomData: async function(oController, oPodSelectionModel){            
+        _getCustomData: async function(oController, oPodSelectionModel){        
+            let textHandler = new TextHandler();    
             var oFirstSelection = oPodSelectionModel.getSelections()[0];
             if(!oFirstSelection){
                 return;
@@ -162,6 +164,7 @@ sap.ui.define([
                                         percentProgress: "0",
                                         quantityPerPallet: "",
                                         packagingDescription: "",
+                                        productionWarning: "",
                                         decors: []
                                      };
 
@@ -210,7 +213,7 @@ sap.ui.define([
 
                 let tollerancePlus = quantityMinMax.maxPalleteQuantity - quantityFromPackingCode;
                 let tolleranceMinus = quantityFromPackingCode - quantityMinMax.minPalleteQuantity;
-                 oSfcCardCustom.quantityPerPallet = `<strong>${quantityFromPackingCode}</strong> szt (tolerancja: -${tolleranceMinus} / +${tollerancePlus})`;
+                 oSfcCardCustom.quantityPerPallet = `<strong>${quantityFromPackingCode}</strong> szt (${textHandler.getText("tolerance")}: -${tolleranceMinus} / +${tollerancePlus})`;
 
                 if(oOrderData.customValues !== undefined){
                     for(var i = 0; i < oOrderData.customValues.length; i++ ){
@@ -234,6 +237,13 @@ sap.ui.define([
                             oSfcCardCustom.recipeNumber = oOrderData.customValues[i].value;
                         }else if(oOrderData.customValues[i].attribute === "HEADER_CROSS_COMPANY"){
                             oSfcCardCustom.crossCompany = oOrderData.customValues[i].value;
+                        }else if(oOrderData.customValues[i].attribute === "PEG_ZDELMON"){
+                            let pegZdelmonValue = oOrderData.customValues[i].value;
+                            if(pegZdelmonValue==="DELIVERY"){
+                                oSfcCardCustom.productionWarning = textHandler.getText("labels.sfcCard.warningProductionDelivery");
+                            }else if(pegZdelmonValue==="COMPLAINT"){
+                                oSfcCardCustom.productionWarning = textHandler.getText("labels.sfcCard.warningProductionComplaint");
+                            }
                         }
                         
                     }
@@ -368,7 +378,8 @@ sap.ui.define([
                    progressIndicatorValue: visibilityValue,
                    quantityPerPallet: visibilityValue,
                    decors: visibilityValue,
-                   packagingDescription: visibilityValue };
+                   packagingDescription: visibilityValue,
+                   productionWarning: visibilityValue, };
         }
     })
 });

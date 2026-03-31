@@ -19,6 +19,7 @@ sap.ui.define([
                         resolve(oResponseData.identifiers[0]);
                     },
                     (oError, sHttpErrorMessage) => {
+                        oError.sendAlert = true; 
                         reject(oError);
                     }   
                 );

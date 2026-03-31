@@ -18,11 +18,11 @@
                     items="{multiOrdersModel>/positions}"
                     selectionChange="onOrderSelect">
                         <columns>
-                            <Column><Text text="Długość"/></Column>
-                            <Column><Text text="Szerokość"/></Column>
-                            <Column><Text text="Zlecenie sprzedaży"/></Column>
-                            <Column><Text text="Pozycja"/></Column>
-                            <Column><Text text="Ilość zamówienia"/></Column>
+                            <Column><Text text="{i18n>Length}"/></Column>
+                            <Column><Text text="{i18n>Width}"/></Column>
+                            <Column><Text text="{i18n>salesOrderNo}"/></Column>
+                            <Column><Text text="{i18n>itemNo}"/></Column>
+                            <Column><Text text="{i18n>orderedQuantity}"/></Column>
                         </columns>
                         <items>
                             <ColumnListItem type="Active" press="onOrderSelect">
@@ -41,22 +41,22 @@
             <VBox width="70%" class="sapUiTinyMarginBegin">
                 <HBox alignItems="Center" class="sapUiSmallMarginBottom sapUiSmallMarginBegin">
                     <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
-                        <Label text="Długość:"/>
+                        <Label text="{i18n>Length}:"/>
                         <Label text= "{viewModel>/selectedOrder/length}"/>
                     </l:VerticalLayout>
 
                     <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
-                        <Label text="Szerokość:"/>
+                        <Label text="{i18n>Width}:"/>
                         <Label text= "{viewModel>/selectedOrder/width}"/>
                     </l:VerticalLayout>
 
                     <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
-                        <Label text="Grubość:"/>
+                        <Label text="{i18n>thickness}:"/>
                         <Label text= "{viewModel>/selectedOrder/thickness}"/>
                     </l:VerticalLayout>
 
                     <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
-                        <Label text="Kod pakowania:"/>
+                        <Label text="{i18n>packagingCode}:"/>
                         <Label text= "{viewModel>/selectedOrder/packagingCode}"/>
                     </l:VerticalLayout>
 
@@ -81,7 +81,7 @@
                                 width="15rem"
                             />
                     </l:VerticalLayout>
-                    
+
                     <l:VerticalLayout class="sapUiNoContentPadding sapUiMediumMarginEnd">
                         <Button
                             id="btnOrderAssign"
@@ -112,6 +112,15 @@
                     </HBox>
                 
                 </HBox>
+
+                    <l:VerticalLayout class="sapUiNoContentPadding sapUiLargeMarginEnd sapUiSmallMarginBegin">
+                        <ObjectStatus text="{viewModel>/selectedOrder/productionWarning}" 
+                                      visible="{= ${viewModel>/selectedOrder/productionWarning} !== '' &amp;&amp; ${viewModel>/selectedOrder/productionWarning} !== undefined }"
+                                      icon="sap-icon://warning"
+                                      class="blinking" />
+                    </l:VerticalLayout>
+                    
+
                     <Table
                         id="filesTable"
                         width="100%"
@@ -121,7 +130,7 @@
                         items="{viewModel>/selectedOrder/files}">
                     <columns>
                         <Column>
-                            <Text text="Opis pliku"/>
+                            <Text text="{i18n>fileDescription}"/>
                         </Column>
                         <Column hAlign="End" width="8rem">
                             <Text text=""/>
@@ -133,7 +142,7 @@
                             <cells>
                                 <Text text="{viewModel>fileDescription}" />
                                 <Button 
-                                    text="Wyświetl plik" 
+                                    text="{i18n>displayFile}" 
                                     type="Transparent" 
                                     press="onFileViewPress"/>
                             </cells>
@@ -149,7 +158,7 @@
                         <IconTabFilter icon="sap-icon://arrow-down" key="info" iconColor="Positive" text="Q1 - OK">
                             <VBox class="sapUiSmallMarginTop" alignItems="Center">
                                 <HBox justifyContent="Center" alignItems="Center" width="100%">
-                                    <Label text="Liczba wydruków" id="sdasd" labelFor="rbg1" class="sapUiSmallMarginEnd fontText"/>
+                                    <Label text="{i18n>labelCopies}" id="sdasd" labelFor="rbg1" class="sapUiSmallMarginEnd fontText"/>
                                     <RadioButtonGroup id="rbg1" columns="6" class="printRadioButtonGroup">
                                         <RadioButton id="rg0" text="0" class="myRadioButtonGroup" />    
                                         <RadioButton id="rg1" text="1" class="myRadioButtonGroup" />
@@ -179,11 +188,11 @@
                         <IconTabFilter icon="sap-icon://message-error" key="info" iconColor="Negative" text="Q2/Q3">
                             <VBox id="q2q3Section" class="sapUiSmallMarginTop">
                                 <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                    <Text text="Przyczyna" class="sapUiTinyMarginEnd"/>
+                                    <Text text="{i18n>reason}" class="sapUiTinyMarginEnd"/>
                                     <ComboBox
                                         id="q23ReasonsList"
                                         width="25rem"
-                                        placeholder="Wybierz przyczynę"
+                                        placeholder="{i18n>chooseReason}"
                                         selectionChange="onQ3SelectionChange"
                                         items="{multiOrdersModel>/codes}"
                                         class="sapUiTinyMarginEnd">
@@ -192,9 +201,9 @@
                                     <Input id="inputQ23" liveChange="onReceiptInputLiveChange" value="" width="3rem" class="sapUiTinyMarginEnd"/>
                                     <Button id="btnQ23" icon="sap-icon://accept" type="Accept" press="onButtonQ23"/>
 
-                                    <Text text="Ilość zarejestrowana na pozycji:" class="sapUiTinyMarginEnd sapUiMediumMarginBegin"/>
+                                    <Text text="{i18n>quanRegisteredOnPos}" class="sapUiTinyMarginEnd sapUiMediumMarginBegin"/>
                                     <Input id="inputPositionQ23" editable="false" value="{viewModel>/selectedOrder/totalQ23}" width="3rem" class="sapUiTinyMarginEnd"/>
-                                    <Text text="Ilość zarejestrowana na zleceniu:" class="sapUiTinyMarginEnd sapUiMediumMarginBegin"/>
+                                    <Text text="{i18n>quanOnOrder}" class="sapUiTinyMarginEnd sapUiMediumMarginBegin"/>
                                     <Input id="inputTotalQ23" editable="false" value="{multiOrdersModel>/totalQ23}" width="3rem" class="sapUiTinyMarginEnd"/>
                                 </HBox>
                             </VBox>

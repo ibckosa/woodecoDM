@@ -153,6 +153,14 @@ sap.ui.define([
 
                     }
                 }
+
+                for(const position of oPositions){
+                    if(position.pegZdelmon === "DELIVERY"){
+                        position.productionWarning = this._oTextHandler.getText("labels.sfcCard.warningProductionDelivery");
+                    }else if(position.pegZdelmon === "COMPLAINT"){
+                        position.productionWarning = this._oTextHandler.getText("labels.sfcCard.warningProductionComplaint");
+                    }
+                }
                 this._totalRegisteredQ23 = totalRegisteredQ23;
                 const oModel = new JSONModel({ positions: oPositions, codes: oCodesTab, totalQ23: totalRegisteredQ23 });
                 this.getView().setModel(oModel, "multiOrdersModel");

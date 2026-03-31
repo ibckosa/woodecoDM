@@ -112,7 +112,8 @@ sap.ui.define([
                 QST: "0",
                 QSTMANU: "I",
                 TST: "F",
-                ATTR2: oLine.erpResourceId };
+                ATTR2: oLine.erpResourceId,
+                FU_65: crypto.randomUUID() };
 
                 return await new Promise((resolve,reject)=>{
                     this._oController.ajaxPostRequest(sUrl, oParameters,
@@ -159,6 +160,7 @@ sap.ui.define([
                 TST: "F",
                 ATTR2: oLine.erpResourceId,
                 FU_57: oLine.packingMaterial,
+                FU_65: crypto.randomUUID(),
                 EXTCNR: oLine.palleteDetails.handlingUnit };
 
                 return await new Promise((resolve,reject)=>{

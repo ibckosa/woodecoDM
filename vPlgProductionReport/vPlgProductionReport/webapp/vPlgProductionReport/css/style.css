@@ -2,3 +2,23 @@
 .sapMPlanCalLegendHeader {
     display: none;
 }
+
+
+.hideButton .sapMSegB {
+    visibility: hidden;
+}
+
+
+.hideButton .sapMPCHead .sapMPCHeadActionsToolbar {
+    min-height: 0 !important;
+    height: 0 !important;
+}
+
+.bigObjectStatus .sapMObjStatusText {
+    font-size: 2rem;
+    font-weight: bold; 
+}
+
+.bigObjectStatus .sapUiIcon {
+    font-size: 1.4rem;
+}

@@ -339,7 +339,8 @@ sap.ui.define([
                 FU_7: this._parameters.SALES_ORDER_ITEM,
                 FU_13: this._parameters.ITEM_NO,
                 FU_45: this._parameters.SALES_ORDER,
-                FU_54: `${this._parameters.SALES_ORDER}${this._parameters.SALES_ORDER_ITEM}`
+                FU_54: `${this._parameters.SALES_ORDER}${this._parameters.SALES_ORDER_ITEM}`,
+                FU_65: `${this._parameters.HU}_102`
              };
         },
         _getZweiEndpoint: function(){
@@ -484,6 +485,7 @@ sap.ui.define([
                 KLASSE: "G",
                 STATUS: "F",
                 TST: "F",
+                FU_65: `${this._parameters.HU}_102`
              };
         },
         _getDummyOrder: function(){

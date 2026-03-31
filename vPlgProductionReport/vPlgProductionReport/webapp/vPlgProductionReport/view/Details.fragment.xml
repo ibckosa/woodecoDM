@@ -1,0 +1,23 @@
+<core:FragmentDefinition
+		xmlns="sap.m"
+		xmlns:f="sap.ui.layout.form"
+		xmlns:core="sap.ui.core">
+	<ResponsivePopover
+			id="detailsPopover"
+			class="sapUiContentPadding"
+			placement="Auto">
+		<endButton>
+			<Button text="{i18n>close}" press="handleClosePopup"/>
+		</endButton>
+		<f:SimpleForm
+				editable="false"
+				layout="ResponsiveGridLayout"
+				singleContainerFullSize="false">
+			<Text id="descriptionText" text="{path: 'description'}"/>
+			<Label text="{i18n>startDate}" labelFor="startDateText"/>
+			<Text id="startDateText" text="{path: 'start', formatter: '.formatDate'}"/>
+			<Label text="{i18n>endDate}" labelFor="endDateText"/>
+			<Text id="endDateText" text="{path: 'end', formatter: '.formatDate'}"/>
+		</f:SimpleForm>
+	</ResponsivePopover>
+</core:FragmentDefinition>

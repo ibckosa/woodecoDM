@@ -20,26 +20,26 @@
                                                    factory: '.createRow' }" inset="false" growing="true" growingThreshold="100">
                 <columns>
                     <Column>
-                        <Text text="Data/godzina" />
+                        <Text text="{i18n>dateTime}" />
                     </Column>
                     <Column>
                         <header>
                             <VBox>
-                              <Label design="Bold"  text="Potwierdzenie produkcji" wrapping="true" />
-                              <Label design="Standard"  text="(Materiał / Nośnik / Ilość)" wrapping="true" />
+                              <Label design="Bold"  text="{i18n>prodConf}" wrapping="true" />
+                              <Label design="Standard"  text="{i18n>matHuQan}" wrapping="true" />
                             </VBox>
                         </header>
                     </Column>
                     <Column>
                         <header>
                             <VBox>
-                              <Label design="Bold"  text="Wydanie" wrapping="true" />
-                              <Label design="Standard"  text="(Materiał / Nośnik / Ilość)" wrapping="true" />
+                              <Label design="Bold"  text="{i18n>consumption}" wrapping="true" />
+                              <Label design="Standard"  text="{i18n>matHuQan}" wrapping="true" />
                             </VBox>
                         </header>
                     </Column>
                     <Column>
-                        <Text text="Użytkownik" />
+                        <Text text="{i18n>user}" />
                     </Column>
                     <Column>
                         <Text text="" />

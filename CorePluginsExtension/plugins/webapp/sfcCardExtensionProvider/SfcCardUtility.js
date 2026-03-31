@@ -65,29 +65,10 @@ sap.ui.define([
             let oInformationContainer = this.getCoreExtension().getPluginInformationContainer();
             let oToolbarContainer = this.getCoreExtension().getPluginToolbar();
 
-            // oToolbarContainer.addEventDelegate({
-            //     onAfterRendering: function() {
-            //         debugger;
-            //         let oToolbarContainer = this.getCoreExtension().getPluginToolbar();
-            //         let oActionButton = null;
-            //         if (oToolbarContainer && this.oChildControls[oToolbarContainer.getId()]) {
-            //             oActionButton = this.oChildControls[oToolbarContainer.getId()];
-            //         }
-            //         if (oToolbarContainer && !oActionButton) {
-            //             this.addActionButton(oToolbarContainer);
-            //         }
-            //     }
-            // }, this);
-            // debugger;
-
             if (!this.oChildControls) {
                 this.oChildControls = {};
             }
 
-            
-
-            // this.addActionButton(oToolbarContainer);
-            // this.addInformationControls(oInformationContainer);
             if (true) {
                 let oActionButton = null;
                 if (oToolbarContainer && this.oChildControls[oToolbarContainer.getId()]) {
@@ -110,17 +91,8 @@ sap.ui.define([
         },
 
         addActionButton: function(oToolbar) {
-            // let that = this;
-            // let oActionButton = new Button({
-            //     type: "Emphasized",
-            //     text: "Help",
-            //     press: [that.onHelpPress, that]
-            // });
-
-
-
-            let oInformationControl = new VerticalLayout({
-                visible: true,// "{customData>/sfcCardCustomVisibility/progressIndicatorValue}"
+            let oInformationControl = new sap.ui.layout.HorizontalLayout({
+                visible: true,
             });
             oInformationControl.addStyleClass("sapUiNoContentPadding");
             oInformationControl.addStyleClass("sapUiMediumMarginEnd");
@@ -132,12 +104,25 @@ sap.ui.define([
                 showValue: true,
                 displayOnly: true,
                 width: "15rem",
-                visible: true,// "{customData>/sfcCardCustomVisibility/progressIndicatorValue}",
+                visible: true,
                 percentValue: "{customData>/sfcCardCustom/percentProgress}",
                 displayValue: "{customData>/sfcCardCustom/progressIndicatorValue}"
             });
 
             oInformationControl.addContent(oProgressIndicator);
+            let objectStatusWarning = new sap.m.ObjectStatus({
+                text:"{customData>/sfcCardCustom/productionWarning}",
+                visible: "{= ${customData>/sfcCardCustom/productionWarning} !== '' && ${customData>/sfcCardCustom/productionWarning} !== undefined }",
+                icon:"sap-icon://warning"
+            });
+            objectStatusWarning.addStyleClass("blinking");
+            objectStatusWarning.addStyleClass("sapUiMediumMarginBegin");
+            objectStatusWarning.addStyleClass("sapUiTinyMarginTop");
+
+            oInformationControl.addContent(objectStatusWarning);
+
+            
+
 
             if (oToolbar.addContent) {
                 oToolbar.addContent(oInformationControl);

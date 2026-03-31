@@ -18,12 +18,12 @@
                 <items>
                     <IconTabFilter 
                         icon="sap-icon://cart" 
-                        text="Produkcja" key="production">
+                        text="{i18n>productionIcon}" key="production">
                         <core:Fragment fragmentName="ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.view.Production" type="XML"/>
                     </IconTabFilter>
                     <IconTabFilter
                         icon="sap-icon://pause"
-                        text="Przestoje"
+                        text="{i18n>downtimesIcon}"
                         key="downtimes">
                         <core:Fragment fragmentName="ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.view.Downtimes" type="XML"/>
                     </IconTabFilter>

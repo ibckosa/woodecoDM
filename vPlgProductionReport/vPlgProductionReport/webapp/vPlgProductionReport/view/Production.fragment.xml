@@ -5,25 +5,25 @@
   <Table id="componentsTable"   items="{path:'/productionItems'}" inset="false">
     <columns>
       <Column width="5%">
-        <Text text="Data produkcji" />
+        <Text text="{i18n>productionDate}" />
       </Column>
       <Column width="5%">
-        <Text text="Zmiana" />
+        <Text text="{i18n>shift}" />
       </Column>
       <Column width="5%">
-        <Text text="Numer zlecenia" />
+        <Text text="{i18n>productionOrder}" />
       </Column>
       <Column width="5%">
-        <Text text="Numer pozycji" />
+        <Text text="{i18n>itemNO}" />
       </Column>
       <Column width="15%">
-        <Text text="Materiał" />
+        <Text text="{i18n>material}" />
       </Column>
       <Column width="7%">
-        <Text text="Ilość Q1" />
+        <Text text="{i18n>numberOfQ1}" />
       </Column>
       <Column width="30%">
-        <Text text="Ilość Q2/Q3" />
+        <Text text="{i18n>numberOfQ23}" />
       </Column>
       <Column width="auto">
         <Text text="KPI Q1" />
@@ -35,23 +35,35 @@
     <items>
       <ColumnListItem vAlign="Middle">
         <cells>
-          <Text text="{productionDateTime}" />
+          <Text text="{productionDate}" />
           <Text text="{shift}" />
           <Text text="{orderNumber}" />
           <Text text="{itemNumber}" />
           <Text text="{material}" />
           <Text text="{q1Quantity}" />
-          <Text text="{q23Quantity}" />
-          <ct:BulletMicroChart scale="%" targetValue="95" forecastValue="95"> 
-            <ct:actual>
-              <ct:BulletMicroChartData value="91" color="Error"/>
-            </ct:actual>
-          </ct:BulletMicroChart>
-          <ct:BulletMicroChart scale="M2" targetValue="1200" forecastValue="1200"> 
-            <ct:actual>
-              <ct:BulletMicroChartData value="1400" color="Good"/>
-            </ct:actual>
-          </ct:BulletMicroChart>
+          <FormattedText htmlText="{q23Quantity}" />
+
+          <VBox visible="{isQ1PercentageIndicatorVisible}">
+              <ObjectStatus
+                  class="bigObjectStatus"
+                  text="{q1Percentage}%"
+                  state="{= ${q1Percentage} >= ${q1PercentagePlan} ? 'Success' : 'Error' }" />
+
+              <ObjectStatus
+                  text="{i18n>target} {q1PercentagePlan}"
+                  state="{= ${q1Percentage} >= ${q1PercentagePlan} ? 'Success' : 'Error' }"/>
+          </VBox>
+          
+          <VBox visible="{isPlanIndicatorVisible}">
+              <ObjectStatus
+                  class="bigObjectStatus"
+                  text="{planForRow}{planUOM}"
+                  state="{= ${planForRow} >= ${planExecution} ? 'Success' : 'Error' }" />
+
+              <ObjectStatus
+                  text="{i18n>target} {q1PercentagePlan}"
+                  state="{= ${planForRow} >= ${planExecution} ? 'Success' : 'Error' }"/>
+          </VBox>
         </cells>
     </ColumnListItem>
     </items>
