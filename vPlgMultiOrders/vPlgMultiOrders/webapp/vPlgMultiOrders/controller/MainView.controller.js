@@ -134,7 +134,12 @@ sap.ui.define([
                                                                                  resource: this._oResource,
                                                                                  excludeStorned: true  } );
 
+                for(const position of oPositions){
+                    position.codes = structuredClone(oCodesTab);
+                }
+
                 let nonconformances  = await nonConformancesCodeReader.readNonconformances();
+
                 let totalRegisteredQ23 = 0;
                 for(const nonconformance of nonconformances){
                     totalRegisteredQ23 = totalRegisteredQ23 + nonconformance.quantity;
@@ -148,12 +153,22 @@ sap.ui.define([
                                 }else{
                                     position.totalQ23 = nonconformance.quantity;
                                 }
+                                                debugger;
+                                let ncCode = position.codes.find(code=> {return code.code === nonconformance.code});
+                                if(ncCode){
+                                    if(ncCode.postedQuantity){
+                                        ncCode.postedQuantity = ncCode.postedQuantity + nonconformance.quantity;
+                                    }else{
+                                        ncCode.postedQuantity = nonconformance.quantity;
+                                    }
+                                }
                             }
+
+                            
                         }
 
                     }
                 }
-
                 for(const position of oPositions){
                     if(position.pegZdelmon === "DELIVERY"){
                         position.productionWarning = this._oTextHandler.getText("labels.sfcCard.warningProductionDelivery");
@@ -187,7 +202,6 @@ sap.ui.define([
             }
         },
         onQ1Press: function () {
-            // Pokazuje sekcję Q1, ukrywa sekcję Q2/Q3
             this.getView().byId("q1Section").setVisible(true);
             this.getView().byId("q2q3Section").setVisible(false);
             var oButton = this.byId("btnQ1");
@@ -197,7 +211,6 @@ sap.ui.define([
             oButtonQ2.removeStyleClass("redCircle--active");
         },
         onQ2Q3Press: function () {
-            // Pokazuje sekcję Q2/Q3, ukrywa sekcję Q1
             this.getView().byId("q1Section").setVisible(false);
             this.getView().byId("q2q3Section").setVisible(true);
 
@@ -207,10 +220,7 @@ sap.ui.define([
             oButtonQ1.removeStyleClass("greenCircle--active");
         },
         onButtonReceipt: async function () {
-            // Logika zatwierdzania dla Q1
             try{
-                // this.getView().setBusyIndicatorDelay(0);
-                // this.getView().setBusy(true); 
                 PodTools.setCustomBusyIndicator(true);
                 this._checkTimeLastReceipt();
                 let selectedOrder = this.getView().getModel("viewModel").getData();
@@ -252,7 +262,6 @@ sap.ui.define([
                     routing: aSelectionFirstRow.getSfcData().getRouting(),
                     routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion() };
                 
-                ///uruchamianie nowego kodu
                     let oSfcReceipt = new SfcMOReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeReceipt();
                     selectedOrder.selectedOrder.deliveredQuantity = selectedOrder.selectedOrder.deliveredQuantity + oReceiptParameters.palletesNumber * oReceiptParameters.packageNumber * oReceiptParameters.quantity;
@@ -262,15 +271,7 @@ sap.ui.define([
                     this._setLastReceiptTime();
                     this._selectPositionAfterReceipt();
                     // this.getView().setBusy(false);
-                    PodTools.setCustomBusyIndicator(false);
-                    // setTimeout( async ()=> { 
-                    //     if(this._oResourceInstance.getMOSelectionMode().toUpperCase()==="AUTOMATIC"){
-                    //         this._oOrderNumberPrevious = "";
-                    //     }
-                    //     await this._loadData();
-                    // },1500);
-                    
-
+                    PodTools.setCustomBusyIndicator(false);               
             }catch(oError){
                 if(!oError.displayType){
                     oError.displayType = "POPUP";
@@ -285,10 +286,8 @@ sap.ui.define([
         },
         onButtonQ23: async function(oEvent){
             try{
-                // this.getView().setBusyIndicatorDelay(0);
-                // this.getView().setBusy(true);
                 PodTools.setCustomBusyIndicator(true);
-                let selectedCode = this.getView().byId("q23ReasonsList").getSelectedItem().getBindingContext("multiOrdersModel").getObject();
+                let selectedCode = this.getView().byId("q23ReasonsList").getSelectedItem().getBindingContext("viewModel").getObject();
                 let selectedOrder = this.getView().getModel("viewModel").getData();
                 let oPodController = this.getPodController();
                 let oPodSelectionModel = this.getPodSelectionModel();
@@ -321,9 +320,7 @@ sap.ui.define([
 
                 let oSfcQ23 = new SfcQ23(this, q23Parameters);
                 await oSfcQ23.executeMO();
-                // this._totalRegisteredQ23 = this._totalRegisteredQ23 + q23Parameters.quantity;
-                // selectedOrder.totalQ23 = selectedOrder.totalQ23 + q23Parameters.quantity;
-                this._updateModelAfterQ23(selectedOrder, q23Parameters.quantity);
+                this._updateModelAfterQ23(selectedOrder, q23Parameters.quantity, q23Parameters);
                 this.byId("inputQ23").setValue("");
  
                 // this.getView().setBusy(false);
@@ -777,16 +774,24 @@ sap.ui.define([
                 this._oOrderNumberPrevious = this._oOrderNumber;
             }catch(error){}
         },
-        _updateModelAfterQ23: function(item, quantity){
+        _updateModelAfterQ23: function(item, quantity, q23Parameters){
             this._totalRegisteredQ23 = this._totalRegisteredQ23 + quantity;
             item.selectedOrder.totalQ23 = item.selectedOrder.totalQ23 + quantity;
-            //this.getView().getModel("viewModel").setProperty("selectedOrder", item.selectedOrder);
 
             let multiOrdersModel =  this.getView().getModel("multiOrdersModel");
             let viewModel = this.getView().getModel("viewModel");
 
             let multiOrdersModelData = multiOrdersModel.getData();
             let viewModelData = viewModel.getData();
+            debugger;
+            let selectedCode = viewModelData.selectedOrder.codes.find(code=>{return code.code === q23Parameters.nonconformanceCode});
+            if(selectedCode){
+                if(selectedCode.postedQuantity){
+                    selectedCode.postedQuantity = selectedCode.postedQuantity + quantity;
+                }else{
+                    selectedCode.postedQuantity = quantity;
+                }
+            }
 
             multiOrdersModelData.totalQ23 = multiOrdersModelData.totalQ23 + quantity;
             viewModel.selectedOrder = item.selectedOrder;
@@ -796,8 +801,20 @@ sap.ui.define([
 
             this.getView().setModel(multiOrdersModel, "multiOrdersModel");
             this.getView().setModel(viewModel, "viewModel");
+            this.getView().byId("q23ReasonsList").clearSelection();
 
-
+        },
+        formatPositionNcCode: function(description, quantity){
+            let result = "";
+            if(description){
+                result = result + description;
+                if(quantity){
+                    result = result + ` (${quantity})`;
+                }else{
+                    result = result + " (0)";
+                }
+            }
+            return result;
         }
 	});
 });

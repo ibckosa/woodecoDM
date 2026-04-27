@@ -20,9 +20,12 @@
                         <Text id="CodeDescriptionColumn"/>
                     </Column>
                     <Column width="5rem">
-                        <Text id="QuantityConformanceColumn"  visible = "true" text="Zgłoszone"/>
+                        <Text id="QuantityConformanceColumn"  visible = "true" text="{i18n>postedNc}"/>
                     </Column>
-                    <Column width="10rem">
+                    <Column width="5rem">
+                        <Input id="totalQ23" value="{i18n>totalNc}: {/totalNcQuantity}" editable="false" width="13rem" class="inputFontQ23" textAlign="Center"/>
+                    </Column>
+                    <Column width="8rem">
                         <Input id="availableQ23" value="Dostępne: 0" editable="false" width="13rem" class="inputFontQ23" textAlign="Center"/>
                     </Column>
                     <Column width="6rem">

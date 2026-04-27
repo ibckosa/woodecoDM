@@ -112,7 +112,8 @@ sap.ui.define([
             this._columnQuantity = new Column();
             if(this._oMode === "RESOURCE"){
                 oReturn.push(new Column({ header: new Text({ text: "" }), width: "3rem" }));
-                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.material") }) }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.stockDate") }) }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.material") }), width: "5rem" }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.materialDesc") }) }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.handlingUnit") }) }));
                 oReturn.push(this._columnQuantity);
@@ -120,6 +121,7 @@ sap.ui.define([
 
             }else{
                 oReturn.push(new Column({ header: new Text({ text: "" }) , width: "3rem"  }));
+                oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.stockDate") }) }));
                 oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("labels.loghu.column.handlingUnit") }) }));
                 oReturn.push(this._columnQuantity);
                 //oReturn.push(new Column({header: new Text({ text: this._textHandler.getText("Materiał") }) }));
@@ -131,6 +133,7 @@ sap.ui.define([
             let oReturn = [];
             if(this._oMode === "RESOURCE"){
                 oReturn.push( new CheckBox({ selected: "{lineSelected}" }) );
+                oReturn.push( new Text({ text: { path: "createdDateTime", formatter: this.formatUiDateTime } }) );
                 oReturn.push( new Text({ text: "{materialId}" }) );
                 oReturn.push( new Text({ text: "{materialDesc}" }) )
                 oReturn.push( new Text({ text: "{handlingUnit}" }) )
@@ -138,6 +141,7 @@ sap.ui.define([
                 oReturn.push( new Text({ text: "{reservation}" }) )
             }else{
                 oReturn.push( new CheckBox({ selected: "{lineSelected}" }) );
+                oReturn.push( new Text({ text: { path: "createdDateTime", formatter: this.formatUiDateTime } }) );
                 oReturn.push( new Text({ text: "{handlingUnit}" }) );
                 oReturn.push( new Text({ text: "{quantity}" }) )
                 //oReturn.push( new Text({ text: "{materialId}" }) )
@@ -639,7 +643,7 @@ sap.ui.define([
             try{
                 const oBinding = this._table.getBinding("items");
 
-                let sQuery = this._searchMaterialField.getValue();
+                let sQuery = (this._searchMaterialField.getValue() || "").trim();
 
                 if (!sQuery) {
                     oBinding.filter([]);
@@ -647,7 +651,21 @@ sap.ui.define([
                 }
 
                 const searchFilters =   [   new sap.ui.model.Filter("handlingUnit", sap.ui.model.FilterOperator.Contains, sQuery),
-                                            new sap.ui.model.Filter("reservation", sap.ui.model.FilterOperator.Contains, sQuery)];
+                                            new sap.ui.model.Filter("reservation", sap.ui.model.FilterOperator.Contains, sQuery),
+                                            new sap.ui.model.Filter({
+                                                path: "createdDateTime",
+                                                test: function (vValue) {
+                                                    if (!vValue) {
+                                                        return false;
+                                                    }
+
+                                                    const sFormatted = this.formatUiDateTime(vValue);
+                                                    return sFormatted && sFormatted.toLowerCase().includes(sQuery.toLowerCase());
+                                                }.bind(this)
+                                            })
+                                        
+                                        
+                                        ];
                                             
                 if (!isNaN(sQuery)) {
                     searchFilters.push(new sap.ui.model.Filter("quantity", sap.ui.model.FilterOperator.EQ, Number(sQuery)));
@@ -734,7 +752,28 @@ sap.ui.define([
             }
 
             return result;
-        }
+        },
+        formatUiDateTime: function (sDate) {
+            if (!sDate) {
+                return "";
+            }
+
+            var oDate = new Date(sDate);
+            if (isNaN(oDate.getTime())) {
+                return "";
+            }
+
+            var pad = function (n) {
+                return n < 10 ? "0" + n : n;
+            };
+
+            return oDate.getFullYear() + "-" +
+                pad(oDate.getMonth() + 1) + "-" +
+                pad(oDate.getDate()) + " " +
+                pad(oDate.getHours()) + ":" +
+                pad(oDate.getMinutes()) + ":" +
+                pad(oDate.getSeconds());
+                }
     })
 
 });

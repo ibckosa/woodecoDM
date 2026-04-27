@@ -131,6 +131,10 @@ sap.ui.define([
                     if(collection.NC_CODE_DESCRIPTION){
                         collection.confText = collection.confText + `\n${collection.NC_CODE_DESCRIPTION}`;
                     }
+                    let positionDimensions = this._oOrder.getDimensions(parseInt(collection.ITEM_NO));
+                    if(positionDimensions.LA > 0 && positionDimensions.BR > 0){
+                        collection.confText = collection.confText + `\n${positionDimensions.LA}x${positionDimensions.BR}`;
+                    }
                 }
 
                 if(collection.CONSUMPTION&&collection.CONSUMPTION.length>0){
@@ -169,6 +173,10 @@ sap.ui.define([
                     }
                     if(collection.NC_CODE_DESCRIPTION){
                         collection.confText = collection.confText + `\n${collection.NC_CODE_DESCRIPTION}`;
+                    }
+                    let positionDimensions = this._oOrder.getDimensions(parseInt(collection.ITEM_NO));
+                    if(positionDimensions.LA > 0 && positionDimensions.BR > 0){
+                        collection.confText = collection.confText + `\n${positionDimensions.LA}x${positionDimensions.BR}`;
                     }
                 }
 

@@ -38,5 +38,21 @@ sap.ui.define([
     };
 
 
+    oOrderRepository.massOrderRead = async function(controller, plant, orderNumbers){
+        let result = [];
+        let orderInstances = orderNumbers.map(orderNumber => this.readOrderByPassBuffer(controller, plant, orderNumber));
+
+        if(orderInstances.length>0){
+            let promiseResult = await Promise.all(orderInstances);
+            result = promiseResult.map(result=>{ return { instance: result,
+                                                          orderNumber: result.getOrderNumber() } });
+        }
+
+
+        return result;
+
+    }
+
+
     return oOrderRepository;
 });

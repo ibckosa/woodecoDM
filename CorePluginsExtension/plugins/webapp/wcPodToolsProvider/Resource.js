@@ -203,7 +203,7 @@ sap.ui.define([
             let result = 100;
             try{
                 let q1PercentagePlan = this._oDetails.customValues.find(customValue => { return customValue.attribute === "Q1_PERCENTAGE_PLAN"});
-                result = parseInt(q1PercentagePlan.value);
+                result = parseFloat(q1PercentagePlan.value);
                 if(result>100||result<=0)
                 {
                     result = 100;
@@ -229,7 +229,7 @@ sap.ui.define([
             try{
                 let dayPlanUOM = this._oDetails.customValues.find(customValue => { return customValue.attribute === "DAY_PLAN_UOM"});
                 let uom = dayPlanUOM.value.toUpperCase();
-                if(uom==="M3"){
+                if(uom==="M3"||uom==="KG"||uom==="ST"){
                     result = uom;
                 }
 
@@ -240,7 +240,7 @@ sap.ui.define([
             let result = 100;
             try{
                 let plan = this._oDetails.customValues.find(customValue => { return customValue.attribute === "AVAILABILITY_PLAN_PERCENTAGE"});
-                result = parseInt(plan.value);
+                result = parseFloat(plan.value);
                 if(result>100||result<=0)
                 {
                     result = 100;
@@ -249,8 +249,5 @@ sap.ui.define([
             }catch(oError){}
             return result;
         }
-
-
-
     });
 });

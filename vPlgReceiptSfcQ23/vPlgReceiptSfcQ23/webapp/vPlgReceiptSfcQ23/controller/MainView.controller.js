@@ -105,6 +105,7 @@ sap.ui.define([
             var oPodSelectionModel = this.getPodSelectionModel();
 
             try{
+                let totalNcQuantity = 0;
                 let aSelection = this.getPodSelectionModel().getSelections()[0];
                 if(oPodSelectionModel.workCenter === undefined || oPodSelectionModel.workCenter === ""){
                     return;
@@ -116,7 +117,6 @@ sap.ui.define([
                 this._oResource = oPodSelectionModel.resource.resource;
                 let resourceInstance = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), this._oResource);
 
-                //var aSelection = this.getPodSelectionModel().getSelections()[0];
                 let oCodesTab = await NcCodesReader.readCodes(this, this.getPodController().getUserPlant(), this._oWorkCenter, this._oResource);
 
                 let nonConformancesCodeReader = new NonconformanceReader(this, { plant: this.getPodController().getUserPlant(),
@@ -131,10 +131,12 @@ sap.ui.define([
                     let nonconformancesFiltered = nonconformances.filter(nonconformance=>{ return nonconformance.code === codeLine.code });
                     for(const nonconformance of nonconformancesFiltered){
                         codeLine.conconformanceQuantity = codeLine.conconformanceQuantity + nonconformance.quantity;
+                        totalNcQuantity = totalNcQuantity + nonconformance.quantity;
                     }
                 }
-                //var oCodesTab = await this._getCodes(aSelection.getSfcData().getWorkCenter());
-                var oModelData = { items: oCodesTab };
+
+                var oModelData = { items: oCodesTab,
+                                   totalNcQuantity: totalNcQuantity };
                 var oModel = new JSONModel(oModelData);
                 oView.setModel(oModel);
 

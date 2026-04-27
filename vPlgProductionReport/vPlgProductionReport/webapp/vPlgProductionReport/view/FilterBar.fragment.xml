@@ -6,6 +6,14 @@
 				width="100%">
 			<l:Grid	>
 				<VBox class= "sapUiTinyMarginTop">
+					<Text/>
+					<FormattedText id="workCenterText" htmlText=""/>
+					<layoutData>
+						<l:GridData span="XL1 L1 M1 S12" />
+					</layoutData>
+				</VBox>
+
+				<VBox class= "sapUiTinyMarginTop">
 					<Label text="{i18n>date}" labelFor="datePicker" />
 					<DatePicker id="datePicker"
 								displayFormat="yyyy-MM-dd" />
@@ -24,7 +32,7 @@
 							<core:Item key="1" text="1" />
 							<core:Item key="2" text="2" />
 							<core:Item key="3" text="3" />
-							<core:Item key="onlyDay" text=" " />
+							<core:Item key="onlyDay" text="{i18n>onlyDay}"/>
 						</items>
 
 					</ComboBox>
@@ -35,7 +43,7 @@
 
 				<VBox class= "sapUiTinyMarginTop">
 					<Label text="{i18n>productionOrder}:" labelFor="orderNumber" />
-					<Input id="orderNumber" type="Text"/>
+					<Input id="orderNumber" type="Text" value=""/>
 					<layoutData>
 						<l:GridData span="XL2 L2 M2 S12" />
 					</layoutData>
@@ -43,34 +51,35 @@
 
 				<VBox class= "sapUiTinyMarginTop">
 					<Label text="{i18n>aggregate}" labelFor="aggregationFilter" />
-					<SegmentedButton id="aggregationFilter" selectedKey="yes" class="sapUiSmallMarginBottom" selectionChange="onAggregationChange">
-						<items>
-							<SegmentedButtonItem text="{i18n>yes}" key="yes" />
-							<SegmentedButtonItem text="{i18n>no}" key="no" />
-						</items>
-					</SegmentedButton>
+					<HBox width="10rem">
+						<SegmentedButton id="aggregationFilter" width="8rem" selectedKey="yes" class="sapUiSmallMarginBottom" selectionChange="onAggregationChange">
+							<items>
+								<SegmentedButtonItem text="{i18n>yes}" key="yes" />
+								<SegmentedButtonItem text="{i18n>no}" key="no" />
+							</items>
+						</SegmentedButton>
+						<Button class="sapUiTinyMarginBegin" text="Start" type="Emphasized" press="onStart"/>
+					</HBox>
+
 					<layoutData>
-						<l:GridData span="XL1 L1 M1 S12" />
+						<l:GridData span="XL2 L2 M2 S12" />
 					</layoutData>
 				</VBox>
-
 				<VBox class= "sapUiTinyMarginTop">
 					<Text ></Text>	
 					<SearchField id="searchField" placeholder="{i18n>search}" search="onSearch"/>
 					<layoutData>
-						<l:GridData span="XL3 L3 M3 S12" />
+						<l:GridData span="XL2 L2 M2 S12" />
 					</layoutData>
 				</VBox>
-
-
-
 				<VBox class= "sapUiTinyMarginTop">
 					<Text ></Text>	
-					<Button text="Start" type="Emphasized" press="onStart"/>
+					<Button text="{i18n>filter}" type="Emphasized" press="onSearch"/>
 					<layoutData>
-						<l:GridData span="XL1 L1 M1 S12" />
+						<l:GridData span="XL2 L2 M2 S12" />
 					</layoutData>
 				</VBox>
+
 			</l:Grid>
 		</l:VerticalLayout>
 </core:FragmentDefinition>

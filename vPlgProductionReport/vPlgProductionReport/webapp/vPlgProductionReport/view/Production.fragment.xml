@@ -2,7 +2,7 @@
   xmlns="sap.m"
   xmlns:ct="sap.suite.ui.microchart"
   xmlns:core="sap.ui.core">
-  <Table id="componentsTable"   items="{path:'/productionItems'}" inset="false">
+  <Table id="componentsTable"   items="{path:'/productionItems'}" inset="false" growing="true" growingThreshold="100">
     <columns>
       <Column width="5%">
         <Text text="{i18n>productionDate}" />
@@ -16,13 +16,16 @@
       <Column width="5%">
         <Text text="{i18n>itemNO}" />
       </Column>
+      <Column width="5%">
+        <Text text="{i18n>operation}" />
+      </Column>
       <Column width="15%">
         <Text text="{i18n>material}" />
       </Column>
       <Column width="7%">
         <Text text="{i18n>numberOfQ1}" />
       </Column>
-      <Column width="30%">
+      <Column width="25%">
         <Text text="{i18n>numberOfQ23}" />
       </Column>
       <Column width="auto">
@@ -39,6 +42,7 @@
           <Text text="{shift}" />
           <Text text="{orderNumber}" />
           <Text text="{itemNumber}" />
+          <Text text="{operation}" />
           <Text text="{material}" />
           <Text text="{q1Quantity}" />
           <FormattedText htmlText="{q23Quantity}" />
@@ -57,12 +61,12 @@
           <VBox visible="{isPlanIndicatorVisible}">
               <ObjectStatus
                   class="bigObjectStatus"
-                  text="{planForRow}{planUOM}"
-                  state="{= ${planForRow} >= ${planExecution} ? 'Success' : 'Error' }" />
+                  text="{planExecution}{planUOM}"
+                  state="{= ${planExecution} >= ${planForRow} ? 'Success' : 'Error' }" />
 
               <ObjectStatus
-                  text="{i18n>target} {q1PercentagePlan}"
-                  state="{= ${planForRow} >= ${planExecution} ? 'Success' : 'Error' }"/>
+                  text="{i18n>target} {planForRow}"
+                  state="{= ${planExecution} >= ${planForRow} ? 'Success' : 'Error' }"/>
           </VBox>
         </cells>
     </ColumnListItem>

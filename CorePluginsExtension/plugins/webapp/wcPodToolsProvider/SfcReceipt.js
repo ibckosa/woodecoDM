@@ -495,6 +495,39 @@ sap.ui.define([
 
             });
         },
+        _executeEwmReceipt2: async function(){
+            this._oReceiptParameters.handlingUnit = await HuGenerator.generate(this._oController, this._oReceiptParameters.material, this._oReceiptParameters.materialVersion, this._oReceiptParameters.plant);
+            let sUrl = this._oController.getPublicApiRestDataSourceUri()  +  "/pe/api/v1/process/processDefinitions/start?key=REG_b8f7c1d4-1191-45e5-baa3-78599c982cd4"; 
+            let oParameters = { content: [{
+                                    quantity: this._oReceiptParameters.quantity,
+                                    sfc: {
+                                        plant: this._oReceiptParameters.plant,
+                                        sfc: this._oReceiptParameters.sfc
+                                    }
+                                }],
+                                plant: this._oReceiptParameters.plant,
+                                material: {
+                                    material: "PALETA",
+                                    plant: this._oReceiptParameters.plant,
+                                    version: "A" },
+                                number: this._oReceiptParameters.handlingUnit,
+                                status: "CLOSED" };
+            return await new Promise((resolve,reject)=>{
+                AjaxUtil.post(sUrl, oParameters,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        oError.apiName = "packingUnit"; 
+                        oError.sendAlert = true; 
+                        reject(oError);
+                    }
+                );
+
+            });
+        },
+
+
         _executeMmReceipt: async function(){
             ///not implementation needed
         },

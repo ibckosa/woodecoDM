@@ -143,7 +143,8 @@
                                 <Text text="{viewModel>fileDescription}" />
                                 <Button 
                                     text="{i18n>displayFile}" 
-                                    type="Transparent" 
+                                    type="Emphasized"
+                                    
                                     press="onFileViewPress"/>
                             </cells>
                         </ColumnListItem>
@@ -194,9 +195,14 @@
                                         width="25rem"
                                         placeholder="{i18n>chooseReason}"
                                         selectionChange="onQ3SelectionChange"
-                                        items="{multiOrdersModel>/codes}"
+                                        items="{viewModel>/selectedOrder/codes}"
                                         class="sapUiTinyMarginEnd">
-                                        <core:Item key="{multiOrdersModel>code}" text="{multiOrdersModel>codeDescription}"/>
+                                        <core:Item key="{viewModel>code}" 
+                                        text="{
+                                            parts: [
+                                            { path: 'viewModel>codeDescription' },
+                                            { path: 'viewModel>postedQuantity' } ],
+                                            formatter: '.formatPositionNcCode' }" />
                                     </ComboBox>
                                     <Input id="inputQ23" liveChange="onReceiptInputLiveChange" value="" width="3rem" class="sapUiTinyMarginEnd"/>
                                     <Button id="btnQ23" icon="sap-icon://accept" type="Accept" press="onButtonQ23"/>

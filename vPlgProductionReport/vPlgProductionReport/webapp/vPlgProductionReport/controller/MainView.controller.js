@@ -3,7 +3,7 @@ sap.ui.define([
 	"sap/dm/dme/podfoundation/controller/PluginViewController",
 	"sap/ui/model/json/JSONModel",
   "sap/ui/core/date/UI5Date",
-  "ibc/dm/plugins/wcPodToolsProvider/ProductionReport/ProductionReportModel",
+  "ibc/dm/plugins/vPlgProductionReport/vPlgProductionReport/controller/ProductionReportModel",
   "ibc/dm/plugins/wcPodToolsProvider/PodTools",
   "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
   'sap/ui/core/Fragment',
@@ -19,85 +19,6 @@ sap.ui.define([
             this._errorHandler = new ErrorHandler(this);
             this.byId("shiftCb").setSelectedKey("onlyDay");
             //this.byId("PC1").setShowViewSelection(false)
-
-
-                let downTimesCategories = [ { categoryName: "PRODUCTION",
-                                              categoryDescription: "Produkcyjne",
-                                              value: "0" },
-                                            { categoryName: "INDEPENDENT",
-                                              categoryDescription: "Niezależne",
-                                              value: "0" },
-                                            { categoryName: "CHANGEOVER",
-                                              categoryDescription: "Przezbrojenie",
-                                              value: "0" },
-                                            { categoryName: "ECONOMIC_DOWN",
-                                              categoryDescription: "Ekonomiczne",
-                                              value: "0" },
-                                            { categoryName: "REPAIRS",
-                                              categoryDescription: "Naprawa",
-                                              value: "0" },
-                                            { categoryName: "TECHNICAL",
-                                              categoryDescription: "Techniczne",
-                                              value: "0" },
-                                            { categoryName: "TECHNOLOGICAL",
-                                              categoryDescription: "Technologiczne",
-                                              value: "0" },
-                                            { categoryName: "LOGISTICS",
-                                              categoryDescription: "Logistyczne",
-                                              value: "0" },
-                                            { categoryName: "TOTAL",
-                                              categoryDescription: "<strong>Łącznie</strong>",
-                                              value: "<strong>0</strong>" },
-                 ];
-                let productionItems = [ { productionDate: "2026-02-20",
-                                        shift: "",
-                                         q1Quantity: "6000 SZT\n6000 M2\n3600 M3",
-                                         q23Quantity: "150SZT/144M2/240M3 - Q3 - Wady cięcia\n400SZT/400M2/500M3 - Q2 - Zsiwienia / Niezamknięta powierzchnia",
-                                         material: "34800573\nD_S 434 P2 CARB2-fsc 2xPB0021MT R4 16x56",
-                                         kpiQ1: "",
-                                         kpiQ1Visible: false,
-                                         kpiM23: "",
-                                         kpiM23Visible: true,
-                                         itemNumber: "1",
-                                         orderNumber: "3664551"},
-                                        { productionDate: "2026-02-20",
-                                         shift: "1",
-                                         q1Quantity: "2000 SZT\n2000 M2\n1200 M3",
-                                         q23Quantity: "75SZT/72M2/120M3 - Q3 - Wady cięcia\n200SZT/200M2/250M3 - Q2 - Zsiwienia / Niezamknięta powierzchnia - zwrot NPW",
-                                         material: "34800573\nD_S 434 P2 CARB2-fsc 2xPB0021MT R4 16x56",
-                                         kpiQ1: "",
-                                         kpiQ1Visible: false,
-                                         kpiM23: "",
-                                         kpiM23Visible: false,
-                                         itemNumber: "1",
-                                         orderNumber: "3664551"},
-                                         { productionDate: "2026-02-20",
-                                         shift: "2",
-                                         q1Quantity: "2000 SZT\n2000 M2\n1200 M3",
-                                         q23Quantity: "200SZT/100M2/120M3 - Q2 - Wady szlifowania - Zwrot\n200SZT/100M2/120M3 - Q3 - Zsiwienia / Niezamknięta powierzchnia",
-                                         material: "34800573\nD_S 434 P2 CARB2-fsc 2xPB0021MT R4 16x56",
-                                         kpiQ1: "",
-                                         kpiQ1Visible: false,
-                                         kpiM23: "",
-                                         kpiM23Visible: true,
-                                         itemNumber: "1",
-                                         orderNumber: "3664551"},
-                                         { productionDate: "2026-02-20",
-                                        shift: "3",
-                                         q1Quantity: "2000 SZT\n2000 M2\n1200 M3",
-                                         q23Quantity: "",
-                                         material: "34800573\nD_S 434 P2 CARB2-fsc 2xPB0021MT R4 16x56",
-                                         kpiQ1: "",
-                                         kpiQ1Visible: false,
-                                         kpiM23: "",
-                                         kpiM23Visible: true,
-                                         itemNumber: "1",
-                                         orderNumber: "3664551"},
-                                        
-                                        
-                                        
-                                        
-                                        ];
                 let downtimesCalendarItems = [ ];
 
                 let modelData = {   productionItems: [],
@@ -110,71 +31,23 @@ sap.ui.define([
                 oModel.setData(modelData);
                 this.getView().setModel(oModel);
 
-
-
-
-
-		},
-        onAfterRendering: function(){
-           
-
-        },
-
-		onBeforeRenderingPlugin: function () {
-
-			
-			
-		},
-
-        isSubscribingToNotifications: function() {
-            
-            var bNotificationsEnabled = true;
-           
-            return bNotificationsEnabled;
-        },
-
-
-        getCustomNotificationEvents: function(sTopic) {
-            //return ["template"];
-        },
-
-
-        getNotificationMessageHandler: function(sTopic) {
-
-            //if (sTopic === "template") {
-            //    return this._handleNotificationMessage;
-            //}
-            return null;
-        },
-
-        _handleNotificationMessage: function(oMsg) {
-           
-            var sMessage = "Message not found in payload 'message' property";
-            if (oMsg && oMsg.parameters && oMsg.parameters.length > 0) {
-                for (var i = 0; i < oMsg.parameters.length; i++) {
-
-                    switch (oMsg.parameters[i].name){
-                        case "template":
-                            
-                            break;
-                        case "template2":
-                            
-                        
-                        }        
-          
-
-                    
-                }
-            }
-
-        },
-        
-
+		},      
+    onBeforeRendering: async function () {   
+      this.setWorkCenterText();
+    },
 		onExit: function () {
 			PluginViewController.prototype.onExit.apply(this, arguments);
-
-
+      this.unsubscribe("PodSelectionChangeEvent", this.setWorkCenterText, this);
+      this.unsubscribe("WorklistSelectEvent", this.setWorkCenterText, this);
 		},
+    onBeforeRenderingPlugin: function () {
+      this.subscribe("PodSelectionChangeEvent", this.setWorkCenterText, this);
+      this.subscribe("WorklistSelectEvent", this.setWorkCenterText, this);
+    },
+    setWorkCenterText: function(){
+      let oPodSelectionModel = this.getPodSelectionModel();
+      this.byId("workCenterText").setHtmlText(`<h3><strong>${oPodSelectionModel.workCenter||''}</strong></h3>`);
+    },
     onStart: async function(){
       try{
         PodTools.setCustomBusyIndicator(true);
@@ -183,13 +56,14 @@ sap.ui.define([
         let oPodController = this.getPodController();
 
         let selectedShift = this.byId("shiftCb").getSelectedKey();
+        let selectedOrder = this.byId("orderNumber").getValue();
 
         let productionReportModel = new ProductionReportModel(this, {
               plant: oPodController.getUserPlant(),
               workCenter: oPodSelectionModel.workCenter,
               resource: oPodSelectionModel.resource.resource,
               date: date,
-              orderNumber: "",
+              orderNumber: selectedOrder,
               shiftNumber: selectedShift
         });
         let reportData = await productionReportModel.getReportData();
@@ -268,11 +142,7 @@ sap.ui.define([
                                           new sap.ui.model.Filter("material", sap.ui.model.FilterOperator.Contains, sQuery),
                                           new sap.ui.model.Filter("q1Quantity", sap.ui.model.FilterOperator.Contains, sQuery),
                                           new sap.ui.model.Filter("q23Quantity", sap.ui.model.FilterOperator.Contains, sQuery)];
-                                            
-                // if (!isNaN(sQuery)) {
-                //     searchFilters.push(new sap.ui.model.Filter("quantity", sap.ui.model.FilterOperator.EQ, Number(sQuery)));
-                // } 
-
+                                      
                 
                 const aFilters = [];
                 aFilters.push(new sap.ui.model.Filter({ filters: searchFilters, and: false }));

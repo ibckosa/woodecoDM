@@ -234,6 +234,16 @@ sap.ui.define([
 
             return oReturn;
         },
+        getThicknessAsInteger(){
+            let oReturn = 0;
+
+            try{
+                let oPackagingMaterial = this._oDetails.customValues.find(customValue => { return customValue.attribute === 'THICKNESS' });
+                oReturn = parseInt(oPackagingMaterial.value);
+            }catch(oError){}
+
+            return oReturn;
+        },
         getSalesText(langugage="PL"){
             let oReturn = "";
 

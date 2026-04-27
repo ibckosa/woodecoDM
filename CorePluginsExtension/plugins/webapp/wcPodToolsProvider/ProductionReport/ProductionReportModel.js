@@ -112,6 +112,7 @@ sap.ui.define([
                                      type: this._getCalendarItemType(downTime.timeElement),
                                      color: this._getCalendarItemColor(downTime.timeElement),
                                      description: downTime.description,
+                                     timeInMinutes: parseInt(downTime.downTimeSeconds/60),
                                      tentative: false }); 
                                      
                 let categoryRow = downTimesCategories.find(category=>{return category.categoryName === downTime.timeElement;});
@@ -589,8 +590,8 @@ _finalizeAccumulator: function (accumulator) {
         quantityQ23M2: accumulator.quantityQ23M2,
         quantityQ23M3: accumulator.quantityQ23M3,
         totalQuantityBaseUom: accumulator.quantityQ1BaseUom + accumulator.quantityQ23BaseUom,
-        totalQuantityM2: accumulator.quantityQ1M2 + accumulator.quantityQ23M2,
-        totalQuantityM3: accumulator.quantityQ1M3 + accumulator.quantityQ23M3,
+        totalQuantityM2: parseFloat((accumulator.quantityQ1M2 + accumulator.quantityQ23M2).toFixed(2)),
+        totalQuantityM3: parseFloat((accumulator.quantityQ1M3 + accumulator.quantityQ23M3).toFixed(2)),
         isQ1PercentageIndicatorVisible: false,
         isPlanIndicatorVisible: false,
         q1Percentage: 0,
@@ -622,8 +623,11 @@ _finalizeAccumulator: function (accumulator) {
         }
         if(result.planUOM==="M2"){
             result.planExecution = result.totalQuantityM2;
-        }else{
+        }else if(result.planUOM==="M3"){
             result.planExecution = result.totalQuantityM3;
+        }
+        else{
+            result.planExecution = result.totalQuantityBaseUom;
         }
     }
 
@@ -734,7 +738,7 @@ _formatQ23Quantity: function (q23Groups) {
             return this._formatQ23Group(group);
         });
 
-    return ["<strong>" + totalLine + "</strong>", ...detailLines].join("<br>");
+    return ["<h5><strong>" + totalLine + "</strong></h5>", ...detailLines].join("");//.join("<br>");
 },
 
 _buildQ23TotalUnits: function (q23Groups) {
@@ -767,10 +771,10 @@ _formatQ23Group: function (group) {
         .join("/");
 
     if (group.q2Destination) {
-        return quantitiesPart + " - " + group.ncCodeDescription + " - " + group.q2Destination;
+        return "<p>" +  quantitiesPart + " - " + group.ncCodeDescription + " - " + group.q2Destination + "</p>";
     }
 
-    return quantitiesPart + " - " + group.ncCodeDescription;
+    return "<p>" +  quantitiesPart + " - " + group.ncCodeDescription + "</p>";
 },
 
 _sortUnAggregatedRows: function (rows) {
@@ -882,6 +886,10 @@ _normalizeNumber: function (value) {
 _formatNumber: function (value) {
     if (Number.isInteger(value)) {
         return String(value);
+    }
+
+    if (!isNaN(value)) {
+        return value.toFixed(2);
     }
 
     return String(value).replace(/\.0+$/, "");

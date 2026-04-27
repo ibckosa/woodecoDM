@@ -650,6 +650,42 @@ sap.ui.define([
                 );
 
             });
+        },
+        getConverterM2: function(itemNumber = 1){
+            let result = 0;
+
+            try{
+                let lineValues = this.getOrderLineCustomValues(itemNumber);
+                let fieldLA = lineValues.find(line=>{ return line.field_name === "LA" });
+                let fieldBR = lineValues.find(line=>{ return line.field_name === "BR" });
+                if(fieldLA&&fieldBR){
+                    result = parseFloat(fieldLA.field_value) * parseFloat(fieldBR.field_value) / 1000000;
+                }              
+            }catch(error){}
+
+            return result;
+        },
+        getDimensions: function(itemNumber = 1){
+            let result = {
+                LA: 0,
+                BR: 0
+            }
+            try{
+                let lineValues = this.getOrderLineCustomValues(itemNumber);
+                let fieldLA = lineValues.find(line=>{ return line.field_name === "LA" });
+                let fieldBR = lineValues.find(line=>{ return line.field_name === "BR" });
+                if(fieldLA){
+                    result.LA = fieldLA.field_value;
+                }
+                if(fieldBR){
+                    result.BR = fieldBR.field_value;
+                }
+            }catch(error){
+
+            }
+
+
+            return result;
         }
 
         

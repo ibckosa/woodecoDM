@@ -20,8 +20,12 @@
 			id="PC1"
 			viewKey="A"
 			legend="PCLegend"
-			class="hideButton"
+			groupAppointmentsMode="Collapsed"
+			class="hideButton myPlanningCalendar"
+			appointmentsReducedHeight="true"
 			appointmentsVisualization="Filled"
+			showRowHeaders="false"
+			showIntervalHeaders="false"
 			appointmentSelect="handleDTSelect"
 			rows="{path: '/downtimesCalendarItems'}">
 			<views>
@@ -59,8 +63,7 @@
 							startDate="{start}"
 							endDate="{end}"
 							icon="{pic}"
-							title="{categoryDescription}"
-							text="{info}"
+							title="{timeInMinutes}"
 							color="{color}"
 							tentative="{tentative}">
 						</unified:CalendarAppointment>
@@ -70,7 +73,7 @@
                             startDate="{start}"
                             endDate="{end}"
                             icon="{pic}"
-                            title="{categoryDescription}"
+                            title="{timeInMinutes}"
                             color="{color}">
                         </unified:CalendarAppointment>
                     </intervalHeaders>

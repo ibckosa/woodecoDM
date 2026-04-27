@@ -72,7 +72,7 @@ sap.ui.define([
             try{
                 let dayPlanUOM = this._oDetails.customValues.find(customValue => { return customValue.attribute === "DAY_PLAN_UOM"});
                 let uom = dayPlanUOM.value.toUpperCase();
-                if(uom==="M3"){
+                if(uom==="M3" || uom==="KG" || uom==="ST"){
                     result = uom;
                 }
 

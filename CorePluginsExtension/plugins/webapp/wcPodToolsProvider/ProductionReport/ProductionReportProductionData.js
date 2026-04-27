@@ -26,7 +26,7 @@ sap.ui.define([
         getData: async function(){
             let result = [];
 
-            if(!this._parameters.date&&!this._parameters.oderNumber){
+            if(!this._parameters.date&&!this._parameters.orderNumber){
                 return result;
             }
 
@@ -41,13 +41,19 @@ sap.ui.define([
             }
             debugger;
             let dcTransformed = this._transformDC(productionDCParameters);
-            //dcTransformed = this._getLatestRecords(dcTransformed);
+
+
+            dcTransformed = this._getLatestRecords(dcTransformed);
             dcTransformed = dcTransformed.filter(dc=>{return ( dc["Q1/Q3"] === "Q1" || dc["Q1/Q3"] === "Q3" ) && dc.MATERIAL && dc.CANCELLED === "false" });
+            if(this._parameters.orderNumber){
+                dcTransformed = dcTransformed.filter(dc=>{return dc.sfc.substring(0, this._parameters.orderNumber.length) === this._parameters.orderNumber});
+            }
             if(dcTransformed.length>0){
                 dcTransformed = await this._excludeStornedDC(dcTransformed);
             }
             
             await this._callMaterialInstances(dcTransformed);
+            let orderInstances = await this._getOrderInstances(dcTransformed);
             for(const dc of dcTransformed){
                 let materialInstance = await MaterialRepository.getMaterialInstance(this._controller, this._parameters.plant, dc.MATERIAL);
                 dc.materialDescription = materialInstance.getDescription();
@@ -56,15 +62,33 @@ sap.ui.define([
                 dc.QUANTITIES = [];
                 let materialUoms = materialInstance.getUomProductionReport();
                 for(const materialUom of materialUoms){
-                    dc.QUANTITIES.push({
-                        quantity: dc.QUANTITY = GeneralTools.roundQuantity(materialInstance.convertUom(dc.QUANTITY, dc.UOM, materialUom.uom), materialUom.uom),
-                        uom: materialUom.uom,
-                        uomDesc: materialUom.uomDesc
-                    })
+                    if(materialUom.uom!=="M2"&&materialUom.uom!=="M3"){
+                        dc.QUANTITIES.push({
+                            quantity: dc.QUANTITY = GeneralTools.roundQuantity(materialInstance.convertUom(dc.QUANTITY, dc.UOM, materialUom.uom), materialUom.uom),
+                            uom: materialUom.uom,
+                            uomDesc: materialUom.uomDesc
+                        })
+                    }else{
+                        let orderInstance = orderInstances.find(instance=>{return instance.orderNumber === dc.orderNumber});
+                        if(orderInstance){
+                            if(materialUom.uom==="M2"){
+                                dc.QUANTITIES.push({
+                                    quantity: dc.QUANTITY * orderInstance.instance.getConverterM2(),
+                                    uom: materialUom.uom,
+                                    uomDesc: materialUom.uomDesc });
+                            }else{
+                                dc.QUANTITIES.push({
+                                    quantity: dc.QUANTITY * orderInstance.instance.getConverterM2() * ( materialInstance.getThicknessAsInteger() / 1000 ),
+                                    uom: materialUom.uom,
+                                    uomDesc: materialUom.uomDesc });
+                            }
+                        }
+                    }
+
                 }
 
-                dc.orderNumber = dc.sfc.split("_")[0];
-                dc.formattedDate = new Date(dc.DATE_CREATED).toISOString().split("T")[0];
+                //dc.orderNumber = dc.sfc.split("_")[0];
+                dc.formattedDate = this._getReportDate(dc.DATE_CREATED);// new Date(dc.DATE_CREATED).toISOString().split("T")[0];
             }
             let q2Destinations = await this._getQ2Destination(dcTransformed);
             for(const q2Destination of q2Destinations){
@@ -73,10 +97,21 @@ sap.ui.define([
                     q2Dc.Q2_DESTINATION = q2Destination.q2Destination;
                 }
             }
-
-
             return dcTransformed;
 
+        },
+
+        _getReportDate: function(dateString) {
+            const date = new Date(dateString);
+            const hours = date.getHours();
+            if (hours < 6) {
+                date.setDate(date.getDate() - 1);
+            }
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+
+            return `${year}-${month}-${day}`;
         },
         _getQ2Destination: async function(dataCollections){
             let result = [];
@@ -110,49 +145,66 @@ sap.ui.define([
 
         _getQ2DestinationDc: async function(dataCollections){
             let result = [];
-            let dataCollectionsQ23 = dataCollections.filter(dc=>{return dc["Q1/Q3"] === "Q3" });
-            let sfcs = [];
+            const dataCollectionsQ23 = dataCollections.filter(dc => dc["Q1/Q3"] === "Q3");
+            const sfcs = dataCollectionsQ23.map(dc => dc.sfc);
 
-            for(const dc of dataCollectionsQ23){
-                sfcs.push(dc.sfc);
-            }
+            if (sfcs.length > 0) {
+                const workCenter = await WorkCenterRepository.getInstance(
+                    this._controller,
+                    this._parameters.plant,
+                    this._parameters.workCenter
+                );
 
-            if(sfcs.length>0){
-                let workCenter = await WorkCenterRepository.getInstance(this._controller ,this._parameters.plant, this._parameters.workCenter);
-                let resources = workCenter.getResources();
-                for(const resource of resources){
-                    let requestParameters = this._getQ2RequestParameters(resource, sfcs);
-                    let firstResult = await this._callApi(requestParameters);
-                    result = result.concat(firstResult);
+                const resources = workCenter.getResources();
+                const MAX_SFCS_PER_REQUEST = 15;
+                const MAX_CONCURRENT_REQUESTS = 20;
+                const sfcChunks = this._chunkArray(sfcs, MAX_SFCS_PER_REQUEST);
+                const tasks = [];
 
-                    const numberOfPages = firstResult.numberOfPages || 1;
+                for (const resource of resources) {
+                    for (const sfcChunk of sfcChunks) {
+                        tasks.push(async () => {
+                            const requestParameters = this._getQ2RequestParameters(resource, sfcChunk);
+                            const firstResult = await this._callApi(requestParameters);
 
-                    if(numberOfPages>1){
-                        const maxConcurrentRequests = 20;
-                        const remainingPages = [];
-                        for (let page = 1; page < numberOfPages; page++) {
-                            remainingPages.push(page);
-                        }
-                        for (let i = 0; i < remainingPages.length; i += maxConcurrentRequests) {
-                            const pageBatch = remainingPages.slice(i, i + maxConcurrentRequests);
+                            let chunkResults = [];
+                            chunkResults = chunkResults.concat(firstResult);
 
-                            const batchPromises = pageBatch.map((pageNumber) => {
-                                let requestParameters = this._getRequestParameters(resource, sfcs);
-                                requestParameters.pageNumber = pageNumber;
-                                return this._callApi(requestParameters);
-                            });
+                            const numberOfPages = firstResult.numberOfPages || 1;
 
-                            const batchResults = await Promise.all(batchPromises);
-                            result.push(...batchResults);
-                        }
+                            if (numberOfPages > 1) {
+                                const pageNumbers = [];
+                                for (let page = 1; page < numberOfPages; page++) {
+                                    pageNumbers.push(page);
+                                }
+
+                                for (let i = 0; i < pageNumbers.length; i += MAX_CONCURRENT_REQUESTS) {
+                                    const pageBatch = pageNumbers.slice(i, i + MAX_CONCURRENT_REQUESTS);
+
+                                    const batchPromises = pageBatch.map((pageNumber) => {
+                                        const pagedRequestParameters = this._getQ2RequestParameters(resource, sfcChunk);
+                                        pagedRequestParameters.pageNumber = pageNumber;
+                                        return this._callApi(pagedRequestParameters);
+                                    });
+
+                                    const batchResults = await Promise.all(batchPromises);
+                                    chunkResults.push(...batchResults);
+                                }
+                            }
+                            return chunkResults;
+                        });
                     }
                 }
 
+                for (let i = 0; i < tasks.length; i += MAX_CONCURRENT_REQUESTS) {
+                    const taskBatch = tasks.slice(i, i + MAX_CONCURRENT_REQUESTS);
+                    const batchResults = await Promise.all(taskBatch.map(task => task()));
 
+                    for (const partialResult of batchResults) {
+                        result.push(...partialResult);
+                    }
+                }
             }
-
-
-
             return result;
         },
         _callMaterialInstances: async function(dataCollections){
@@ -192,98 +244,124 @@ sap.ui.define([
         },
 
         _transformDC: function(productionDataCollections){
-            // const latestBySfcAndMeasure = new Map();
-            // for (const row of productionDataCollections) {
-            //     const { sfc, measureName, actual, dateCreated } = row;
-            //     const key = `${sfc}__${measureName}`;
+            const grouped = {};
 
-            //     const existing = latestBySfcAndMeasure.get(key);
+            for (const item of productionDataCollections) {
+                const key = `${item.sfc}__${item.dateCreated}`;
 
-            //     if (!existing || new Date(dateCreated) > new Date(existing.dateCreated)) {
-            //         latestBySfcAndMeasure.set(key, {
-            //             sfc,
-            //             measureName,
-            //             actual,
-            //             dateCreated
-            //         });
-            //     }
-            // }
+                if (!grouped[key]) {
+                    grouped[key] = {
+                        sfc: item.sfc,
+                        dcDate: item.dateCreated
+                    };
+                    grouped[key]["orderNumber"] = item.sfc.split("_")[0];
+                }
 
-            // const resultBySfc = new Map();
-
-            // for (const row of latestBySfcAndMeasure.values()) {
-            //     if (!resultBySfc.has(row.sfc)) {
-            //         resultBySfc.set(row.sfc, { sfc: row.sfc });
-            //     }
-
-            //     const sfcObject = resultBySfc.get(row.sfc);
-            //     let value = row.actual;
-            //     if (row.measureName === "QUANTITY") {
-            //         value = parseInt(row.actual)||0;
-            //     }
-            //     sfcObject[row.measureName] = value;
-            // }
-
-            // return Array.from(resultBySfc.values());
-        const grouped = {};
-
-        for (const item of productionDataCollections) {
-            const key = `${item.sfc}__${item.dateCreated}`;
-
-            if (!grouped[key]) {
-            grouped[key] = {
-                sfc: item.sfc,
-                dcDate: item.dateCreated
-            };
+                grouped[key][item.measureName] = item.actual;
             }
 
-            grouped[key][item.measureName] = item.actual;
-        }
-
-        return Object.values(grouped);
-
-
+            return Object.values(grouped);
         },
 
-        _getDataCollections: async function(){
-            let result = [];
 
-            let sfcs;
-            let workCenter = await WorkCenterRepository.getInstance(this._controller ,this._parameters.plant, this._parameters.workCenter);
-            let resources = workCenter.getResources();
-            if(this._parameters.orderNumber){
-                let orderInstance = await OrderRepository.readOrderByPassBuffer(this._controller, this._parameters.plant, this._parameters.orderNumber);
-                sfcs = orderInstance.getSfcs();
+
+
+
+_getDataCollections: async function () {
+    let result = [];
+
+    const workCenter = await WorkCenterRepository.getInstance(
+        this._controller,
+        this._parameters.plant,
+        this._parameters.workCenter
+    );
+
+    const resources = workCenter.getResources();
+
+    let sfcs = null;
+
+    if (this._parameters.orderNumber) {
+        const orderInstance = await OrderRepository.readOrderByPassBuffer(
+            this._controller,
+            this._parameters.plant,
+            this._parameters.orderNumber
+        );
+        sfcs = orderInstance.getSfcs() || [];
+    }
+
+    const maxConcurrentRequests = 20;
+    const sfcBatchSize = 20;
+
+    const chunkArray = (array, size) => {
+        const chunks = [];
+        for (let i = 0; i < array.length; i += size) {
+            chunks.push(array.slice(i, i + size));
+        }
+        return chunks;
+    };
+
+    const fetchAllPagesForRequest = async (resource, sfcsBatch) => {
+        let localResult = [];
+
+        const requestParameters = this._getRequestParameters(resource, sfcsBatch);
+        const firstResult = await this._callApi(requestParameters);
+
+        localResult = localResult.concat(firstResult);
+
+        const numberOfPages = firstResult.numberOfPages || 1;
+
+        if (numberOfPages > 1) {
+            const remainingPages = [];
+            for (let page = 1; page < numberOfPages; page++) {
+                remainingPages.push(page);
             }
-            for(const resource of resources){
-                let requestParameters = this._getRequestParameters(resource, sfcs);
-                let firstResult = await this._callApi(requestParameters);
-                result = result.concat(firstResult);
 
-                const numberOfPages = firstResult.numberOfPages || 1;
+            for (let i = 0; i < remainingPages.length; i += maxConcurrentRequests) {
+                const pageBatch = remainingPages.slice(i, i + maxConcurrentRequests);
 
-                if(numberOfPages>1){
-                    const maxConcurrentRequests = 20;
-                    const remainingPages = [];
-                    for (let page = 1; page < numberOfPages; page++) {
-                        remainingPages.push(page);
-                    }
-                    for (let i = 0; i < remainingPages.length; i += maxConcurrentRequests) {
-                        const pageBatch = remainingPages.slice(i, i + maxConcurrentRequests);
+                const batchPromises = pageBatch.map((pageNumber) => {
+                    const pagedRequestParameters = this._getRequestParameters(resource, sfcsBatch);
+                    pagedRequestParameters.pageNumber = pageNumber;
+                    return this._callApi(pagedRequestParameters);
+                });
 
-                        const batchPromises = pageBatch.map((pageNumber) => {
-                            let requestParameters = this._getRequestParameters(resource, sfcs);
-                            requestParameters.pageNumber = pageNumber;
-                            return this._callApi(requestParameters);
-                        });
+                const batchResults = await Promise.all(batchPromises);
 
-                        const batchResults = await Promise.all(batchPromises);
-                        result.push(...batchResults);
-                    }
+                for (const pageResult of batchResults) {
+                    localResult = localResult.concat(pageResult);
                 }
             }
-            return result;
-        },
+        }
+
+        return localResult;
+    };
+
+    for (const resource of resources) {
+        if (sfcs && sfcs.length > 0) {
+            const sfcBatches = chunkArray(sfcs, sfcBatchSize);
+
+            for (const sfcBatch of sfcBatches) {
+                const batchResult = await fetchAllPagesForRequest(resource, sfcBatch);
+                result = result.concat(batchResult);
+            }
+        } else {
+            const resourceResult = await fetchAllPagesForRequest(resource, sfcs);
+            result = result.concat(resourceResult);
+        }
+    }
+
+    return result;
+},
+
+
+
+
+
+
+
+
+
+
         _callApi: async function(request){
             let sUrl = this._controller.getPublicApiRestDataSourceUri() + "datacollection/v1/measurements";
 
@@ -343,44 +421,77 @@ sap.ui.define([
             return result;
         },
 
-        _excludeStornedDC: async function(dataCollections){
-            let result = [];
-            let sfcs = [];
-            let productionDataCollections = [];
-            let productionDCParameters = [];
+        _excludeStornedDC: async function (dataCollections) {
+            const result = [];
+            const productionDCParameters = [];
+            const sfcs = [...new Set(dataCollections.map(dc => dc.sfc))];
 
-            for(const dc of dataCollections){
-                let sfc = sfcs.find(row=>{return row === dc.sfc});
-                if(!sfc){
-                    sfcs.push(dc.sfc);
+            const workCenter = await WorkCenterRepository.getInstance(
+                this._controller,
+                this._parameters.plant,
+                this._parameters.workCenter
+            );
+
+            const resources = workCenter.getResources();
+            const sfcChunks = this._chunkArray(sfcs, 10);
+
+            const tasks = resources.flatMap(resource =>
+                sfcChunks.map(sfcChunk => async () => {
+                    const requestParameters = this._getRequestParameters(resource, sfcChunk, false);
+                    return await this._callApi(requestParameters);
+                })
+            );
+
+            const productionDataCollections = await this._runWithConcurrencyLimit(tasks, 15);
+
+            for (const dataCollection of productionDataCollections) {
+                if (!dataCollection?.data) {
+                    continue;
                 }
-            }
-            let workCenter = await WorkCenterRepository.getInstance(this._controller ,this._parameters.plant, this._parameters.workCenter);
-            let resources = workCenter.getResources();
-            for(const resource of resources){
-                let requestParameters = this._getRequestParameters(resource, sfcs, false);
-                let firstResult = await this._callApi(requestParameters);
-                productionDataCollections.push(firstResult);
-                debugger;
-            }
 
-            for(const dataCollection of productionDataCollections){
-                for(const dataRow of dataCollection.data){
+                for (const dataRow of dataCollection.data) {
                     dataRow.parameter.sfc = dataRow.sfc;
                     productionDCParameters.push(dataRow.parameter);
                 }
             }
-            debugger;
-            let dcStornedTransformed = this._transformDC(productionDCParameters);
-            dcStornedTransformed = dcStornedTransformed.filter(dc=>{return dc.CANCELLED === "true"});
-            for(const dataCollection of dataCollections){
-                let dcStorned = dcStornedTransformed.find(dc=>{ return dc.GUID === dataCollection.GUID });
-                if(!dcStorned){
+
+            let dcStornedTransformed = this._transformDC(productionDCParameters)
+                .filter(dc => dc.CANCELLED === "true");
+
+            for (const dataCollection of dataCollections) {
+                const dcStorned = dcStornedTransformed.find(dc => dc.GUID === dataCollection.GUID);
+                if (!dcStorned) {
                     result.push(dataCollection);
                 }
             }
 
             return result;
+        },
+
+        _chunkArray: function (array, size) {
+            const result = [];
+            for (let i = 0; i < array.length; i += size) {
+                result.push(array.slice(i, i + size));
+            }
+            return result;
+        },
+
+        _runWithConcurrencyLimit: async function (tasks, limit) {
+            const results = [];
+
+            for (let i = 0; i < tasks.length; i += limit) {
+                const batch = tasks.slice(i, i + limit);
+                const batchResults = await Promise.all(batch.map(task => task()));
+                results.push(...batchResults);
+            }
+
+            return results;
+        },
+        _getOrderInstances: async function(dcTransformed){
+            let orders = dcTransformed.map(dc => dc.orderNumber);
+
+
+            return await OrderRepository.massOrderRead(this._controller, this._parameters.plant, orders);
         }
         
 

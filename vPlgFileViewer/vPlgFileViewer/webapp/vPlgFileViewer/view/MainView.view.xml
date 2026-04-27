@@ -26,7 +26,7 @@
           <cells>
             <Text text="{linkModel>fileName}" />
             <Text text="{linkModel>fileDescription}" />
-            <Button text="{i18n>displayFile}"  press=".onOpenLink" />
+            <Button text="{i18n>displayFile}"  type="Emphasized" press=".onOpenLink" />
           </cells>
         </ColumnListItem>
       </items>

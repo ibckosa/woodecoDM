@@ -22,3 +22,24 @@
 .bigObjectStatus .sapUiIcon {
     font-size: 1.4rem;
 }
+
+
+.myPlanningCalendar .sapUiCalendarApp,
+.myPlanningCalendar .sapUiCalendarAppCont {
+  min-width: 0 !important;
+}
+
+.myPlanningCalendar .sapUiCalendarApp {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.myPlanningCalendar .sapUiCalendarAppCont {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.myPlanningCalendar .sapUiCalendarAppTitle {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+}
