@@ -34,10 +34,12 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/DataCollectionQ2DestinationSaver",
     "ibc/dm/plugins/wcPodToolsProvider/SfcRepository",
     "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader",
-    "ibc/dm/plugins/wcPodToolsProvider/PodTools"
+    "ibc/dm/plugins/wcPodToolsProvider/PodTools",
+    "ibc/dm/plugins/wcPodToolsProvider/ShiftComment/ShiftCommentDialog"
 ], function (BaseObject, Button, Input, MessageBox, MessageToast, ToolbarSpacer, JSONModel, PodUtility , Dialog, Text
     , mobileLibrary, Table, Column, ColumnListItem, CheckBox, HBox, DateTimePicker, VBox, UI5Date, Panel, Toolbar, DynamicPage, Label, ErrorHandler, PalleteQueueHandler, TextHandler,
-    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository, PiqDtUpdate, NonconformanceReader, DataCollectionQ2DestinationSaver, SfcRepository, SfcDataCollectionReader, PodTools) {
+    MaterialRepository, SfcReceiptPrint, OrderRepository, ResourceRepository, PiqDtUpdate, NonconformanceReader, DataCollectionQ2DestinationSaver, SfcRepository, SfcDataCollectionReader, PodTools,
+    ShiftCommentDialog) {
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
@@ -104,6 +106,8 @@ sap.ui.define([
 
         addActionButton: function(oToolbar, sType, sText, fnFunction, fnContext) {
             debugger;
+
+
             let oActionButton = new Button({
                 type: sType,
                 text: this._oTextHandler.getText("labels.q23.mainButton"),
@@ -132,6 +136,14 @@ sap.ui.define([
                 press: this.onProductionReportPress.bind(this)
             });
             oToolbar.addContent(productionReportButton);
+
+            let shiftCommentButton = new Button({
+                type: sType,
+                visible: false,
+                text: this._oTextHandler.getText("labels.shiftComment.shiftCommentButton"),
+                press: this.onShiftCommentButton.bind(this)
+            });
+            oToolbar.addContent(shiftCommentButton);
         },
 
         createInputFilter: function(sId, sType, sBinding, sPlaceHolder, sMaxLength, sWidth, sSuggestionPath, sItemTextBinding, fnFunction, fnContext) {
@@ -312,6 +324,22 @@ sap.ui.define([
             }catch(oError){
                 this._oErrorHandler.handleError(oError)}
         },
+        onShiftCommentButton: async function(){
+            this._oErrorHandler = new ErrorHandler(this.oPluginEventExtension.getController());
+            try{
+                PodTools.setCustomBusyIndicator(true);
+                let controller = this.oPluginEventExtension.getController();
+                let podSelectionModel =  controller.getPodSelectionModel()
+                if(podSelectionModel.workCenter === undefined || podSelectionModel.workCenter === ""){
+                    this._throwError("q23.error.emptyWorkCenter");
+                }
+                let shiftCommentDialog = new ShiftCommentDialog(controller, podSelectionModel.workCenter, controller.getPodController().getUserPlant());
+                await shiftCommentDialog.show();
+                PodTools.setCustomBusyIndicator(false);
+            }catch(oError){
+                PodTools.setCustomBusyIndicator(false);
+                this._oErrorHandler.handleError(oError)}
+        },
         _displayDialogQ23: async function(oController){
             return await new Promise(async (resolve, reject) => {
                 this._resolveDialogQ23 = resolve;
@@ -437,6 +465,7 @@ sap.ui.define([
                 width: "15rem",
                 press: this.onButtonScrap.bind(this)
             });
+
             oButtonPackaging.addStyleClass("bigButtonNC sapUiSmallMarginEnd");
             oButtonReturn.addStyleClass("bigButtonNC");
             oButtonScrap.addStyleClass("bigButtonNC sapUiSmallMarginBegin");

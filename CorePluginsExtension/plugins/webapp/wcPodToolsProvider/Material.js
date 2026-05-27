@@ -239,7 +239,7 @@ sap.ui.define([
 
             try{
                 let oPackagingMaterial = this._oDetails.customValues.find(customValue => { return customValue.attribute === 'THICKNESS' });
-                oReturn = parseInt(oPackagingMaterial.value);
+                oReturn = parseFloat(oPackagingMaterial.value);
             }catch(oError){}
 
             return oReturn;

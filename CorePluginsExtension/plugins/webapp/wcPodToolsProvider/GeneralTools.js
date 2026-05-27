@@ -1,6 +1,7 @@
 sap.ui.define([
-    "sap/ui/base/Object"
-], function (ObjectUI5) {
+    "sap/ui/base/Object",
+    "sap/ui/core/date/UI5Date"
+], function (ObjectUI5, UI5Date) {
     "use strict";
     let generalTools = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.GeneralTools", {
     });
@@ -59,8 +60,30 @@ sap.ui.define([
             return Math.round(value);
         }
 
+        if (unit === "M3") {
+            return value.toFixed(3)*1000/1000;
+        }
+
         return Number(value.toFixed(3));
-    }
+    };
+
+    generalTools.getShiftRangeFromDate = function(shift, date){
+        let result = {  startDate: UI5Date.getInstance(date),
+                        endDate: UI5Date.getInstance(date) };
+
+        if(shift === "1"){
+            result.startDate.setHours(6,0,0);
+            result.endDate.setHours(13,59,59);
+        }else if(shift === "2"){
+            result.startDate.setHours(14,0,0);
+            result.endDate.setHours(21,59,59);
+        }else{
+            result.startDate.setHours(22,0,0);
+            result.endDate.setDate(result.endDate.getDate() + 1);
+            result.endDate.setHours(5,59,59);
+        }
+        return result;
+    };
 
     return generalTools;
 

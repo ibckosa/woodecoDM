@@ -72,6 +72,20 @@ sap.ui.define([
                     oLabel = aContent[iIndex-1];
                     oLabel.setText("Endpoint for printing");
                 }
+                oInput = oPropertyEditor.addInputField(oPropertyFormContainer, "dummyOrderSC", oPropertyData);
+                iIndex = oPropertyFormContainer.indexOfContent(oInput);
+                aContent = oPropertyFormContainer.getContent();
+                if (aContent[iIndex-1].setText) {
+                    oLabel = aContent[iIndex-1];
+                    oLabel.setText("Dummy order number for shift comment");
+                }
+                oInput = oPropertyEditor.addInputField(oPropertyFormContainer, "dummySfcSC", oPropertyData);
+                iIndex = oPropertyFormContainer.indexOfContent(oInput);
+                aContent = oPropertyFormContainer.getContent();
+                if (aContent[iIndex-1].setText) {
+                    oLabel = aContent[iIndex-1];
+                    oLabel.setText("Dummy sfc number for shift comment");
+                }
 
 
             }
@@ -120,6 +134,12 @@ sap.ui.define([
             if (typeof oPropertyData.printerEndPoint === "undefined") {
                 oPropertyData.printerEndPoint = "";
             }
+            if (typeof oPropertyData.dummyOrderSC === "undefined") {
+                oPropertyData.dummyOrderSC = "";
+            }
+            if (typeof oPropertyData.dummySfcSC === "undefined") {
+                oPropertyData.dummySfcSC = "";
+            }
 
 
             return oPropertyData;
@@ -155,6 +175,12 @@ sap.ui.define([
             if (typeof oPropertyData.printerEndPoint === "undefined") {
                 oPropertyData.printerEndPoint = "";
             }
+            if (typeof oPropertyData.dummyOrderSC === "undefined") {
+                oPropertyData.dummyOrderSC = "";
+            }
+            if (typeof oPropertyData.dummySfcSC === "undefined") {
+                oPropertyData.dummySfcSC = "";
+            }
             return oPropertyData;
         },
 
@@ -173,6 +199,8 @@ sap.ui.define([
             oPropertyData.dummyOrder = "";
             oPropertyData.dummySfc = "";
             oPropertyData.printerEndPoint = "";
+            oPropertyData.dummyOrderSC = "";
+            oPropertyData.dummySfcSC = "";
             return oPropertyData;
         }
     })

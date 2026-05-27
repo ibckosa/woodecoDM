@@ -69,16 +69,20 @@ sap.ui.define([
                             uomDesc: materialUom.uomDesc
                         })
                     }else{
+                        let ITEM_NO = 1;
+                        if(dc.ITEM_NO){
+                            ITEM_NO = parseInt(dc.ITEM_NO);
+                        }
                         let orderInstance = orderInstances.find(instance=>{return instance.orderNumber === dc.orderNumber});
                         if(orderInstance){
                             if(materialUom.uom==="M2"){
                                 dc.QUANTITIES.push({
-                                    quantity: dc.QUANTITY * orderInstance.instance.getConverterM2(),
+                                    quantity: dc.QUANTITY * orderInstance.instance.getConverterM2(ITEM_NO),
                                     uom: materialUom.uom,
                                     uomDesc: materialUom.uomDesc });
                             }else{
                                 dc.QUANTITIES.push({
-                                    quantity: dc.QUANTITY * orderInstance.instance.getConverterM2() * ( materialInstance.getThicknessAsInteger() / 1000 ),
+                                    quantity: dc.QUANTITY * orderInstance.instance.getConverterM2(ITEM_NO) * ( materialInstance.getThicknessAsInteger() / 1000 ),
                                     uom: materialUom.uom,
                                     uomDesc: materialUom.uomDesc });
                             }
@@ -433,16 +437,61 @@ _getDataCollections: async function () {
             );
 
             const resources = workCenter.getResources();
-            const sfcChunks = this._chunkArray(sfcs, 10);
+
+            const sfcBatchSize = 10;
+            const maxConcurrentRequests = 15;
+
+            const sfcChunks = this._chunkArray(sfcs, sfcBatchSize);
+
+            const fetchAllPagesForRequest = async (resource, sfcChunk) => {
+                let localResult = [];
+
+                const requestParameters = this._getRequestParameters(resource, sfcChunk, false);
+                const firstResult = await this._callApi(requestParameters);
+
+                localResult = localResult.concat(firstResult);
+
+                const numberOfPages = firstResult?.numberOfPages || 1;
+
+                if (numberOfPages > 1) {
+                    const remainingPages = [];
+
+                    for (let page = 1; page < numberOfPages; page++) {
+                        remainingPages.push(page);
+                    }
+
+                    const pageTasks = remainingPages.map(pageNumber => async () => {
+                        const pagedRequestParameters = this._getRequestParameters(resource, sfcChunk, false);
+                        pagedRequestParameters.pageNumber = pageNumber;
+
+                        return await this._callApi(pagedRequestParameters);
+                    });
+
+                    const pageResults = await this._runWithConcurrencyLimit(
+                        pageTasks,
+                        maxConcurrentRequests
+                    );
+
+                    for (const pageResult of pageResults) {
+                        localResult = localResult.concat(pageResult);
+                    }
+                }
+
+                return localResult;
+            };
 
             const tasks = resources.flatMap(resource =>
                 sfcChunks.map(sfcChunk => async () => {
-                    const requestParameters = this._getRequestParameters(resource, sfcChunk, false);
-                    return await this._callApi(requestParameters);
+                    return await fetchAllPagesForRequest(resource, sfcChunk);
                 })
             );
 
-            const productionDataCollections = await this._runWithConcurrencyLimit(tasks, 15);
+            const productionDataCollectionsNested = await this._runWithConcurrencyLimit(
+                tasks,
+                maxConcurrentRequests
+            );
+
+            const productionDataCollections = productionDataCollectionsNested.flat();
 
             for (const dataCollection of productionDataCollections) {
                 if (!dataCollection?.data) {
@@ -455,11 +504,17 @@ _getDataCollections: async function () {
                 }
             }
 
-            let dcStornedTransformed = this._transformDC(productionDCParameters)
-                .filter(dc => dc.CANCELLED === "true");
+            let dcStornedTransformed = this._transformDC(productionDCParameters);
+
+            dcStornedTransformed = dcStornedTransformed.filter(dc => {
+                return dc.CANCELLED === "true";
+            });
 
             for (const dataCollection of dataCollections) {
-                const dcStorned = dcStornedTransformed.find(dc => dc.GUID === dataCollection.GUID);
+                const dcStorned = dcStornedTransformed.find(dc => {
+                    return dc.GUID === dataCollection.GUID;
+                });
+
                 if (!dcStorned) {
                     result.push(dataCollection);
                 }

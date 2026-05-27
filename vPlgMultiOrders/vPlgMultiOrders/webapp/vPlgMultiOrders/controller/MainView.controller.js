@@ -12,8 +12,9 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/m/library",
     "ibc/dm/plugins/wcPodToolsProvider/NonconformanceReader",
-    "ibc/dm/plugins/wcPodToolsProvider/PodTools"
-], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader, SfcMOReceipt, ResourceRepository, SfcQ23, Fragment, mobileLibrary, NonconformanceReader, PodTools) {
+    "ibc/dm/plugins/wcPodToolsProvider/PodTools",
+    "ibc/dm/plugins/wcPodToolsProvider/WorkCenterRepository",
+], function (jQuery, PluginViewController, JSONModel, ErrorHandler, TextHandler, OrderRepository, NcCodesReader, SfcMOReceipt, ResourceRepository, SfcQ23, Fragment, mobileLibrary, NonconformanceReader, PodTools, WorkCenterRepository) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.plugins.vPlgMultiOrders.vPlgMultiOrders.controller.MainView", {
@@ -123,6 +124,7 @@ sap.ui.define([
                 this._oResource = oPodSelectionModel.resource.resource;
                 this._oSfc = oFirstSelection.getSfc().getSfc();
                 this._oResourceInstance = await ResourceRepository.getResourceInstance(this, this._oPlant, this._oResource);
+                this._oWorkCenterInstance = await WorkCenterRepository.getInstance(this, this._oPlant, this._oWorkCenter);
                 this._oOrder = await OrderRepository.readOrderByPassBuffer(this, this._oPlant, this._oOrderNumber);
                 
                 this._routing = oFirstSelection.getSfcData().getRouting(),
@@ -177,7 +179,7 @@ sap.ui.define([
                     }
                 }
                 this._totalRegisteredQ23 = totalRegisteredQ23;
-                const oModel = new JSONModel({ positions: oPositions, codes: oCodesTab, totalQ23: totalRegisteredQ23 });
+                const oModel = new JSONModel({ positions: oPositions, codes: oCodesTab, totalQ23: totalRegisteredQ23, imageVisibility: this._oWorkCenterInstance.getQ3ImagesVisibility() });
                 this.getView().setModel(oModel, "multiOrdersModel");
                 
                 if( ( !this._oOrderNumberPrevious || this._oOrderNumberPrevious !== this._oOrderNumber ) && oPositions.length > 0){
@@ -667,16 +669,12 @@ sap.ui.define([
         onChange: function (oEvent) {
             var oDatePicker = oEvent.getSource();
             var sValue = oDatePicker.getValue();
-            
-            // RegExp do walidacji formatu "yyyy-MM-dd"
             var oRegExp = /^\d{4}-\d{2}-\d{2}$/;
             
             if (!oRegExp.test(sValue)) {
-                // Jeśli wartość nie pasuje do formatu, ustawienie błędu
                 oDatePicker.setValueState(sap.ui.core.ValueState.Error);
                 oDatePicker.setValueStateText("error.multiOrders.OADateFormat");
             } else {
-                // Jeśli wartość jest poprawna, usuwamy błąd
                 oDatePicker.setValueState(sap.ui.core.ValueState.None);
             }
         },
@@ -766,11 +764,13 @@ sap.ui.define([
         },
         _selectPositionAfterReceipt: function(){
             try{
-                let positions = this.getView().getModel("multiOrdersModel").getData().positions;
-                let selectedPosition = this._selectPositionAfterLoad(positions);
-                let oViewModel = this.getView().getModel("viewModel");
-                oViewModel.setProperty("/selectedOrder", selectedPosition.selectedRow);
-                this._setSelectedFirstPosition(selectedPosition.index);
+                if(this._oResourceInstance.getMOSelectionMode().toUpperCase() === "AUTOMATIC"){
+                    let positions = this.getView().getModel("multiOrdersModel").getData().positions;
+                    let selectedPosition = this._selectPositionAfterLoad(positions);
+                    let oViewModel = this.getView().getModel("viewModel");
+                    oViewModel.setProperty("/selectedOrder", selectedPosition.selectedRow);
+                    this._setSelectedFirstPosition(selectedPosition.index);
+                }
                 this._oOrderNumberPrevious = this._oOrderNumber;
             }catch(error){}
         },
@@ -815,6 +815,25 @@ sap.ui.define([
                 }
             }
             return result;
+        },
+        onImageButton: function(){
+            
+            
+            try{
+                let selectedItem = this.getView().byId("q23ReasonsList").getSelectedItem();
+                if(selectedItem){
+                    let selectedCode = selectedItem.getBindingContext("viewModel").getObject();
+                    if(selectedCode.imageLink){
+                        window.open(selectedCode.imageLink, "_blank");
+                    }else{
+                        this._oErrorHandler.throwErrorPopup("error.q23.noImageLink");
+                    }
+                }
+
+            }catch(error){
+                this._oErrorHandler.handleError(error);
+            }
+
         }
 	});
 });

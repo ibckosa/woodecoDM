@@ -17,9 +17,10 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/PiqQ23",
     "ibc/dm/plugins/wcPodToolsProvider/ConfirmDialog",
     "ibc/dm/plugins/wcPodToolsProvider/DataCollectionSaver",
-    "ibc/dm/plugins/wcPodToolsProvider/PodTools"
+    "ibc/dm/plugins/wcPodToolsProvider/PodTools",
+    "ibc/dm/plugins/wcPodToolsProvider/WorkCenterRepository",
 ], function (PluginViewController, JSONModel, Dialog, Button, mobileLibrary, TextArea, ErrorHandler, SfcRepository, IssuesManagerV2, ResourceRepository, NcCodesReader, Sfc, TextHandler, 
-             OrderRepository, NonconformanceReader, PiqQ23, ConfirmDialog, DataCollectionSaver, PodTools) {
+             OrderRepository, NonconformanceReader, PiqQ23, ConfirmDialog, DataCollectionSaver, PodTools, WorkCenterRepository) {
 	"use strict";
 
 	return PluginViewController.extend("ibc.dm.vPlgReceiptSfcQ23.vPlgReceiptSfcQ23.controller.MainView", {
@@ -116,6 +117,7 @@ sap.ui.define([
                 this._oWorkCenter = oPodSelectionModel.workCenter;
                 this._oResource = oPodSelectionModel.resource.resource;
                 let resourceInstance = await ResourceRepository.getResourceInstance(this, this.getPodController().getUserPlant(), this._oResource);
+                let workCenterInstance = await WorkCenterRepository.getInstance(this, this.getPodController().getUserPlant(), this._oWorkCenter);
 
                 let oCodesTab = await NcCodesReader.readCodes(this, this.getPodController().getUserPlant(), this._oWorkCenter, this._oResource);
 
@@ -136,7 +138,8 @@ sap.ui.define([
                 }
 
                 var oModelData = { items: oCodesTab,
-                                   totalNcQuantity: totalNcQuantity };
+                                   totalNcQuantity: totalNcQuantity,
+                                   q3ImageVisible: workCenterInstance.getQ3ImagesVisibility() };
                 var oModel = new JSONModel(oModelData);
                 oView.setModel(oModel);
 
@@ -307,6 +310,12 @@ sap.ui.define([
                 await this._saveDataCollection(oScrapQuantity, oSfcDetails, oSelectedItem.oeeCode, issueManager, oSelectedItem.code, oSelectedItem.codeDescription);
                 this._showMessageSuccess("success.ProccessFinished");
                 //oEvent.getSource().getBindingContext().setProperty("/quantity", "0");
+
+                // if(oSfcDetails.multiOperation || oSfcDetails.lastOperation){   
+                //     await this._oOrder.completeOrderLastOperation();
+                // }
+
+
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
                     await this.loadData();
                 }else{
@@ -685,6 +694,19 @@ sap.ui.define([
                 }
             }
             return result;  
+        },
+        onImageButton: function(oEvent){
+            try{
+                let oSelectedItem = oEvent.getSource().getBindingContext().getObject();
+                if(oSelectedItem.imageLink){
+                    window.open(oSelectedItem.imageLink, "_blank");
+                }else{
+                    this._oErrorHandler.throwErrorPopup("error.q23.noImageLink");
+                }
+                debugger
+            }catch(error){
+                this._oErrorHandler.handleError(error);
+            }
         }
 	});
 });

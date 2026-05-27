@@ -46,7 +46,7 @@ sap.ui.define([
             let result = 100;
             try{
                 let q1PercentagePlan = this._oDetails.customValues.find(customValue => { return customValue.attribute === "Q1_PERCENTAGE_PLAN"});
-                result = parseInt(q1PercentagePlan.value);
+                result = parseFloat(q1PercentagePlan.value);
                 if(result>100||result<=0)
                 {
                     result = 100;
@@ -76,6 +76,14 @@ sap.ui.define([
                     result = uom;
                 }
 
+            }catch(oError){}
+            return result;
+        },
+        getQ3ImagesVisibility: function(){ 
+            let result = false;
+            try{
+                let q3ImagesVisibility = this._oDetails.customValues.find(customValue => { return customValue.attribute === "Q3_IMAGES_VISIBILITY"});
+                result = q3ImagesVisibility.value.toUpperCase() === "X";
             }catch(oError){}
             return result;
         }

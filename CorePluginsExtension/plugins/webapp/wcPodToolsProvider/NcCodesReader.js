@@ -58,7 +58,8 @@ sap.ui.define([
                     codeDescription: oCodeDetails.description,
                     quantity: 0,
                     resourceReasonCode: oReasonCode.reasonCode,
-                    oeeCode: oReasonCode.oeeCode
+                    oeeCode: oReasonCode.oeeCode,
+                    imageLink: oCodeDetails.imageLink
                 });
             }
         }
@@ -96,6 +97,7 @@ sap.ui.define([
             let oReturn = {description: "",
                            oeeCode: "",
                            dataType: "",
+                           imageLink: "",
                            code: "" };
 
             let sUrl = this._oController.getPublicApiRestDataSourceUri() + "nonconformancecode/v1/nonconformancecodes";
@@ -112,6 +114,10 @@ sap.ui.define([
                                 let oCustomField = oResponseData[0].customData.find((customField) => customField.attribute === "REASON_CODE");
                                 oReturn.oeeCode = oCustomField.value;
                                 oReturn.code = oResponseData[0].code;
+                                let imageLinkCustomField = oResponseData[0].customData.find((customField) => customField.attribute === "IMAGE_LINK");
+                                if(imageLinkCustomField){
+                                    oReturn.imageLink = imageLinkCustomField.value;
+                                }
                             }catch(error){}
                         }
                         resolve(oReturn);

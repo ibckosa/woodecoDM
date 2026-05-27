@@ -205,8 +205,9 @@
                                             formatter: '.formatPositionNcCode' }" />
                                     </ComboBox>
                                     <Input id="inputQ23" liveChange="onReceiptInputLiveChange" value="" width="3rem" class="sapUiTinyMarginEnd"/>
-                                    <Button id="btnQ23" icon="sap-icon://accept" type="Accept" press="onButtonQ23"/>
-
+                                    <Button id="btnQ23" icon="sap-icon://accept" type="Accept" class="sapUiTinyMarginEnd" press="onButtonQ23"/>
+                                    <Button icon="sap-icon://image-viewer" id="imageButton" type="Accept" press="onImageButton" class="sapUiSmallMarginEnd" visible="{multiOrdersModel>/imageVisibility}"/>
+                                    
                                     <Text text="{i18n>quanRegisteredOnPos}" class="sapUiTinyMarginEnd sapUiMediumMarginBegin"/>
                                     <Input id="inputPositionQ23" editable="false" value="{viewModel>/selectedOrder/totalQ23}" width="3rem" class="sapUiTinyMarginEnd"/>
                                     <Text text="{i18n>quanOnOrder}" class="sapUiTinyMarginEnd sapUiMediumMarginBegin"/>

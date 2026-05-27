@@ -112,7 +112,7 @@ sap.ui.define([
                                      type: this._getCalendarItemType(downTime.timeElement),
                                      color: this._getCalendarItemColor(downTime.timeElement),
                                      description: downTime.description,
-                                     timeInMinutes: parseInt(downTime.downTimeSeconds/60),
+                                     timeInMinutes: Math.round(downTime.downTimeSeconds/60),
                                      tentative: false }); 
                                      
                 let categoryRow = downTimesCategories.find(category=>{return category.categoryName === downTime.timeElement;});
@@ -123,7 +123,7 @@ sap.ui.define([
 
             let totalSeconds = 0
             for(const categoryRow of downTimesCategories){
-                categoryRow.value = `${ Math.floor( categoryRow.valueInt / 60 ) }`;
+                categoryRow.value = `${ Math.round( categoryRow.valueInt / 60 ) }`;
                 totalSeconds = totalSeconds + categoryRow.valueInt;
             }
             downTimesCategories.push({ categoryName: "TOTAL", categoryDescription: this._textHandler.getText("labels.productionReport.total"), valueInt: totalSeconds, value: `<strong>${Math.floor(totalSeconds/60)}</strong>` });
@@ -591,7 +591,7 @@ _finalizeAccumulator: function (accumulator) {
         quantityQ23M3: accumulator.quantityQ23M3,
         totalQuantityBaseUom: accumulator.quantityQ1BaseUom + accumulator.quantityQ23BaseUom,
         totalQuantityM2: parseFloat((accumulator.quantityQ1M2 + accumulator.quantityQ23M2).toFixed(2)),
-        totalQuantityM3: parseFloat((accumulator.quantityQ1M3 + accumulator.quantityQ23M3).toFixed(2)),
+        totalQuantityM3: parseFloat((accumulator.quantityQ1M3 + accumulator.quantityQ23M3).toFixed(3)),
         isQ1PercentageIndicatorVisible: false,
         isPlanIndicatorVisible: false,
         q1Percentage: 0,
@@ -612,7 +612,7 @@ _finalizeAccumulator: function (accumulator) {
     }
 
     if(result.totalQuantityBaseUom>0){
-        result.q1Percentage = parseInt(result.quantityQ1BaseUom*100/result.totalQuantityBaseUom);
+        result.q1Percentage = parseFloat((result.quantityQ1BaseUom*100/result.totalQuantityBaseUom).toFixed(1));
     }
 
     if(!result.orderNumber){
@@ -715,7 +715,7 @@ _formatQ1Quantity: function (unitMap) {
 
     return Array.from(unitMap.values())
         .map((unit) => {
-            return (this._formatNumber(unit.quantity) + " " + this._normalizeString(unit.uomDesc || unit.uom)).trim();
+            return (this._formatNumber(unit.quantity, unit.uom) + " " + this._normalizeString(unit.uomDesc || unit.uom)).trim();
         })
         .join("\n");
 },
@@ -729,7 +729,7 @@ _formatQ23Quantity: function (q23Groups) {
 
     const totalLine = Array.from(totalUnits.values())
         .map((unit) => {
-            return (this._formatNumber(unit.quantity) + " " + this._normalizeString(unit.uomDesc || unit.uom)).trim();
+            return (this._formatNumber(unit.quantity, unit.uom) + " " + this._normalizeString(unit.uomDesc || unit.uom)).trim();
         })
         .join("/");
 
@@ -800,7 +800,7 @@ _buildQ23TotalUnits: function (q23Groups) {
 _formatQ23Group: function (group) {
     const quantitiesPart = Array.from(group.units.values())
         .map((unit) => {
-            return (this._formatNumber(unit.quantity) + " " + this._normalizeString(unit.uomDesc || unit.uom)).trim();
+            return (this._formatNumber(unit.quantity, unit.uom) + " " + this._normalizeString(unit.uomDesc || unit.uom)).trim();
         })
         .join("/");
 
@@ -917,12 +917,15 @@ _normalizeNumber: function (value) {
     return Number.isFinite(parsed) ? parsed : 0;
 },
 
-_formatNumber: function (value) {
+_formatNumber: function (value, uom) {
     if (Number.isInteger(value)) {
         return String(value);
     }
 
     if (!isNaN(value)) {
+        if(uom==="M3"){
+            return value.toFixed(3);
+        }
         return value.toFixed(2);
     }
 

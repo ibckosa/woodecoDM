@@ -22,14 +22,11 @@
                     <Column width="5rem">
                         <Text id="QuantityConformanceColumn"  visible = "true" text="{i18n>postedNc}"/>
                     </Column>
-                    <Column width="5rem">
-                        <Input id="totalQ23" value="{i18n>totalNc}: {/totalNcQuantity}" editable="false" width="13rem" class="inputFontQ23" textAlign="Center"/>
-                    </Column>
-                    <Column width="8rem">
-                        <Input id="availableQ23" value="Dostępne: 0" editable="false" width="13rem" class="inputFontQ23" textAlign="Center"/>
-                    </Column>
-                    <Column width="6rem">
-                        <Text id="ButtonCol"  />
+                    <Column width="20rem">
+                        <HBox>
+                            <Input id="totalQ23" value="{i18n>totalNc}: {/totalNcQuantity}" editable="false" width="10rem" class="inputFontQ23" textAlign="Center"/>
+                            <Input id="availableQ23" value="Dostępne: 0" editable="false" width="13rem" class="inputFontQ23" textAlign="Center"/>
+                        </HBox>
                     </Column>
                 </columns>
                 <items>
@@ -37,8 +34,11 @@
                         <cells>
                             <Text text="{codeDescription}" width="50rem" class="fontTextQ23"/>
                             <Input value="{conconformanceQuantity}" editable="false" width="5rem" class="inputFontQ23" textAlign="Center"/>
-                            <Input value="{quantity}" editable="true" width="10rem" class="inputFontQ23" textAlign="Center"/>
-                            <Button icon="sap-icon://accept" id="wasteButton" press="onWasteButton" class="bigButtonQ23 bigButtonIcon sapUiSmallMarginEnd" width="6rem"/>
+                            <HBox>
+                                <Input value="{quantity}" editable="true" width="10rem" class="inputFontQ23 sapUiSmallMarginEnd" textAlign="Center"/>
+                                <Button icon="sap-icon://accept" id="wasteButton" press="onWasteButton" class="bigButtonQ23 bigButtonIcon sapUiSmallMarginEnd" width="6rem"/>
+                                <Button icon="sap-icon://image-viewer" id="imageButton" press="onImageButton" class="bigButtonQ23 bigButtonIcon sapUiSmallMarginEnd" width="6rem" visible="{/q3ImageVisible}"/>
+                            </HBox>
                         </cells>
                     </ColumnListItem>
                 </items>
