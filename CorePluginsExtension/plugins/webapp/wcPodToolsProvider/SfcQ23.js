@@ -113,7 +113,6 @@ sap.ui.define([
                             text: this._oTextHandler.getText("labels.q23.dialogAcceptButton"),
                             press: async function () {
                                 let oReturn = "";
-                                debugger;
                                 try {
                                     let oTextArea = this.oApproveDialog.getContent()[0];
                                     oReturn = oTextArea.getValue();
@@ -214,7 +213,6 @@ sap.ui.define([
 
             let guid = crypto.randomUUID();
             let date = new Date();
-            debugger;
             parameterValues.push({ name: "GUID",
                                    comment: guid,
                                    value: guid });

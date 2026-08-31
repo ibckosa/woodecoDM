@@ -39,7 +39,6 @@ sap.ui.define([
                     productionDCParameters.push(dataRow.parameter);
                 }
             }
-            debugger;
             let dcTransformed = this._transformDC(productionDCParameters);
 
 

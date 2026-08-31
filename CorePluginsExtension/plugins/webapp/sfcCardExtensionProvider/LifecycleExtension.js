@@ -40,7 +40,6 @@ sap.ui.define([
 
         onBeforeRendering: function(oEvent){
             if (!this._bInitialized) {
-                debugger;
                 this._oSfcCardUtility.getPluginEventExtension().updateCustomData();
                 this._bInitialized = true;
             }
@@ -60,7 +59,6 @@ sap.ui.define([
                 return;
             }
             this._bRendered = true;
-            debugger;
             var that = this;
             // that._oSfcCardUtility.loadHeaderInformation(true, true);
             // that._oSfcCardUtility.loadHeaderInformation(true, true);

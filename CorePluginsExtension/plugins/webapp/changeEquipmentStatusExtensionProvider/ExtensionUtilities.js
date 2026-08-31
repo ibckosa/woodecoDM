@@ -19,7 +19,6 @@ sap.ui.define([
      */
     function getSettingsForControl(oControl, oController) {
         let oProperties = oControl.getMetadata().getAllProperties();
-        debugger;
 
         let oValues = {};
         for (let sProp in oProperties) {
@@ -102,7 +101,6 @@ sap.ui.define([
                     oStatus.onAfterRendering(this._onAfterList.bind(this));       
                     oList.onAfterRendering(this._onAfterList.bind(this));    
         
-                    debugger;
                     // let oStatusModel = this._oPluginEventExt.getController().byId("inputStatus").getModel();
                     // let oModel = this._oPluginEventExt.getController().byId("resourceStatusPanel").getModel();
                     // let oModelData = this._oPluginEventExt.getController().byId("resourceStatusPanel").getModel().getData();
@@ -110,7 +108,6 @@ sap.ui.define([
     
                 }
             }catch(oError){
-                debugger;
             }
         },
 
@@ -155,7 +152,6 @@ sap.ui.define([
 
             }
             
-            debugger;
         },
 
         changeResourceStatus: async function(oUrl, oRequest, oController){
@@ -185,7 +181,6 @@ sap.ui.define([
         },
         _createErpNotification: async function(oDurRequest, oController, oComment, oErrorHandler){
 
-            debugger;
             let oEndPoint = this._getNotifEndpoint(oController, oErrorHandler);
             if(oEndPoint===""){
                 oErrorHandler.throwErrorPopup("error.notifiaction.noEndpoint");
@@ -217,7 +212,6 @@ sap.ui.define([
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {
-                        debugger;
                         reject(oError);
                     }   
                 );
@@ -226,12 +220,10 @@ sap.ui.define([
             // let oSelectedCode = oController.oSelectedReasonCodeData;
             // let oResourceStatus = oController.oResourceStatus;
             // let oResourceStatusPanel = oController.byId("resourceStatusPanel")
-            // debugger;
         },
         _onItemsLoad: function(oEvent){
             
             try{
-                debugger;
                 let oList = oEvent.getSource();
                 let oListItems = oList.getItems();
                 let oBinding = oList.getBinding();
@@ -289,7 +281,6 @@ sap.ui.define([
 
                 // oModel.setData(oModelData);
             }catch(oError){
-                debugger;
             }
         },
         _getCurrentSapDateTime: function(){
@@ -324,14 +315,12 @@ sap.ui.define([
             return oReturn;
         },
         _onAfterList: function(oEvent){
-            debugger;
             try{
                 
                 let oList = oEvent.getSource();
                 let oBinding = oList.getBinding("items");
                 let oFormatter = oBinding.formatter;
             }catch(oError){
-                debugger;
             }
 
         },
@@ -369,7 +358,6 @@ sap.ui.define([
             }catch(oError){
 
             }
-            debugger;
         }
 
     })

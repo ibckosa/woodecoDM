@@ -47,7 +47,6 @@ sap.ui.define([
             // check if close icon should be displayed
            // this.configureNavigationButtons(oConfig); 
             //this.getView().setBusy(true);
-            //debugger;
         },
 
         onExit: function () {
@@ -62,16 +61,13 @@ sap.ui.define([
 
         onBeforeRendering: async function () {   
             await this.loadModel();
-            debugger;
         },
 
         onAfterRendering: function () {
-            debugger;
         },
 
         onPodSelectionChangeEvent: async function (sChannelId, sEventId, oData) {
             await this.loadModel();
-            debugger;
         },
 
         onOperationChangeEvent: function (sChannelId, sEventId, oData) {
@@ -262,7 +258,6 @@ sap.ui.define([
                     }
                 }
             }catch(error){
-                debugger;
             }
         },
 
@@ -296,7 +291,6 @@ sap.ui.define([
 
             await this.ajaxGetRequest(sUrl, oParameters,
                 function (oResponseData) {
-                    debugger;
                     var modelData = { receiptQuan: 0,
                                       isCustomQuan: oCustomQuan.isSetted,
                                       uom: "" };
@@ -411,7 +405,6 @@ sap.ui.define([
                 }
 
             }catch(oError){
-                debugger;
             }
         },
         _setPrintQuantity: function(printQuantity){

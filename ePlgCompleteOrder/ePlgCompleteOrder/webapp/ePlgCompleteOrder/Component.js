@@ -100,7 +100,6 @@ sap.ui.define([
             
         },
         _completeSOOrder: async function(){
-            debugger;
             if(this._sfc.getIsMultiOperation()){
                 if(!this._sfc.checkIsLastOperation(this._operation)){
                     await this._completeSONotLastOperation();
@@ -113,7 +112,6 @@ sap.ui.define([
             var sUrl = this.getPublicApiRestDataSourceUri() + `sfc/v1/sfcs/invalidate?plant=${this._plant}&sfc=${sfc}`;
             var oRequestParameters = { };
 
-            debugger;
     
             return await new Promise((resolve,reject)=>{
                 this.ajaxPatchRequest(sUrl, oRequestParameters,

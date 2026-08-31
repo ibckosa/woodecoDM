@@ -44,7 +44,6 @@ sap.ui.define([
             }
         },
         _completeSOOrder: async function(){
-            debugger;
             if(this._sfc.getIsMultiOperation()){
                 if(!this._sfc.checkIsLastOperation(this._parameters.operation)){
                     await this._completeSONotLastOperation();
@@ -166,6 +165,7 @@ sap.ui.define([
                 let sfcsSteps = [];
                 let sfcs = this._order.getSfcs();
                 let sfcsInstances = await SfcRepository.getSfcsInstances(this._controller, this._parameters.plant, sfcs);
+                sfcsInstances = sfcsInstances.filter(sfcInstance => { return sfcInstance.getStatus() !== '408' });
                 for(const sfcInstance of sfcsInstances){
                     let sfcSteps = sfcInstance.getSteps();
                     sfcsSteps = sfcsSteps.concat(sfcSteps);
@@ -176,7 +176,7 @@ sap.ui.define([
                 if(!sfcStepInWork){
                     await this._order.completeOrder();
                 }
-            }catch(oError){debugger;}
+            }catch(oError){}
         },
         _signoff: async function(sfcs){
             var sUrl = this._controller.getPublicApiRestDataSourceUri() + "sfc/v1/sfcs/signoff";
@@ -217,7 +217,6 @@ sap.ui.define([
             var sUrl = this._controller.getPublicApiRestDataSourceUri() + `sfc/v1/sfcs/invalidate?plant=${this._parameters.plant}&sfc=${sfc}`;
             var oRequestParameters = { };
 
-            debugger;
     
             return await new Promise((resolve,reject)=>{
                 this._controller.ajaxPatchRequest(sUrl, oRequestParameters,

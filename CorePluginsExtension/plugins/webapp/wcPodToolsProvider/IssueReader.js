@@ -52,11 +52,9 @@ sap.ui.define([
             return await new Promise((resolve,reject)=>{
                 controller.ajaxGetRequest(sUrl, requestParameters,
                     (oResponseData) => {
-                        debugger;
                         resolve(oResponseData);
                     },
                     (oError, sHttpErrorMessage) => {
-                        debugger;
                         resolve();
                     }   
                 );

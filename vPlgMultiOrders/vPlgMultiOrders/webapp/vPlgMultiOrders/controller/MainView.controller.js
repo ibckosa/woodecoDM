@@ -155,7 +155,6 @@ sap.ui.define([
                                 }else{
                                     position.totalQ23 = nonconformance.quantity;
                                 }
-                                                debugger;
                                 let ncCode = position.codes.find(code=> {return code.code === nonconformance.code});
                                 if(ncCode){
                                     if(ncCode.postedQuantity){
@@ -575,7 +574,6 @@ sap.ui.define([
                 }
                 
             }catch(oError){
-                debugger;
             }
 
 
@@ -735,7 +733,6 @@ sap.ui.define([
             }
         },
         _selectPositionAfterLoad: function(positions){
-            debugger;
             let selectionMode = this._oResourceInstance.getMOSelectionMode();
 
             const result = positions.reduce((acc, row, index) => {
@@ -783,7 +780,6 @@ sap.ui.define([
 
             let multiOrdersModelData = multiOrdersModel.getData();
             let viewModelData = viewModel.getData();
-            debugger;
             let selectedCode = viewModelData.selectedOrder.codes.find(code=>{return code.code === q23Parameters.nonconformanceCode});
             if(selectedCode){
                 if(selectedCode.postedQuantity){

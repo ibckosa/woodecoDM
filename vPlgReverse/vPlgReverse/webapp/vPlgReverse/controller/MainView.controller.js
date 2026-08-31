@@ -109,7 +109,6 @@ sap.ui.define([
         _loadDataSO: async function(){
             let oReturn = [];
             let oSfcs = this._oOrder.getSfcs();
-            debugger;
             let sfcCollectionData = await SfcDataCollectionReader.readCollections(this, this._oPlant, oSfcs, this._operation, true, false, this._routing, this._routingVersion );
 
             sfcCollectionData = sfcCollectionData.filter(collection => { 
@@ -155,9 +154,7 @@ sap.ui.define([
             return oReturn;
         },
         _loadDataMO: async function(){
-            debugger;
             let oReturn = [];
-            debugger;
             let oSfcs = this._oOrder.getSfcs();
             let sfcCollectionData = await SfcDataCollectionReader.readCollections(this, this._oPlant, oSfcs, this._operation, true, false, this._routing, this._routingVersion);
 

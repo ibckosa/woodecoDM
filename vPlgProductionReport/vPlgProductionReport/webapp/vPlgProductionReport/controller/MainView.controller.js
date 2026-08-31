@@ -70,7 +70,6 @@ sap.ui.define([
         //reportData.shiftDates.viewKey
 
         let oDate = new Date(reportData.shiftDates.startDate.getTime());
-        debugger;
         this.byId("PC1").setMinDate(null); 
         this.byId("PC1").setMaxDate(null); 
 
@@ -89,6 +88,9 @@ sap.ui.define([
         modelData.targetPercentage = reportData.targetPercentage;
         modelData.productionAggregated = reportData.productionAggregated;
         modelData.productionUnAggregated = reportData.productionUnAggregated;
+        modelData.shiftComments = reportData.shiftComments;
+
+        
         model.setData(modelData);
         this.getView().setModel(model);
         this.onAggregationChange();
@@ -112,7 +114,6 @@ sap.ui.define([
       this.getView().setModel(model);
     },
     formatLegendBox: function (categoryName, color) {
-      debugger;
       if (categoryName === "TOTAL") {
         return "";
       }
@@ -148,13 +149,11 @@ sap.ui.define([
                 aFilters.push(new sap.ui.model.Filter({ filters: searchFilters, and: false }));
                 oBinding.filter(aFilters);
             }catch(error){
-                debugger;
             }
     },
     handleDTSelect: function(oEvent){
 				var selectedDownTime = oEvent.getParameter("appointment");
         var oView = this.getView();
-        debugger;
         if(!selectedDownTime){
           return;
         }

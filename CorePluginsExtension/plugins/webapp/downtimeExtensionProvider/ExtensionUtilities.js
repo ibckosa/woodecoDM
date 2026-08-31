@@ -67,7 +67,6 @@ sap.ui.define([
                     oTable.insertColumn(oNewColumn, this._myColIndex)
                     let omyCol = oTable.getColumns()[oTable.getColumns().length - 1];
                     let omycolhed = omyCol.getHeader();
-                    debugger;
                 }else if(this._myColIndex){
                     let omyCol = oTable.getColumns()[this._myColIndex];
                     let omyColid = omyCol.getId();
@@ -183,7 +182,6 @@ sap.ui.define([
                     for(const item of selectedItems){
                         await this._sendToErp(item.getBindingContext().getObject());
                         await this._editDownTime(item.getBindingContext().getObject());
-                        debugger;                        
                     }
                 }catch(oError){
                     this._oErrorHandler.handleError(oError);
@@ -191,7 +189,6 @@ sap.ui.define([
             }
         },
         _sendToErp: async function(oItem){
-            debugger;
             let oEndPoint = this._getNotifEndpoint();
             let oPlant = this._oController.getPodController().getUserPlant();
             if(oItem.comments&&oItem.comments.includes("Wysłane do DUR")){
@@ -230,7 +227,6 @@ sap.ui.define([
                         resolve();
                     },
                     (oError, sHttpErrorMessage) => {
-                        debugger;
                         reject(oError);
                     }   
                 );

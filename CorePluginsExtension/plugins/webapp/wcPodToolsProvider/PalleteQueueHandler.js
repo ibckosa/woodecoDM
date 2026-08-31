@@ -22,9 +22,10 @@ sap.ui.define([
     "sap/m/VBox",
     "sap/m/Panel",
     "sap/f/DynamicPage",
-    "ibc/dm/plugins/wcPodToolsProvider/PartialPalleteReturnDialog"
+    "ibc/dm/plugins/wcPodToolsProvider/PartialPalleteReturnDialog",
+    "ibc/dm/plugins/wcPodToolsProvider/DataCollectionPalleteSaver"
 ], function (ObjectUI5,TextHandler, Palette, ResourceRepository, ErrorHandler, PalleteQueue, ReturnNpwDialog, AdditionalIssueDialog, MaterialRepository, SfcReceiptPrint, JSONModel, Dialog, Button, Text,
-     mobileLibrary, Table, Column, ColumnListItem, CheckBox, HBox, VBox, Panel, DynamicPage, PartialPalleteReturnDialog){
+     mobileLibrary, Table, Column, ColumnListItem, CheckBox, HBox, VBox, Panel, DynamicPage, PartialPalleteReturnDialog, DataCollectionPalleteSaver){
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.PalleteQueueHandler", {
         constructor: function(){
@@ -81,7 +82,6 @@ sap.ui.define([
                                             model.setData(modelData);
                                             this._oPluginViewController.byId("componentList").setModel(model)
                                         }catch(error){
-                                            debugger;
                                         }
 
                                         try{
@@ -92,7 +92,6 @@ sap.ui.define([
                                             model.setData(modelData);
                                             this._oPluginViewController.getView().setModel(model, "componentsModel")
                                         }catch(error){
-                                            debugger;
                                         }
                                     this._resolveLogDialog();
                                 }.bind(this)
@@ -383,6 +382,18 @@ sap.ui.define([
                         item.erpResourceId = oResource.getResourceErpId();
                         await oPallete.palleteReturn(item, oZweiEndpoint, item.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
                         await this._executeLabelPrint(item, oPrinter, item.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN);
+                        await DataCollectionPalleteSaver.savePalleteDestinationDC(this._oPluginViewController, {
+                            actionType: "RETURN",
+                            orderNumber: oDummyOrderSfc.dummyOrder,
+                            sfc: oDummyOrderSfc.dummySfc,
+                            material: item.palleteDetails.material,
+                            quantity: item.quantity,
+                            uom: item.uom,
+                            hu: item.palleteDetails.handlingUnit,
+                            sourceHu: item.palleteDetails.handlingUnit,
+                            plant: item.plant,
+                            resource: item.resource,
+                            workCenter: item.workCenter });
                         this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     }
                 }catch(oError){this._oErrorHandler.handleError(oError);}
@@ -409,8 +420,21 @@ sap.ui.define([
                     let oPallete  = new Palette(this._oPluginViewController);
                     item.erpResourceId = oResource.getResourceErpId();
                     await oPallete.palleteReturn(item, oZweiEndpoint, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
-                    //await oPallete.palleteReturn(item, oZweiEndpoint, oDialogReturn.quantity);
                     await this._executeLabelPrint(item, oPrinter, oDialogReturn.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN);
+                    await DataCollectionPalleteSaver.savePalleteDestinationDC(this._oPluginViewController, {
+                        actionType: "RETURN",
+                        orderNumber: oDummyOrderSfc.dummyOrder,
+                        sfc: oDummyOrderSfc.dummySfc,
+                        material: item.palleteDetails.material,
+                        quantity: item.quantity,
+                        uom: item.uom,
+                        hu: item.palleteDetails.handlingUnit,
+                        sourceHu: item.palleteDetails.handlingUnit,
+                        plant: item.plant,
+                        resource: item.resource,
+                        workCenter: item.workCenter });
+                    //await oPallete.palleteReturn(item, oZweiEndpoint, oDialogReturn.quantity);
+                    
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturn", item.handlingUnit),true,true);
                     setTimeout( async ()=> {    await this._getDialogData();
                                                 this._oDialogLog.setBusy(false);},1500);
@@ -444,6 +468,18 @@ sap.ui.define([
                     await oPallete.palleteReturnNpw(oItem, oZweiEndpoint, oDialogReturn.quantity, oDummyOrderSfc.dummyOrder, oDummyOrderSfc.dummySfc);
                     this._oPluginViewController.showSuccessMessage( this._textHandler.getText("success.logHu.palleteReturnNpw"),true,true);
                     await this._executeLabelPrint(oItem, oPrinter, oDialogReturn.quantity, SfcReceiptPrint.PRINT_INPUT_RETURN_NPW);
+                    await DataCollectionPalleteSaver.savePalleteDestinationDC(this._oPluginViewController, {
+                        actionType: "RETURN_NPW",
+                        orderNumber: oDummyOrderSfc.dummyOrder,
+                        sfc: oDummyOrderSfc.dummySfc,
+                        material: oItem.palleteDetails.material,
+                        quantity: oDialogReturn.quantity,
+                        uom: oItem.uom,
+                        hu: oItem.palleteDetails.handlingUnit,
+                        sourceHu: oItem.palleteDetails.handlingUnit,
+                        plant: oItem.plant,
+                        resource: oItem.resource,
+                        workCenter: oItem.workCenter });
                     setTimeout( async ()=> {    await this._getDialogData();
                                                 this._oDialogLog.setBusy(false);},1500);
                 }else{
@@ -688,7 +724,6 @@ sap.ui.define([
                 }
                 this._columnQuantity.setHeader(new Text({ text: this._textHandler.getText("labels.loghu.column.quantity", quantityColumnAfterFiltering) }) );
             }catch(error){
-                debugger;
             }
         },
         _getPrintCountGroup: function(){

@@ -82,7 +82,6 @@ sap.ui.define([
             this._mainSfcInstance = await SfcRepository.getInstance(this, plant, `${order}_M0000`, orderRouting.routing, orderRouting.type);
             let steps = this._mainSfcInstance.getSteps();
             this._setOrderSelectModel(steps);
-            debugger;
           }catch(error){
             this._setOrderSelectModel([]);
             this._errorHandler.handleError(error);

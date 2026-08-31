@@ -26,7 +26,6 @@ sap.ui.define([
         _addCustomStyle: function(){
             try{
 
-            debugger;
                 let oHead = document.getElementsByTagName("head")[0];
                 let oStyle = document.createElement("style");
                 oStyle.type = "text/css";

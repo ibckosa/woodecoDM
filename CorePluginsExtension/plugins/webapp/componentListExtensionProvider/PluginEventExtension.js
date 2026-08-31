@@ -178,7 +178,6 @@ sap.ui.define([
                             //     await fnUpdateTableItems(oTable,result,oPodContr, oController, this, oMdl.getProperty("/shopOrder").shopOrder);
                             // });
                         } catch (error) {
-                            debugger;
                         }
                     }
                 }
@@ -242,7 +241,6 @@ sap.ui.define([
             //         oTable.insertColumn(oNewColumn, oTable.getColumns().length );  
             //         oTable.insertColumn(oIssuedColumn, oTable.getColumns().length - 1 );  
             //     }
-            //     debugger;
             //     for(const item of oTable.getItems()){
             //         try {
             //             let issuedQuantity = 0;
@@ -393,7 +391,6 @@ sap.ui.define([
         },
         _onPaletteQueuePress: async function(oEvent){
             let oLine = oEvent.getSource().getBindingContext().getObject();
-            debugger;
             try{
                 
                 let oPodSelectionModel = this.getController().getPodSelectionModel();
@@ -431,7 +428,6 @@ sap.ui.define([
             
 
             let firstApiCallResults = await this._callApiGetIssue(plant, material, materialVersion, orderNumber);
-            debugger;
             if(firstApiCallResults.totalPages&&firstApiCallResults.totalPages>1){
                 for(let i=1;i<firstApiCallResults.totalPages;i++){
                     additionalApiCalls.push(this._callApiGetIssue(plant, material, materialVersion, orderNumber,i));
@@ -466,11 +462,9 @@ sap.ui.define([
             return await new Promise((resolve,reject)=>{
                 controller.ajaxGetRequest(sUrl, parameters,
                     (oResponseData) => {
-                        debugger;
                         resolve(oResponseData);
                     },
                     (oError, sHttpErrorMessage) => {
-                        debugger;
                         resolve();
                     }   
                 );
@@ -599,7 +593,6 @@ sap.ui.define([
                         }
                     };
                 } catch (error) {
-                    debugger;
                 }
             };
             if(bSort){ this.fnSortTable(oTable); 

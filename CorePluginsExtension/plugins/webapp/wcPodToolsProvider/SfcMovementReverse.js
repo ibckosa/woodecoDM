@@ -126,7 +126,6 @@ sap.ui.define([
         _saveReversedDataCollection: async function(){
             let parameterValues = [];
 
-            debugger;
 
             
 

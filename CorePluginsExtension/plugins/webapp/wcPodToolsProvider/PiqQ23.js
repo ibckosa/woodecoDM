@@ -20,7 +20,6 @@ sap.ui.define([
             }
 
             // let firstCollection = sfcDtDataCollections[0];
-            // debugger;
             // result = parseInt(firstCollection.Q3T);
             return result
 
@@ -143,8 +142,10 @@ sap.ui.define([
 
             let oParameters = { plant: this._parameters.plant,
                                 sfcs:  [sfc],
-                                dcGroup: { name: "PIQ_ORDER_DATA",
-                                           version: "1" },
+                                "dcGroup.name": "PIQ_ORDER_DATA",
+                                "dcGroup.version": "1",
+                                // dcGroup: { name: "PIQ_ORDER_DATA",
+                                //            version: "1" },
                                 pageNumber: pageNumber,
                                 pageSize: 50 };
             return await new Promise((resolve,reject)=>{

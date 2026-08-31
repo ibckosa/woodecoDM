@@ -18,7 +18,6 @@ sap.ui.define([
         constructor: function (oExtensionUtilities) {
             this._oExtensionUtilities = oExtensionUtilities;
             let controller = this.getController();
-            debugger;
 
         },
 
@@ -53,7 +52,6 @@ sap.ui.define([
             let controller = this.getController();
             let hoursFromConfiguration = this.getHoursRangeFromConfiguration();
             controller.getHoursRangeFromConfiguration = function(){
-                debugger;
                 let result = 24;
                 var oController = this;
                 try{
@@ -177,7 +175,6 @@ sap.ui.define([
         },
 
         onInit: function(oEvent){
-            debugger;
         },
 
         onAfterRendering: function(oEvent){

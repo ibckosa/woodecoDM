@@ -5,8 +5,9 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/SfcDataCollectionReader",
     "ibc/dm/plugins/wcPodToolsProvider/ErrorHandler",
     "ibc/dm/plugins/wcPodToolsProvider/BomRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/IssueReader"
-], function (ObjectUI5, LinkReader, MaterialRepository, SfcDataCollectionReader, ErrorHandler, BomRepository, IssueReader) {
+    "ibc/dm/plugins/wcPodToolsProvider/IssueReader",
+    "ibc/dm/plugins/wcPodToolsProvider/ProductionProcessCaller"
+], function (ObjectUI5, LinkReader, MaterialRepository, SfcDataCollectionReader, ErrorHandler, BomRepository, IssueReader, ProductionProcessCaller) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.Order", {
         constructor: function(oController, oPlant, oOrderNumber){
@@ -513,19 +514,9 @@ sap.ui.define([
             return orderQuantity;
         },
         completeOrder: async function(){
-            var sUrl = this._oController.getPublicApiRestDataSourceUri() + `order/v1/orders/complete?plant=${this._oPlant}&order=${this._oOrderNumber}`;
-            var oRequestParameters = {  };
-    
-            return await new Promise((resolve,reject)=>{
-                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
-                    (oResponseData) => {
-                        resolve();
-                    },
-                    (oError, sHttpErrorMessage) => { 
-                        reject(oError);
-                    }
-                );
-            });
+            var oRequestParameters = { plant: this._oPlant, order: this._oOrderNumber };
+
+            return await ProductionProcessCaller.start(this._oController, ProductionProcessCaller.PROCESS_KEYS.COMPLETE_ORDER, oRequestParameters);
         },
         getOrderNumber: function(){
             return this._oDetails.order;
@@ -686,8 +677,23 @@ sap.ui.define([
 
 
             return result;
-        }
+        },
+        completeOrderLastOperation: async function(){
+            var sUrl = this._oController.getPublicApiRestDataSourceUri() + `/pe/api/v1/process/processDefinitions/start?key=REG_0a52bce3-40e5-47e6-9b60-9f9aed875f91`;
+            var oRequestParameters = { plant: this._oPlant,
+                                       order: this._oOrderNumber  };
+    
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => { 
+                        reject(oError);
+                    }
+                );
 
-        
+            });
+        }
     });
 });

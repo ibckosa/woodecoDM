@@ -5,8 +5,10 @@ sap.ui.define([
     "sap/ui/core/date/UI5Date",
     "ibc/dm/plugins/wcPodToolsProvider/TextHandler",
     "ibc/dm/plugins/wcPodToolsProvider/ResourceRepository",
-    "ibc/dm/plugins/wcPodToolsProvider/WorkCenterRepository"
-], function (ObjectUI5, ProductionReportProductionData, ProductionReportDowntimeData, UI5Date, TextHandler, ResourceRepository, WorkCenterRepository) {
+    "ibc/dm/plugins/wcPodToolsProvider/WorkCenterRepository",
+    "ibc/dm/plugins/wcPodToolsProvider/ShiftComment/ShiftCommentFactory",
+    "ibc/dm/plugins/wcPodToolsProvider/GeneralTools"
+], function (ObjectUI5, ProductionReportProductionData, ProductionReportDowntimeData, UI5Date, TextHandler, ResourceRepository, WorkCenterRepository, ShiftCommentFactory, GeneralTools) {
     "use strict";
     return ObjectUI5.extend("ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.controller.ProductionReportModel", {
 
@@ -26,13 +28,15 @@ sap.ui.define([
             await this._getPlanQuantities();
             let productionResults = await this._getProductionData();
             let downTimesResults = await this._getDownTimes();
+            let shiftComments = await this._getShiftComments();
             return { dataModel: downTimesResults.dataModel,
                      shiftDates: downTimesResults.shiftDates,
                      downtimesCategories: downTimesResults.downtimesCategories,
                      availabilityPercentage: downTimesResults.availabilityPercentage,
                      targetPercentage: this._availabilityPlanPercentage,
                      productionAggregated: productionResults.dataAggregated,
-                     productionUnAggregated: productionResults.dataUnAggregated };
+                     productionUnAggregated: productionResults.dataUnAggregated,
+                     shiftComments: shiftComments };
             
         },
         _getPlanQuantities: async function(){
@@ -938,6 +942,49 @@ _compareStrings: function (a, b) {
 
 _buildKey: function (parts) {
     return JSON.stringify(parts.map((part) => this._normalizeString(part)));
+},
+_getShiftComments: async function () {
+    const aResult = [];
+
+    if (!this._parameters.date) {
+        return aResult;
+    }
+
+    const sShiftNumber = String(this._parameters.shiftNumber || "");
+    const aValidShifts = ["1", "2", "3"];
+
+    const aShiftsToLoad = aValidShifts.includes(sShiftNumber)
+        ? [sShiftNumber]
+        : aValidShifts;
+
+    for (const sShift of aShiftsToLoad) {
+        const oDateRange = GeneralTools.getShiftRangeFromDate(
+            sShift,
+            this._parameters.date
+        );
+
+        const oShiftComment = await ShiftCommentFactory.getInstance(
+            this._controller,
+            {
+                workCenter: this._parameters.workCenter,
+                plant: this._parameters.plant,
+                dummyOrder: "",
+                dummySfc: "",
+                startDate: oDateRange.startDate,
+                endDate: oDateRange.endDate,
+                commentDate: this._parameters.date,
+                shift: sShift
+            }
+        );
+
+        const sComment = oShiftComment.getComment();
+
+        aResult.push({
+            shift: sShift,
+            comment: sComment || ""
+        });
+    }
+    return aResult;
 }
 
     });

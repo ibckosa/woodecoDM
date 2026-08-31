@@ -43,7 +43,6 @@ sap.ui.define([
     "use strict";
     return BaseObject.extend("ibc.dm.plugins.utils.PodSelectionExtensionUtility", {
         constructor: function () {
-            debugger;
             this._oTextHandler = new TextHandler();
             this.aCustomFilters = [];
             this._initialized = false;
@@ -52,7 +51,6 @@ sap.ui.define([
         setPluginEventExtension: function(oExtension){
             var oPluginMethods = this.getMethodsOf(oExtension);
             
-            debugger;
             return this.oPluginEventExtension = oExtension
             
         },
@@ -105,7 +103,6 @@ sap.ui.define([
         },
 
         addActionButton: function(oToolbar, sType, sText, fnFunction, fnContext) {
-            debugger;
 
 
             let oActionButton = new Button({
@@ -139,7 +136,7 @@ sap.ui.define([
 
             let shiftCommentButton = new Button({
                 type: sType,
-                visible: false,
+                visible: true,
                 text: this._oTextHandler.getText("labels.shiftComment.shiftCommentButton"),
                 press: this.onShiftCommentButton.bind(this)
             });
@@ -320,7 +317,6 @@ sap.ui.define([
                 await this._checkWorkListScheme("1");
 
                 await this._displayDialogQ23(oController);
-                debugger;            
             }catch(oError){
                 this._oErrorHandler.handleError(oError)}
         },
@@ -774,7 +770,6 @@ sap.ui.define([
         },
         _callCustomApi: async function(oProcess, oLine){
             let sUrl = this._oSelController.getPublicApiRestDataSourceUri() + this._oZweiEndpoint;
-            debugger;
             let oSapDateTime = this._getCurrentSapDateTime();
             let oParameters = {};
             if(oProcess==="RETURN"){

@@ -169,7 +169,6 @@ sap.ui.define([
             this._resolveDialog();
         },
         _onSaveButton: async function(){
-            debugger;
             try{
                 const sShift = this._shiftComboBox.getSelectedKey();
                 const sCommentDate = this._commentDatePicker.getValue();

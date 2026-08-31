@@ -311,9 +311,9 @@ sap.ui.define([
                 this._showMessageSuccess("success.ProccessFinished");
                 //oEvent.getSource().getBindingContext().setProperty("/quantity", "0");
 
-                // if(oSfcDetails.multiOperation || oSfcDetails.lastOperation){   
-                //     await this._oOrder.completeOrderLastOperation();
-                // }
+                if(oSfcDetails.multiOperation || oSfcDetails.lastOperation){   
+                    await this._oOrder.completeOrderLastOperation();
+                }
 
 
                 if(oSfcDetails.sfcLeftQuantity>oScrapQuantity){
@@ -513,7 +513,6 @@ sap.ui.define([
         _logNonconformance: async function(oScrapQuantity, oSfcDetails, oCode, oComment){
             let sUrl = this.getPublicApiRestDataSourceUri() + "nonconformance/v1/log";
 
-            debugger;
             let oRequestParameters = {
                 code: oCode,
                 dataFields: [
@@ -567,7 +566,6 @@ sap.ui.define([
                             text: this._oTextHandler.getText("labels.q23.dialogAcceptButton"),
                             press: async function () {
                                 let oReturn = "";
-                                debugger;
                                 try {
                                     let oTextArea = this.oApproveDialog.getContent()[0];
                                     oReturn = oTextArea.getValue();
@@ -703,7 +701,6 @@ sap.ui.define([
                 }else{
                     this._oErrorHandler.throwErrorPopup("error.q23.noImageLink");
                 }
-                debugger
             }catch(error){
                 this._oErrorHandler.handleError(error);
             }

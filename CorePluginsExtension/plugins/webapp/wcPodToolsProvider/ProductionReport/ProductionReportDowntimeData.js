@@ -33,7 +33,6 @@ sap.ui.define([
             dateNow.setSeconds(dateNow.getSeconds()-180);
             let startDateTime = UI5Date.getInstance(this._parameters.date);
             let endDateTime= UI5Date.getInstance(this._parameters.date);
-            debugger;
             startDateTime.setDate(startDateTime.getDate()- 3);
             endDateTime.setDate(endDateTime.getDate()+ 3)
             

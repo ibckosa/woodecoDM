@@ -39,7 +39,6 @@ sap.ui.define([
                     productionDCParameters.push(dataRow.parameter);
                 }
             }
-            debugger;
             let dcTransformed = this._transformDC(productionDCParameters);
 
 
@@ -390,8 +389,10 @@ _getDataCollections: async function () {
                 plant: this._parameters.plant,
                 sfcs: sfcs,
                 resource: resource,
-                dcGroup: { name: "Q2_DESTINATION",
-                           version: "1" },
+                "dcGroup.name": "Q2_DESTINATION",
+                "dcGroup.version": "1",
+                // dcGroup: { name: "Q2_DESTINATION",
+                //            version: "1" },
                 pageSize: 50,
                 pageNumber: 0,
             };
@@ -402,8 +403,10 @@ _getDataCollections: async function () {
             let result = {
                 plant: this._parameters.plant,
                 resource: resource,
-                dcGroup: { name: "WOODECO_PROD_ACTIVITY",
-                           version: "A" },
+                "dcGroup.name": "WOODECO_PROD_ACTIVITY",
+                "dcGroup.version": "A",
+                // dcGroup: { name: "WOODECO_PROD_ACTIVITY",
+                //            version: "A" },
                 pageSize: 50,
                 pageNumber: 0,
             };

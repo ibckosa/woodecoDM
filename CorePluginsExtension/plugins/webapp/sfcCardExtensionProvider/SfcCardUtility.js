@@ -73,7 +73,6 @@ sap.ui.define([
                 let oActionButton = null;
                 if (oToolbarContainer && this.oChildControls[oToolbarContainer.getId()]) {
                     oActionButton = this.oChildControls[oToolbarContainer.getId()];
-                    debugger;
                 }
                 if (oToolbarContainer && !oActionButton) {
                     this.addActionButton(oToolbarContainer);
@@ -209,7 +208,6 @@ sap.ui.define([
             });
             oInformationControl.addContent(oLabel);
             if(asFormattedText){
-                debugger;
                 let formattedText = new sap.m.FormattedText({ htmlText: "{customData>/sfcCardCustom/"+fieldName+"}" }); 
                 oInformationControl.addContent(formattedText);
             }else{

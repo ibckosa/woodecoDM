@@ -53,7 +53,6 @@ sap.ui.define([
         },
 
         onAfterRendering: function(oEvent) {
-            debugger;
             this._oExtensionUtilities.logMessage("LifecycleExtension.onAfterRendering: ChangeEquipmentStatus extension");
             this._oExtensionUtilities.editDialog();
         },
@@ -63,13 +62,11 @@ sap.ui.define([
         },
         _onItemsLoad: function(oEvent){
             try{
-                debugger;
                 let oStatus = oEvent.getSource();
                 let oBinding = oStatus.getBinding();
             }catch(oError){
 
             }
-            debugger;
         }
     })
 });

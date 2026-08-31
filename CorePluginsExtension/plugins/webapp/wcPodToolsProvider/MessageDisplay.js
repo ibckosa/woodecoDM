@@ -18,7 +18,6 @@ sap.ui.define([
 
         displayAsPopup: async function(){
             return await new Promise( async (resolve, reject) => {
-                debugger;
                 this._resolveLogDialog = resolve;
                 this._rejectLogDialog = reject;
                 

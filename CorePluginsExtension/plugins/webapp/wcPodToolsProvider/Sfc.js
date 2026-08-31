@@ -98,7 +98,6 @@ sap.ui.define([
             var sUrl = this._oController.getPublicApiRestDataSourceUri() + `sfc/v1/sfcs/invalidate?plant=${this._oPlant}&sfc=${this._oSfcNumber}`;
             var oRequestParameters = { };
 
-            debugger;
     
             return await new Promise((resolve,reject)=>{
                 this._oController.ajaxPatchRequest(sUrl, oRequestParameters,
@@ -131,6 +130,9 @@ sap.ui.define([
                     }
                 );
             });
+        },
+        getStatus: function(){  
+            return this._oDetails.status.code;
         },
         checkUncollectedParameters: async function(operationActivity, resource){
             var sUrl = this._oController.getPublicApiRestDataSourceUri() + "datacollection/v1/uncollectedParameters";

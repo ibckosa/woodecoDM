@@ -87,7 +87,6 @@ sap.ui.define([
             try {
                 let oTable = this.byId("componentsTable");
                 let sorter = oTable.getBinding("items").aSorters[0];
-                debugger;
                 if(sorter){
                     if(oTable.getBinding("items").aSorters){
                         oTable.getBinding("items").sort(oTable.getBinding("items").aSorters);
@@ -100,7 +99,6 @@ sap.ui.define([
                     oTable.getBinding("items").applySort();
                 }
             } catch (error) {
-                debugger;
             }  
         },
 
@@ -168,7 +166,6 @@ sap.ui.define([
 
         onConsume: async function(oEvent){
             let oLine = oEvent.getSource().getBindingContext("componentsModel").getObject();
-            debugger;
             try{
                 let order = await OrderRepository.readOrder(this, this._oPlant, this._oOrderNumber);
                 let oHandlerData = { plant: this._oPlant,
