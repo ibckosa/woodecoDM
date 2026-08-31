@@ -4,7 +4,7 @@ sap.ui.define([
     "ibc/dm/plugins/wcPodToolsProvider/GeneralTools"
 ], function (ObjectUI5, ShiftComment, GeneralTools) {
     "use strict";
-    let ShiftCommentFactory = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.WorkCenterRepository", {
+    let ShiftCommentFactory = ObjectUI5.extend("ibc.dm.plugins.wcPodToolsProvider.ShiftComment.ShiftCommentFactory", {
     });
 
     ShiftCommentFactory.getInstance =  async function(controller, parameters){

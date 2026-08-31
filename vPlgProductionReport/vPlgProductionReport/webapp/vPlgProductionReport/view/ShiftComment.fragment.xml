@@ -1,0 +1,41 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <Table
+        id="shiftCommentsTable"
+        items="{path: '/shiftComments'}"
+        inset="false"
+        growing="true"
+        growingThreshold="100">
+
+        <columns>
+            <Column width="15%">
+                <Text text="{i18n>shift}" />
+            </Column>
+
+            <Column width="85%">
+                <Text text="{i18n>comment}" />
+            </Column>
+        </columns>
+
+        <items>
+            <ColumnListItem vAlign="Top">
+                <cells>
+
+                    <Text
+                        text="{shift}"
+                        wrapping="false" />
+
+                    <Text
+                        text="{comment}"
+                        wrapping="true"
+                        renderWhitespace="true"
+                        width="100%" />
+
+                </cells>
+            </ColumnListItem>
+        </items>
+
+    </Table>
+
+</core:FragmentDefinition>

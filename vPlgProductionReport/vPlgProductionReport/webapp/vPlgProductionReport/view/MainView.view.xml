@@ -27,6 +27,12 @@
                         key="downtimes">
                         <core:Fragment fragmentName="ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.view.Downtimes" type="XML"/>
                     </IconTabFilter>
+                    <IconTabFilter
+                        icon="sap-icon://comment"
+                        text="{i18n>comment}"
+                        key="comment">
+                        <core:Fragment fragmentName="ibc.dm.plugins.vPlgProductionReport.vPlgProductionReport.view.ShiftComment" type="XML"/>
+                    </IconTabFilter>
                 </items>
             </IconTabBar>
 	</Panel>		

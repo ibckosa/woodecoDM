@@ -346,8 +346,10 @@ sap.ui.define([
 
             let oParameters = { plant: this._parameters.plant,
                                 sfcs:  [sfc],
-                                dcGroup: { name: "DOWNTIMES",
-                                           version: "1" },
+                                "dcGroup.name": "DOWNTIMES",
+                                "dcGroup.version": "1",
+                                // dcGroup: { name: "DOWNTIMES",
+                                //            version: "1" },
                                 pageNumber: pageNumber,
                                 pageSize: 50 };
             return await new Promise((resolve,reject)=>{

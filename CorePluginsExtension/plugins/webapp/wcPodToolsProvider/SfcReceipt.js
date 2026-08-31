@@ -91,7 +91,7 @@ sap.ui.define([
             // } 
             
             this._reloadQ1Plugin = true;
-            this._refreshPod(oSingleOperationSfc, oLastOperation);
+            await this._refreshPod(oSingleOperationSfc, oLastOperation);
         },
 
         _issueSingleOper: async function(){
@@ -531,7 +531,7 @@ sap.ui.define([
         _executeMmReceipt: async function(){
             ///not implementation needed
         },
-        _refreshPod: function(isSingleOperation, isLastOperation){
+        _refreshPod: async function(isSingleOperation, isLastOperation){
             let oPodSelectionModel = this._oController.getPodSelectionModel();
             if(parseInt(this._oReceiptParameters.quantity) >= parseInt(this._oReceiptParameters.sfcQuantity)){
                 if(!isSingleOperation && isLastOperation){
@@ -548,6 +548,8 @@ sap.ui.define([
                         }
                     )
                     completeOrder.execute();
+                    // await this._oOrder.completeOrderLastOperation();
+
                     oPodSelectionModel.setInputValue("");
                     oPodSelectionModel.clearSelections();
 
@@ -644,7 +646,7 @@ sap.ui.define([
             let sUrl = this._oController.getPublicApiRestDataSourceUri()  + "sfc/v2/worklist/sfcs";
 
             let oParameters = { plant: this._oReceiptParameters.plant,
-                                workCenter: this._oReceiptParameters.workCenter,
+                                workCenters: this._oReceiptParameters.workCenter,
                                 operation: this._oReceiptParameters.operationActivity,
                                 orders: this._oReceiptParameters.order };
             return await new Promise((resolve,reject)=>{
@@ -653,7 +655,7 @@ sap.ui.define([
                         resolve(oResponseData.content);
                     },
                     (oError, sHttpErrorMessage) => {
-                        oError.apiName = "sfc/v1/worklist/sfcs"; 
+                        oError.apiName = "sfc/v2/worklist/sfcs"; 
                         reject(oError);
                     }
                 );

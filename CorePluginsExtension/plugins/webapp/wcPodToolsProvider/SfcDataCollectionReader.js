@@ -138,10 +138,14 @@ sap.ui.define([
 
         let oParameters = { plant: plant,
                             sfcs:  [sfcNumber],
-                            dcGroup: { name: "WOODECO_PROD_ACTIVITY",
-                                       version: "A" },
-                            operation: { name: sfcStep.operation.operation,
-                                         version: sfcStep.operation.version },
+                            "dcGroup.name": "WOODECO_PROD_ACTIVITY",
+                            "dcGroup.version": "A",
+                            "operation.name": sfcStep.operation.operation,
+                            "operation.version": sfcStep.operation.version,
+                            // dcGroup: { name: "WOODECO_PROD_ACTIVITY",
+                            //            version: "A" },
+                            // operation: { name: sfcStep.operation.operation,
+                            //              version: sfcStep.operation.version },
                             pageNumber: pageNumber,
                             pageSize: 50 };
         return await new Promise((resolve,reject)=>{
