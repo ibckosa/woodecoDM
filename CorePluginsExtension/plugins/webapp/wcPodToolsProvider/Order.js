@@ -514,6 +514,21 @@ sap.ui.define([
             return orderQuantity;
         },
         completeOrder: async function(){
+            var sUrl = this._oController.getPublicApiRestDataSourceUri() + `order/v1/orders/complete?plant=${this._oPlant}&order=${this._oOrderNumber}`;
+            var oRequestParameters = {  };
+
+            return await new Promise((resolve,reject)=>{
+                this._oController.ajaxPostRequest(sUrl, oRequestParameters,
+                    (oResponseData) => {
+                        resolve();
+                    },
+                    (oError, sHttpErrorMessage) => {
+                        reject(oError);
+                    }
+                );
+            });
+        },
+        completeOrderPP: async function(){
             var oRequestParameters = { plant: this._oPlant, order: this._oOrderNumber };
 
             return await ProductionProcessCaller.start(this._oController, ProductionProcessCaller.PROCESS_KEYS.COMPLETE_ORDER, oRequestParameters);

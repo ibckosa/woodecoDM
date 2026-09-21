@@ -84,7 +84,7 @@ sap.ui.define([
             await this._signoff([this._parameters.sfc]);
 
             await this._invalidateSfc(this._parameters.sfc);
-            await this._order.completeOrder();
+            await this._order.completeOrderPP();
         },
         _completeSOSingleOperation: async function(){
             await this._checkIssueForComponents();
@@ -113,7 +113,7 @@ sap.ui.define([
             //     await this._invalidateSfc(sfc);
             // }
             await this._invalidateSfc(this._parameters.sfc);
-            await this._order.completeOrder();
+            await this._order.completeOrderPP();
         },
         _completeSONotLastOperation: async function(){
             let maxOrderQuantity = this._order.getMaxOrderQuantitySO();
@@ -155,7 +155,7 @@ sap.ui.define([
             await this._invalidateSfc(this._parameters.sfc);
 
             if(!sfcStepInWork){
-                await this._order.completeOrder();
+                await this._order.completeOrderPP();
             }
 
             await this._clearOrderReservationsCap();
@@ -174,7 +174,7 @@ sap.ui.define([
                 let sfcStepInWork = sfcsSteps.find( step => { return ( step.quantityInQueue > 0 || step.quantityInWork > 0 )  } );
 
                 if(!sfcStepInWork){
-                    await this._order.completeOrder();
+                    await this._order.completeOrderPP();
                 }
             }catch(oError){}
         },
