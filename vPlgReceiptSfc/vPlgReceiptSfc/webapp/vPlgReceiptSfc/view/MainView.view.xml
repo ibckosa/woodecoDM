@@ -17,7 +17,7 @@ width="100%" height="100%">
         <content>
             <VBox justifyContent="Start" alignItems="Start" fitContainer="true" width="100%" height="60%">
                 <HBox justifyContent="Center" alignItems="Center" width="100%">
-                    <Label text="Liczba wydruków" id="sdasd" labelFor="rbg1" class="sapUiSmallMarginEnd fontText"/>
+                    <Label text="{i18n>printCopiesLabel}" id="printCopiesLabel" labelFor="rbg1" class="sapUiSmallMarginEnd fontText"/>
                 	<RadioButtonGroup id="rbg1" columns="6" class="printRadioButtonGroup">
                         <RadioButton id="rg0" text="0" class="myRadioButtonGroup" />
                         <RadioButton id="rg1" text="1" class="myRadioButtonGroup" />
@@ -37,10 +37,11 @@ width="100%" height="100%">
                         <Input id="inputReceiptQuantity" value="{/receiptQuan}" liveChange="onReceiptInputLiveChange" class="inputFont" width="18rem"/>
                         <Label text="{/uom}"  id = "labelUom" class="sapUiSmallMarginBegin fontText"/>
                 </HBox>
-                <HBox justifyContent="Center" alignItems="Center" width="100%">
+                <HBox justifyContent="Center" alignItems="Center" width="100%" class="receiptConfirmRow">
                     <Button text="{i18n>buttonReceiptLabel}"  class="bigButton"
                             press="onButtonReceipt"
                             id="buttonReceipt" width="14rem" />
+                    <CheckBox id="checkboxAdditionalQr" text="{i18n>checkboxAdditionalQrLabel}" visible="false" class="bigCheckbox"/>
                 </HBox>
             </VBox>
         </content>

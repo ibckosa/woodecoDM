@@ -178,10 +178,11 @@
                                         <Input id="inputReceiptQuantity" value="{viewModel>/selectedOrder/quantityPerPallet}" liveChange="onReceiptInputLiveChange" class="inputFont" width="7rem"/>
                                         <Label text="{/uom}"  id = "labelUom" class="sapUiSmallMarginBegin fontText"/>
                                 </HBox>
-                                <HBox justifyContent="Center" alignItems="Center" width="100%">
+                                <HBox justifyContent="Center" alignItems="Center" width="100%" class="receiptConfirmRow">
                                     <Button text="{i18n>buttonReceiptLabel}"  class="bigButton sapUiSmallMarginTop"
                                             press="onButtonReceipt"
                                             id="buttonReceipt" width="14rem" />
+                                    <CheckBox id="checkboxAdditionalQr" text="{i18n>checkboxAdditionalQrLabel}" visible="false" class="bigCheckbox"/>
                                 </HBox>
                             </VBox>
                         </IconTabFilter>

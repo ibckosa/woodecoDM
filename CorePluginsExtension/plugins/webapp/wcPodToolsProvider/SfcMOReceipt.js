@@ -367,6 +367,14 @@ sap.ui.define([
             let oSfcReceiptPrint = new SfcReceiptPrint(this._oController, oPrintingDetails);
             await oSfcReceiptPrint.print();
 
+            if(this._oReceiptParameters.additionalQrPrint){
+                let oQrPrintingDetails = Object.assign({}, oPrintingDetails);
+                oQrPrintingDetails.documentOverride = "DM_QR";
+                oQrPrintingDetails.printingCopies = 1;
+                let oQrReceiptPrint = new SfcReceiptPrint(this._oController, oQrPrintingDetails);
+                await oQrReceiptPrint.print();
+            }
+
             return oPrintingDetails;
         },
 

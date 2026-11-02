@@ -48,4 +48,23 @@
         font-size: 2rem;
     }
 
-	
+    .receiptConfirmRow {
+        position: relative;
+    }
+    .sapMCb.bigCheckbox {
+        position: absolute;
+        left: 0.75rem;
+        top: -0.25rem;
+    }
+    .sapMCb.bigCheckbox .sapMCbLabel {
+        font-size: 1.75rem;
+        line-height: 2.25rem;
+        margin-left: 1rem;
+    }
+    .sapMCb.bigCheckbox .sapMCbBg {
+        width: 1.75rem;
+        height: 1.75rem;
+        top: 0.25rem;
+    }
+
+

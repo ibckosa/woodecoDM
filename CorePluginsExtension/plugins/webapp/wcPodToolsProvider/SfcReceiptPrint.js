@@ -26,7 +26,9 @@ sap.ui.define([
 
             this._getPrintingInterface();
 
-            
+            if(this._oPrintDetails.documentOverride){
+                this._oPrintingInterface.document = this._oPrintDetails.documentOverride;
+            }
 
             // const today = new Date();
             // const day = String(today.getDate()).padStart(2, '0');

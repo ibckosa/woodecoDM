@@ -234,6 +234,7 @@ sap.ui.define([
                     return; };
                 let aSelectionFirstRow = aSelections[0];
                 let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
+                let bAdditionalQrPrint = this.byId("checkboxAdditionalQr").getSelected();
                 let oReceiptParameters = { plant : oPodController.getUserPlant(),
                     order: aSelectionFirstRow.getShopOrder().getShopOrder(),
                     material: selectedOrder.selectedOrder.materialNumber,
@@ -261,8 +262,9 @@ sap.ui.define([
                     quantityPerPalletMax: selectedOrder.selectedOrder.quantityPerPalletMax,
                     quantityPerPalletMin: selectedOrder.selectedOrder.quantityPerPalletMin,
                     routing: aSelectionFirstRow.getSfcData().getRouting(),
-                    routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion() };
-                
+                    routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion(),
+                    additionalQrPrint: bAdditionalQrPrint };
+
                     let oSfcReceipt = new SfcMOReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeReceipt();
                     selectedOrder.selectedOrder.deliveredQuantity = selectedOrder.selectedOrder.deliveredQuantity + oReceiptParameters.palletesNumber * oReceiptParameters.packageNumber * oReceiptParameters.quantity;
@@ -511,6 +513,8 @@ sap.ui.define([
                     this._setPrintQuantity(oResource.getQ1LabelCopies());
                     this._resourceNumber === oResourceNumber;
                 }
+
+                this.byId("checkboxAdditionalQr").setVisible(oResource.getAdditionalQrPrint());
 
                 this.byId("inputReceiptQuantity").setEditable(true);
                 if(oFunctionalLocation==="1"){

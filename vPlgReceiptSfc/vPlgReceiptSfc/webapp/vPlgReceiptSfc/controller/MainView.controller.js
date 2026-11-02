@@ -202,6 +202,7 @@ sap.ui.define([
 
                 let aSelectionFirstRow = aSelections[0];
                 let oResource = await ResourceRepository.getResourceInstance(this, oPodController.getUserPlant(), oPodSelectionModel.resource.resource);
+                let bAdditionalQrPrint = this.byId("checkboxAdditionalQr").getSelected();
                 let oReceiptParameters = { plant : oPodController.getUserPlant(),
                     order: aSelectionFirstRow.getShopOrder().getShopOrder(),
                     material: aSelectionFirstRow.getSfcData().getMaterial() ,
@@ -220,7 +221,8 @@ sap.ui.define([
                     printer: oResource.getPrinterId(),
                     automaticIssues: oResource.getConsumptionMode(true)==="AUTOMATIC",
                     routing: aSelectionFirstRow.getSfcData().getRouting(),
-                    routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion() };
+                    routingVersion: aSelectionFirstRow.getSfcData().getRoutingVersion(),
+                    additionalQrPrint: bAdditionalQrPrint };
                 
                     let oSfcReceipt = new SfcReceipt(this, oReceiptParameters);
                     await oSfcReceipt.executeIssue();
@@ -349,6 +351,8 @@ sap.ui.define([
                     this._setPrintQuantity(oResource.getQ1LabelCopies());
                     this._resourceNumber === oResourceNumber;
                 }
+
+                this.byId("checkboxAdditionalQr").setVisible(oResource.getAdditionalQrPrint());
 
                 this.byId("inputReceiptQuantity").setEditable(true);
                 if(oFunctionalLocation==="1"){

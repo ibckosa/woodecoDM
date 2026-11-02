@@ -118,4 +118,23 @@
     .selectedRowBackground {
         background-color: #DCD5C1 !important;
       }
-	
+
+    .receiptConfirmRow {
+        position: relative;
+    }
+    .sapMCb.bigCheckbox {
+        position: absolute;
+        left: 0.75rem;
+        top: -0.1rem;
+    }
+    .sapMCb.bigCheckbox .sapMCbLabel {
+        font-size: 1.1rem;
+        line-height: 1.4rem;
+        margin-left: 0.6rem;
+    }
+    .sapMCb.bigCheckbox .sapMCbBg {
+        width: 1.1rem;
+        height: 1.1rem;
+        top: 0.15rem;
+    }
+

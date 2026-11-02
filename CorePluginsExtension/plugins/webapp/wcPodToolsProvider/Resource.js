@@ -115,6 +115,16 @@ sap.ui.define([
 
             return result;
         },
+        getAdditionalQrPrint(){
+            let result = false;
+
+            try{
+                let additionalQrPrint = this._oDetails.customValues.find(customValue => { return customValue.attribute === "ADDITIONAL_QR_PRINT"});
+                result = additionalQrPrint.value === 'X';
+            }catch(oError){}
+
+            return result;
+        },
         getConsumptionButtons: function(){
             let result = "";
             try{
