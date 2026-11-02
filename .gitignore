@@ -1,2 +1,3 @@
 **/mta_archives/
 *.mtar
+**/node_modules/
