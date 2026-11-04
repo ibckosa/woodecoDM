@@ -63,10 +63,18 @@ sap.ui.define([
         if(parameters.printingParameters){
             requestParameters.PRINTING_PARAMETERS = GeneralTools.convertPrintingDetailsStuctureToString(parameters.printingParameters);
         }
-        await this._callApi(controller, url, requestParameters);
+
+        try{
+            await this._callApi(controller, url, requestParameters);
+        }catch(oFirstError){
+            await this._sleep(1500);
+            await this._callApi(controller, url, requestParameters);
+        }
     },
 
-
+    saver._sleep = function(ms){
+        return new Promise(resolve => setTimeout(resolve, ms));
+    },
 
 
 
@@ -77,7 +85,9 @@ sap.ui.define([
                         resolve();
                     },
                     async (oError, sHttpErrorMessage) => {
-                        resolve();                         
+                        oError.apiName = "DataCollectionSaver.saveProductionDC";
+                        oError.sendAlert = true;
+                        reject(oError);
                     }
                 );
             });
