@@ -189,44 +189,6 @@ sap.ui.define([
             }
             return sfcCollectionData;
         },
-        _getOrderIssues: async function(){
-            let promiesesIssues = [];
-
-            let bomNumber = this._oOrder.getBomNumber();
-            let bomType = this._oOrder.getBomType();
-            let bomInstance = await BomRepository.getInstance(this, this._oPlant, bomNumber, bomType);
-            let bomComponents = bomInstance.getComponents();
-
-            for(const component of bomComponents){
-                promiesesIssues.push(this._getOrderIssuesForMaterial(component.material.material, component.material.version));
-            }
-            let orderIssus = await Promise.all(promiesesIssues); 
-
-            return [].concat(...orderIssus);
-        },
-
-        _getOrderIssuesForMaterial: async function(material, materialVersion){
-            let sUrl = this.getPublicApiRestDataSourceUri() + "inventory/v1/inventory/goodsIssues";
-
-            let oParameters = { plant: this._oPlant,
-                                material: material,
-                                materialVersion: materialVersion,
-                                order: this._oOrderNumber,
-                                size: 300,
-                                page: 0 };
-
-            return await new Promise((resolve,reject)=>{
-                this.ajaxGetRequest(sUrl, oParameters,
-                    (oResponseData) => {
-                        resolve(oResponseData.content);
-                    },
-                    (oError, sHttpErrorMessage) => {
-                        resolve([]);
-                    }   
-                );
-
-            });
-        },
         _getSfcsStepDetails: async function(sfcs){
             let promisesSfcs = [];
             for(const sfc of sfcs){
